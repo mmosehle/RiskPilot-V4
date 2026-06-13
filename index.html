@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="theme-color" content="#0d0f14"/>
   <title>RiskPilot — Master Your Risk</title>
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -16,57 +13,80 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Inter', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
       color: #e8ecf4;
     }
-    .splash {
-      text-align: center;
-      animation: fadein 0.4s ease;
-    }
-    @keyframes fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
-    .splash svg { margin-bottom: 16px; }
-    .logo { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+    .splash { text-align: center; animation: fadein 0.4s ease; }
+    @keyframes fadein { from { opacity:0; transform:translateY(8px); } to { opacity:1; } }
+    .logo { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-top: 14px; }
     .logo-r { color: #e8ecf4; }
     .logo-p { color: #d4a017; }
-    .tag { font-size: 11px; color: #4a5270; letter-spacing: 2.5px; text-transform: uppercase; margin-top: 6px; }
+    .tag { font-size: 10px; color: #4a5270; letter-spacing: 2.5px; text-transform: uppercase; margin-top: 5px; }
     .dot {
       width: 8px; height: 8px; border-radius: 50%;
       background: #d4a017; margin: 20px auto 0;
       animation: pulse 1.2s ease-in-out infinite;
     }
     @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.6)} }
+    .err { font-size: 12px; color: #f05060; margin-top: 16px; display: none; }
   </style>
 </head>
 <body>
   <div class="splash">
-    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="48">
-      <polygon points="16,3 29,28 3,28" fill="none" stroke="#d4a017" stroke-width="2" stroke-linejoin="round"/>
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="52" height="52">
+      <polygon points="16,3 29,28 3,28" fill="none" stroke="#d4a017" stroke-width="2.2" stroke-linejoin="round"/>
       <circle cx="16" cy="13" r="2.5" fill="#d4a017"/>
-      <line x1="16" y1="16" x2="16" y2="23" stroke="#d4a017" stroke-width="2" stroke-linecap="round"/>
+      <line x1="16" y1="16" x2="16" y2="23" stroke="#d4a017" stroke-width="2.2" stroke-linecap="round"/>
     </svg>
     <div class="logo"><span class="logo-r">Risk</span><span class="logo-p">Pilot</span></div>
     <div class="tag">Master Your Risk</div>
-    <div class="dot"></div>
+    <div class="dot" id="dot"></div>
+    <div class="err" id="err">Could not connect — check your Supabase keys in supabase-config.js</div>
   </div>
 
+  <!-- Load Supabase CDN first, then our config, then the router script -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <script>
-    // Build a base-path-aware URL helper (works on GitHub Pages subfolders)
-    function basePath() {
-      const p = window.location.pathname;
-      return window.location.origin + p.substring(0, p.lastIndexOf('/') + 1);
-    }
-
-    // Check session — route accordingly
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        window.location.replace(basePath() + 'dashboard.html');
-      } else {
-        window.location.replace(basePath() + 'auth.html');
+    /* ── router ── */
+    (function () {
+      function base() {
+        var p = window.location.pathname;           // e.g. /riskpilot/index.html  or  /riskpilot/
+        // Strip trailing filename if present
+        var dir = p.endsWith('/') ? p : p.substring(0, p.lastIndexOf('/') + 1);
+        return window.location.origin + dir;        // e.g. https://user.github.io/riskpilot/
       }
-    }).catch(() => {
-      // If Supabase fails (bad keys etc.) still send to auth
-      window.location.replace(basePath() + 'auth.html');
-    });
+
+      function go(file) {
+        window.location.replace(base() + file);
+      }
+
+      // Safety net: if still on splash after 6 seconds, force redirect to auth
+      var fallbackTimer = setTimeout(function () {
+        go('auth.html');
+      }, 6000);
+
+      // Check whether supabase client was created successfully
+      if (!window.supabase || typeof window.supabase.auth === 'undefined') {
+        clearTimeout(fallbackTimer);
+        document.getElementById('dot').style.display  = 'none';
+        document.getElementById('err').style.display  = 'block';
+        console.error('RiskPilot: Supabase client not initialised. Check supabase-config.js');
+        return;
+      }
+
+      window.supabase.auth.getSession()
+        .then(function (result) {
+          clearTimeout(fallbackTimer);
+          var session = result && result.data && result.data.session;
+          go(session ? 'dashboard.html' : 'auth.html');
+        })
+        .catch(function (err) {
+          clearTimeout(fallbackTimer);
+          console.error('RiskPilot: getSession failed:', err);
+          go('auth.html');
+        });
+    })();
   </script>
 </body>
 </html>
