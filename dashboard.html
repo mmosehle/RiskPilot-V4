@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="RiskPilot" />
+  <meta name="theme-color" content="#0d0f14" />
+  <title>RiskPilot — Master Your Risk</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ═══════════════ MOBILE TOPBAR (visible on mobile only) ═══════════════ -->
+  <div class="mobile-topbar">
+    <div class="mobile-logo">
+      <span class="logo-risk">Risk</span><span class="logo-pilot">Pilot</span>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Open menu" onclick="toggleMobileMenu()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <!-- ═══════════════ SIDEBAR ═══════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="28">
+          <polygon points="16,3 29,28 3,28" fill="none" stroke="#d4a017" stroke-width="2.5" stroke-linejoin="round"/>
+          <circle cx="16" cy="13" r="2.5" fill="#d4a017"/>
+          <line x1="16" y1="16" x2="16" y2="23" stroke="#d4a017" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="logo-text-wrap">
+        <span class="logo-risk">Risk</span><span class="logo-pilot">Pilot</span>
+        <div class="logo-tagline">Master Your Risk</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-btn active" data-tab="calculator" onclick="switchTab('calculator')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+        <span>Risk Calculator</span>
+      </button>
+      <button class="nav-btn" data-tab="journal" onclick="switchTab('journal')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
+        <span>Trade Journal</span>
+      </button>
+      <button class="nav-btn" data-tab="calendar" onclick="switchTab('calendar')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>P&amp;L Calendar</span>
+      </button>
+      <button class="nav-btn" data-tab="profile" onclick="switchTab('profile')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span>My Profile</span>
+      </button>
+    </nav>
+
+    <!-- Currency Toggle -->
+    <div class="currency-section">
+      <div class="currency-label">Display Currency</div>
+      <div class="currency-toggle">
+        <button class="cur-btn active" id="cur-zar" onclick="setCurrency('ZAR')">ZAR</button>
+        <button class="cur-btn" id="cur-usd" onclick="setCurrency('USD')">USD</button>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="wallet-label">Weekly Return Wallet</div>
+      <div class="wallet-amount" id="sidebar-wallet-val">R 0.00</div>
+      <div class="wallet-sub" id="sidebar-winrate">Win rate: 0%</div>
+      <div class="sidebar-user" id="sidebar-user">
+        <div class="sidebar-user-name" id="sidebar-user-name">Loading…</div>
+        <button class="btn-signout" onclick="handleSignOut()">Sign Out</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile overlay -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileMenu()"></div>
+
+  <!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+  <main class="main-content">
+
+    <header class="topbar">
+      <div>
+        <h1 class="page-title" id="page-title">Risk Calculator</h1>
+        <p class="page-sub" id="page-sub">All major forex pairs, indices &amp; gold</p>
+      </div>
+      <div class="prices-strip" id="prices-strip">
+        <span class="price-pill loading"><span class="pulse-dot"></span> Fetching live prices&hellip;</span>
+      </div>
+    </header>
+
+    <!-- ══════════ TAB: CALCULATOR ══════════ -->
+    <section id="tab-calculator" class="tab-section active">
+
+      <div class="blocked-banner" id="blocked-banner" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        <div>
+          <strong>Daily Budget Exceeded</strong>
+          <p>You've used your full daily trading budget. Trading is locked for today. Come back tomorrow!</p>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <!-- Budget Setup -->
+        <div class="card">
+          <h2 class="card-title">Weekly Budget Setup</h2>
+          <div class="form-group">
+            <label for="weekly-budget">Weekly Trading Budget (<span class="cur-label">ZAR</span>)</label>
+            <div class="input-prefix">
+              <span id="budget-symbol">R</span>
+              <input type="number" id="weekly-budget" placeholder="e.g. 5000" min="0" />
+            </div>
+          </div>
+          <button class="btn btn-primary full-width" onclick="updateBudget()">Set Budget</button>
+          <div class="budget-breakdown" id="budget-breakdown" style="display:none;">
+            <div class="breakdown-row">
+              <span>Daily Budget (÷ 5 days)</span>
+              <strong id="daily-budget-display">R 0.00</strong>
+            </div>
+            <div class="breakdown-row">
+              <span>High Precision risk (100%)</span>
+              <strong id="hp-risk-display" class="text-primary">R 0.00</strong>
+            </div>
+            <div class="breakdown-row">
+              <span>Standard risk (50%)</span>
+              <strong id="std-risk-display" class="text-muted">R 0.00</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Budget Status -->
+        <div class="card">
+          <h2 class="card-title">Today's Budget Status</h2>
+          <div class="stat-grid-2">
+            <div class="stat-tile">
+              <span class="stat-label">Remaining Today</span>
+              <span class="stat-num green" id="remaining-today">R 0.00</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-label">Used Today</span>
+              <span class="stat-num red" id="used-today">R 0.00</span>
+            </div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" id="budget-bar" style="width:0%"></div></div>
+            <div class="progress-labels"><span>Budget used</span><span id="budget-pct">0%</span></div>
+          </div>
+          <div class="stat-grid-2" style="margin-top:12px;">
+            <div class="stat-tile green-tile">
+              <span class="stat-label">Weekly Return Wallet</span>
+              <span class="stat-num green" id="weekly-wallet">R 0.00</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-label">Win Rate</span>
+              <span class="stat-num" id="win-rate-display">0%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trade Setup -->
+      <div class="card">
+        <h2 class="card-title">Trade Setup</h2>
+        <div class="two-col">
+          <div>
+            <div class="form-group">
+              <label for="instrument">Instrument</label>
+              <select id="instrument" onchange="onInstrumentChange()">
+                <optgroup label="Forex Majors">
+                  <option value="EURUSD">EUR/USD</option>
+                  <option value="GBPUSD">GBP/USD</option>
+                  <option value="USDJPY">USD/JPY</option>
+                  <option value="USDCHF">USD/CHF</option>
+                  <option value="AUDUSD">AUD/USD</option>
+                  <option value="USDCAD">USD/CAD</option>
+                  <option value="NZDUSD">NZD/USD</option>
+                  <option value="EURGBP">EUR/GBP</option>
+                </optgroup>
+                <optgroup label="Indices">
+                  <option value="NAS100">NAS100 (Nasdaq)</option>
+                  <option value="US30">US30 (Dow Jones)</option>
+                </optgroup>
+                <optgroup label="Commodities">
+                  <option value="XAUUSD">GOLD (XAU/USD)</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="direction">Direction</label>
+              <select id="direction">
+                <option value="buy">Buy / Long</option>
+                <option value="sell">Sell / Short</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Live Market Price</label>
+              <div class="live-price-box">
+                <span class="pulse-dot"></span>
+                <span id="live-price-val">Loading&hellip;</span>
+                <span id="live-price-change" class="price-change"></span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="form-group">
+              <label for="entry-price">Entry Price (Limit Order)</label>
+              <input type="number" id="entry-price" placeholder="e.g. 1.08500" step="any" oninput="calculate()" />
+            </div>
+            <div class="form-group">
+              <label for="sl-price">Stop Loss Price</label>
+              <input type="number" id="sl-price" placeholder="e.g. 1.08200" step="any" oninput="calculate()" />
+            </div>
+            <div class="form-group">
+              <label for="tp-price">Take Profit Price</label>
+              <input type="number" id="tp-price" placeholder="e.g. 1.09100" step="any" oninput="calculate()" />
+            </div>
+          </div>
+        </div>
+
+        <p class="field-label" style="margin-bottom:10px;">Setup Type</p>
+        <div class="setup-grid">
+          <div class="setup-option selected" id="opt-hp" onclick="selectSetup('high')">
+            <div class="setup-icon">&#9670;</div>
+            <h4>High Precision</h4>
+            <p>Risk 100% of your daily budget. Use only for A+ setups.</p>
+          </div>
+          <div class="setup-option" id="opt-std" onclick="selectSetup('standard')">
+            <div class="setup-icon">&#9632;</div>
+            <h4>Standard Setup</h4>
+            <p>Risk 50% of daily budget, leaving room for a second trade.</p>
+          </div>
+        </div>
+
+        <div class="results-panel" id="results-panel" style="display:none;">
+          <h3 class="results-title">Calculated Trade Parameters</h3>
+          <div class="results-grid">
+            <div class="result-item">
+              <span class="result-label" id="lbl-risk">Risk Amount (ZAR)</span>
+              <span class="result-val" id="res-risk">—</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Lot Size</span>
+              <span class="result-val highlight" id="res-lot">—</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">SL Distance</span>
+              <span class="result-val" id="res-sl-dist">—</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">TP Distance</span>
+              <span class="result-val" id="res-tp-dist">—</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label" id="lbl-profit">Potential Profit (ZAR)</span>
+              <span class="result-val green" id="res-profit">—</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Risk : Reward</span>
+              <span class="result-val rr-badge" id="res-rr">—</span>
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-primary" onclick="logTrade()">&#10003; Log Trade</button>
+            <button class="btn btn-green" onclick="markTradeResult('win')">&#9650; Mark Win</button>
+            <button class="btn btn-red" onclick="markTradeResult('loss')">&#9660; Mark Loss</button>
+            <button class="btn btn-ghost" onclick="resetForm()">&#8635; Reset</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ TAB: JOURNAL ══════════ -->
+    <section id="tab-journal" class="tab-section">
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header-row">
+          <h2 class="card-title" style="margin-bottom:0;">Trade Journal</h2>
+          <span class="badge badge-blue" id="journal-count">0 trades</span>
+        </div>
+        <div class="table-scroll">
+          <table class="journal-table">
+            <thead>
+              <tr>
+                <th>Instrument</th>
+                <th>Date</th>
+                <th>Setup</th>
+                <th>Direction</th>
+                <th>Outcome</th>
+                <th>R:R</th>
+                <th class="pnl-header">P&amp;L</th>
+                <th>Screenshots</th>
+              </tr>
+            </thead>
+            <tbody id="journal-body">
+              <tr><td colspan="8" class="empty-cell">No trades logged yet. Use the Risk Calculator to log your first trade.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card card-muted">
+        <h3 class="card-title">Attach Screenshots to Latest Entry</h3>
+        <div class="two-col">
+          <div class="form-group">
+            <label for="before-url">Before Setup Screenshot URL</label>
+            <input type="url" id="before-url" placeholder="https://i.imgur.com/before.png" />
+          </div>
+          <div class="form-group">
+            <label for="after-url">After Setup Screenshot URL</label>
+            <input type="url" id="after-url" placeholder="https://i.imgur.com/after.png" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="trade-notes">Notes (optional)</label>
+          <input type="text" id="trade-notes" placeholder="What did you observe? What worked or didn't?" />
+        </div>
+        <button class="btn btn-primary" onclick="attachUrls()">Attach to Latest Entry</button>
+      </div>
+    </section>
+
+    <!-- ══════════ TAB: CALENDAR ══════════ -->
+    <section id="tab-calendar" class="tab-section">
+      <div class="two-col-wide">
+        <div>
+          <div class="card">
+            <div class="card-header-row">
+              <h2 class="card-title" style="margin-bottom:0;" id="cal-month-label">June 2026</h2>
+              <div class="month-nav">
+                <button class="btn btn-ghost icon-btn" onclick="prevMonth()">&#8592;</button>
+                <button class="btn btn-ghost icon-btn" onclick="nextMonth()">&#8594;</button>
+              </div>
+            </div>
+            <div class="cal-day-headers">
+              <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+            <div class="cal-grid" id="calendar-grid"></div>
+            <div class="cal-legend">
+              <span class="legend-item"><span class="legend-dot green-bg"></span>Profit day</span>
+              <span class="legend-item"><span class="legend-dot red-bg"></span>Loss day</span>
+              <span class="legend-item"><span class="legend-dot today-bg"></span>Today</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:16px;">
+            <h2 class="card-title">Performance Summary</h2>
+            <div class="stat-grid-2">
+              <div class="stat-tile green-tile">
+                <span class="stat-label">Weekly Return Wallet</span>
+                <span class="stat-num green" id="cal-wallet">R 0.00</span>
+              </div>
+              <div class="stat-tile">
+                <span class="stat-label">Win Rate</span>
+                <span class="stat-num" id="cal-winrate">0%</span>
+              </div>
+              <div class="stat-tile">
+                <span class="stat-label">Total Wins</span>
+                <span class="stat-num green" id="cal-wins">0</span>
+              </div>
+              <div class="stat-tile">
+                <span class="stat-label">Total Losses</span>
+                <span class="stat-num red" id="cal-losses">0</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <h2 class="card-title">Detailed Stats</h2>
+            <table class="stats-table">
+              <tr><td>Total trades</td><td id="total-trades">0</td></tr>
+              <tr><td>Total profit</td><td id="total-profit" class="green">R 0.00</td></tr>
+              <tr><td>Total loss</td><td id="total-loss" class="red">R 0.00</td></tr>
+              <tr><td>Net P&amp;L</td><td id="net-pnl">R 0.00</td></tr>
+              <tr><td>Best trading day</td><td id="best-day" class="green">—</td></tr>
+              <tr><td>Worst trading day</td><td id="worst-day" class="red">—</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ TAB: PROFILE ══════════ -->
+    <section id="tab-profile" class="tab-section">
+      <div class="two-col" style="max-width:700px;">
+
+        <!-- Account Info Card -->
+        <div class="card" style="grid-column:1/-1;">
+          <div class="card-header-row">
+            <h2 class="card-title" style="margin-bottom:0;">My Profile</h2>
+            <span class="badge badge-blue" id="profile-member-since"></span>
+          </div>
+          <div class="profile-avatar" id="profile-avatar">?</div>
+          <div class="profile-info-grid">
+            <div class="profile-field">
+              <span class="profile-field-label">First Name</span>
+              <span class="profile-field-val" id="prof-name">—</span>
+            </div>
+            <div class="profile-field">
+              <span class="profile-field-label">Last Name</span>
+              <span class="profile-field-val" id="prof-surname">—</span>
+            </div>
+            <div class="profile-field" style="grid-column:1/-1;">
+              <span class="profile-field-label">Email Address</span>
+              <span class="profile-field-val" id="prof-email">—</span>
+            </div>
+            <div class="profile-field" style="grid-column:1/-1;">
+              <span class="profile-field-label">Marketing Emails</span>
+              <span class="profile-field-val" id="prof-marketing">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats summary -->
+        <div class="card">
+          <h2 class="card-title">Account Stats</h2>
+          <table class="stats-table">
+            <tr><td>Total trades logged</td><td id="prof-trades">0</td></tr>
+            <tr><td>Overall win rate</td><td id="prof-winrate">0%</td></tr>
+            <tr><td>Weekly Return Wallet</td><td id="prof-wallet" class="green">R 0.00</td></tr>
+            <tr><td>Best R:R achieved</td><td id="prof-bestrr" class="green">—</td></tr>
+          </table>
+        </div>
+
+        <!-- Danger zone -->
+        <div class="card card-danger">
+          <h2 class="card-title" style="color:var(--red);">Danger Zone</h2>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:1rem;">
+            Clicking Reset Data will permanently delete all your journal entries, trade history, budget settings, and weekly wallet balance. This cannot be undone.
+          </p>
+          <button class="btn btn-red" onclick="confirmReset()">
+            &#9888; Reset All My Data
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

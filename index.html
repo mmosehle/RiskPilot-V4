@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#0d0f14"/>
+  <title>RiskPilot — Master Your Risk</title>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: #0d0f14;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Inter', sans-serif;
+      color: #e8ecf4;
+    }
+    .splash {
+      text-align: center;
+      animation: fadein 0.4s ease;
+    }
+    @keyframes fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
+    .splash svg { margin-bottom: 16px; }
+    .logo { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+    .logo-r { color: #e8ecf4; }
+    .logo-p { color: #d4a017; }
+    .tag { font-size: 11px; color: #4a5270; letter-spacing: 2.5px; text-transform: uppercase; margin-top: 6px; }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #d4a017; margin: 20px auto 0;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.6)} }
+  </style>
+</head>
+<body>
+  <div class="splash">
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="48">
+      <polygon points="16,3 29,28 3,28" fill="none" stroke="#d4a017" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="16" cy="13" r="2.5" fill="#d4a017"/>
+      <line x1="16" y1="16" x2="16" y2="23" stroke="#d4a017" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <div class="logo"><span class="logo-r">Risk</span><span class="logo-p">Pilot</span></div>
+    <div class="tag">Master Your Risk</div>
+    <div class="dot"></div>
+  </div>
+
+  <script>
+    // Build a base-path-aware URL helper (works on GitHub Pages subfolders)
+    function basePath() {
+      const p = window.location.pathname;
+      return window.location.origin + p.substring(0, p.lastIndexOf('/') + 1);
+    }
+
+    // Check session — route accordingly
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        window.location.replace(basePath() + 'dashboard.html');
+      } else {
+        window.location.replace(basePath() + 'auth.html');
+      }
+    }).catch(() => {
+      // If Supabase fails (bad keys etc.) still send to auth
+      window.location.replace(basePath() + 'auth.html');
+    });
+  </script>
+</body>
+</html>
