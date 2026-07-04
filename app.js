@@ -66,7 +66,6 @@ function goTo(file) {
    AUTH GUARD + BOOT
 ═══════════════════════════════════════════════ */
 async function boot(session) {
-  // session is passed in by onAuthStateChange or the fallback getSession call
   if (!session) { goTo('auth.html'); return; }
   state.user = session.user;
 
@@ -661,22 +660,9 @@ function renderPricesStrip() {
 function todayStr() { return new Date().toISOString().slice(0,10); }
 
 /* ═══════════════════════════════════════════════
-   BOOT — use onAuthStateChange so the session is
-   always fully restored before we act on it.
-   A fallback timeout covers edge cases.
+   BOOT
 ═══════════════════════════════════════════════ */
-let _booted = false;
-
-supabase.auth.onAuthStateChange((event, session) => {
-  if (_booted) return;
-  _booted = true;
-  boot(session);
-});
-
-// Fallback: if onAuthStateChange has not fired within 4s, call getSession directly
-setTimeout(async () => {
-  if (_booted) return;
-  _booted = true;
+(async function() {
   const { data } = await supabase.auth.getSession();
   boot(data.session || null);
-}, 4000);
+})();

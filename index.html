@@ -7,11 +7,7 @@
   <title>RiskPilot — Master Your Risk</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      min-height: 100vh; background: #0d0f14;
-      display: flex; align-items: center; justify-content: center;
-      font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; color: #e8ecf4;
-    }
+    body { min-height: 100vh; background: #0d0f14; display: flex; align-items: center; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; color: #e8ecf4; }
     .splash { text-align: center; animation: fadein 0.4s ease; }
     @keyframes fadein { from { opacity:0; transform:translateY(8px); } to { opacity:1; } }
     .logo { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-top: 14px; }
@@ -19,7 +15,7 @@
     .tag { font-size: 10px; color: #4a5270; letter-spacing: 2.5px; text-transform: uppercase; margin-top: 5px; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #d4a017; margin: 20px auto 0; animation: pulse 1.2s ease-in-out infinite; }
     @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.6)} }
-    .err { font-size: 12px; color: #f05060; margin-top: 16px; display: none; max-width: 300px; line-height: 1.4; }
+    .err { font-size: 12px; color: #f05060; margin-top: 16px; display: none; max-width: 300px; line-height: 1.5; text-align:center; }
   </style>
 </head>
 <body>
@@ -32,9 +28,10 @@
     <div class="logo"><span class="logo-r">Risk</span><span class="logo-p">Pilot</span></div>
     <div class="tag">Master Your Risk</div>
     <div class="dot" id="dot"></div>
-    <div class="err" id="err">Could not connect — check your Supabase keys in supabase-config.js</div>
+    <div class="err" id="err"></div>
   </div>
 
+  <!-- IMPORTANT: Load Supabase CDN, then config (which creates the client), then router -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script>
@@ -45,14 +42,18 @@
         return window.location.origin + dir;
       }
       function go(file) { window.location.replace(base() + file); }
+      function showErr(msg) {
+        document.getElementById('dot').style.display = 'none';
+        var e = document.getElementById('err');
+        e.textContent = msg; e.style.display = 'block';
+      }
 
-      // Safety net — if still on splash after 6s, go to auth
-      var fallback = setTimeout(function () { go('auth.html'); }, 6000);
+      // Safety net — redirect to auth after 8s no matter what
+      var fallback = setTimeout(function () { go('auth.html'); }, 8000);
 
       if (!window.supabase || typeof window.supabase.auth === 'undefined') {
         clearTimeout(fallback);
-        document.getElementById('dot').style.display = 'none';
-        document.getElementById('err').style.display = 'block';
+        showErr('Could not connect to RiskPilot. Check your Supabase keys in supabase-config.js');
         return;
       }
 
@@ -60,23 +61,26 @@
         .then(function (result) {
           clearTimeout(fallback);
           var session = result && result.data && result.data.session;
-          if (!session) { go('auth.html'); return; }
 
-          // Logged in — check license before deciding where to send them
-          var userId = session.user.id;
-          window.supabase
+          if (!session) {
+            go('auth.html');
+            return;
+          }
+
+          // Check license
+          return window.supabase
             .from('riskpilot_data')
             .select('license_valid')
-            .eq('user_id', userId)
+            .eq('user_id', session.user.id)
             .single()
             .then(function (res) {
               var licensed = res.data && res.data.license_valid === true;
               go(licensed ? 'dashboard.html' : 'license.html');
-            })
-            .catch(function () { go('license.html'); });
+            });
         })
-        .catch(function () {
+        .catch(function (err) {
           clearTimeout(fallback);
+          console.error('Router error:', err);
           go('auth.html');
         });
     })();

@@ -463,21 +463,20 @@
   }
 
   // If already logged in — check license status and route accordingly
-  supabase.auth.onAuthStateChange(async (event, session) => {
-    if (!session) return;
-    // Ignore sign-out events
-    if (event === 'SIGNED_OUT') return;
+  (async function() {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return; // not logged in, stay on auth page
     const { data: profile } = await supabase
       .from('riskpilot_data')
       .select('license_valid')
-      .eq('user_id', session.user.id)
+      .eq('user_id', data.session.user.id)
       .single();
     if (profile?.license_valid === true) {
       goTo('dashboard.html');
     } else {
       goTo('license.html');
     }
-  });
+  })();
 
   // Allow Enter key to submit
   document.addEventListener('keydown', e => {
