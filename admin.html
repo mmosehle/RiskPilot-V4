@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#0d0f14"/>
+  <title>RiskPilot — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:         #0d0f14;
+      --bg2:        #131720;
+      --bg3:        #1a1f2e;
+      --surface:    #1e2438;
+      --surface2:   #252c3e;
+      --border:     #2a3048;
+      --text:       #e8ecf4;
+      --text-muted: #7a84a0;
+      --text-dim:   #4a5270;
+      --gold:       #d4a017;
+      --gold-light: #f0c040;
+      --gold-bg:    #1e1608;
+      --gold-border:#3d2e08;
+      --green:      #22c984;
+      --green-bg:   #0f2a1e;
+      --green-border:#164d32;
+      --red:        #f05060;
+      --red-bg:     #2a0f14;
+      --red-border: #4d1620;
+      --blue:       #4d8ef5;
+      --blue-bg:    #0f1a30;
+      --radius:     10px;
+      --radius-sm:  6px;
+    }
+    html, body { min-height: 100vh; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+    body { padding: 2rem; max-width: 1000px; margin: 0 auto; }
+
+    /* Header */
+    .page-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .logo-row { display: flex; align-items: center; gap: 10px; }
+    .logo-icon {
+      width: 40px; height: 40px; background: var(--gold-bg);
+      border: 1.5px solid var(--gold-border); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-name { font-size: 20px; font-weight: 700; }
+    .logo-risk { color: var(--text); }
+    .logo-pilot { color: var(--gold); }
+    .admin-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 100px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+      background: var(--gold-bg); color: var(--gold); border: 1px solid var(--gold-border);
+      margin-left: 8px;
+    }
+    .btn-signout {
+      padding: 8px 16px; font-size: 13px; font-weight: 600; font-family: inherit;
+      background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border);
+      border-radius: var(--radius-sm); cursor: pointer; transition: background 0.15s;
+    }
+    .btn-signout:hover { background: #3d1018; }
+
+    /* Cards */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 1.25rem;
+    }
+    .card-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 1rem; }
+    .card-header-row {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;
+    }
+
+    /* Stats grid */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.25rem;
+    }
+    .stat-tile {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 14px 16px;
+    }
+    .stat-label { font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+    .stat-num   { font-size: 24px; font-weight: 700; color: var(--text); }
+    .stat-num.gold  { color: var(--gold); }
+    .stat-num.green { color: var(--green); }
+    .stat-num.red   { color: var(--red); }
+
+    /* Generate section */
+    .gen-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    .form-group { margin-bottom: 0; }
+    label { display: block; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    input[type="number"], input[type="text"], select {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 10px 12px; font-size: 14px; color: var(--text); font-family: inherit;
+      outline: none; transition: border-color 0.15s; -webkit-appearance: none; appearance: none;
+      width: 100%;
+    }
+    input:focus, select:focus { border-color: var(--gold); }
+    .qty-input { width: 100px; }
+
+    .btn {
+      padding: 10px 20px; font-size: 14px; font-weight: 700; font-family: inherit;
+      border-radius: var(--radius-sm); border: none; cursor: pointer;
+      transition: background 0.15s, transform 0.1s; white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-gold  { background: var(--gold); color: #0d0f14; }
+    .btn-gold:hover  { background: var(--gold-light); }
+    .btn-ghost { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { color: var(--text); }
+    .btn-sm    { padding: 6px 12px; font-size: 12px; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Generated keys box */
+    .keys-output {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 14px 16px; margin-top: 14px; display: none;
+    }
+    .keys-output-title { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+    .key-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .key-item {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 8px 12px;
+    }
+    .key-value { font-family: 'Courier New', monospace; font-size: 14px; font-weight: 700; color: var(--gold); letter-spacing: 1.5px; }
+    .copy-btn {
+      background: none; border: 1px solid var(--border); border-radius: 4px;
+      color: var(--text-muted); font-size: 11px; cursor: pointer; padding: 3px 8px;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .copy-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .copy-btn.copied { border-color: var(--green); color: var(--green); }
+
+    .copy-all-row { display: flex; justify-content: flex-end; margin-top: 10px; }
+
+    /* Table */
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px; }
+    th {
+      text-align: left; padding: 8px 12px;
+      font-size: 10px; font-weight: 700; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+    tbody tr:hover { background: var(--surface2); }
+    .empty-cell { text-align: center; padding: 2rem !important; color: var(--text-dim); font-style: italic; }
+
+    /* Badges */
+    .badge { display: inline-block; padding: 2px 9px; border-radius: 100px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+    .badge-green { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+    .badge-red   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
+    .badge-gold  { background: var(--gold-bg);  color: var(--gold);  border: 1px solid var(--gold-border); }
+
+    /* Key display in table */
+    .key-mono { font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; color: var(--gold); letter-spacing: 1px; }
+
+    /* Alert */
+    .alert { padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 14px; display: none; }
+    .alert-error   { background: var(--red-bg);  color: var(--red);   border: 1px solid var(--red-border); }
+    .alert-success { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+    .alert.show { display: block; }
+
+    /* Spinner */
+    .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(13,15,20,0.3); border-top-color: #0d0f14; border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 5px; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Filters row */
+    .filter-row { display: flex; gap: 10px; margin-bottom: 1rem; flex-wrap: wrap; align-items: flex-end; }
+    .filter-row select { width: 160px; }
+    .search-input { width: 220px; }
+
+    /* Revoke btn */
+    .btn-revoke {
+      background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border);
+      border-radius: 4px; font-size: 11px; padding: 4px 10px; cursor: pointer;
+      font-family: inherit; font-weight: 600; transition: background 0.15s;
+    }
+    .btn-revoke:hover { background: #3d1018; }
+
+    /* Access denied */
+    .access-denied {
+      text-align: center; padding: 4rem 2rem;
+      background: var(--red-bg); border: 1px solid var(--red-border);
+      border-radius: var(--radius); display: none;
+    }
+    .access-denied h2 { color: var(--red); font-size: 20px; margin-bottom: 8px; }
+    .access-denied p  { color: var(--red); opacity: 0.75; font-size: 14px; }
+
+    @media (max-width: 700px) {
+      body { padding: 1rem; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .gen-row { flex-direction: column; align-items: stretch; }
+      .qty-input { width: 100%; }
+      .filter-row select, .filter-row .search-input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Access denied message (shown if not admin) -->
+  <div class="access-denied" id="access-denied">
+    <h2>🚫 Access Denied</h2>
+    <p>This page is restricted to RiskPilot administrators only.</p>
+  </div>
+
+  <div id="admin-content" style="display:none;">
+
+    <!-- Header -->
+    <div class="page-header">
+      <div class="logo-row">
+        <div class="logo-icon">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
+            <polygon points="16,3 29,28 3,28" fill="none" stroke="#d4a017" stroke-width="2.5" stroke-linejoin="round"/>
+            <circle cx="16" cy="13" r="2.5" fill="#d4a017"/>
+            <line x1="16" y1="16" x2="16" y2="23" stroke="#d4a017" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="logo-name">
+            <span class="logo-risk">Risk</span><span class="logo-pilot">Pilot</span>
+            <span class="admin-badge">Admin</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-dim);margin-top:2px;" id="admin-email"></div>
+        </div>
+      </div>
+      <button class="btn-signout" onclick="handleSignOut()">Sign Out</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-tile">
+        <div class="stat-label">Total Keys</div>
+        <div class="stat-num gold" id="stat-total">—</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">Available</div>
+        <div class="stat-num green" id="stat-available">—</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">Activated</div>
+        <div class="stat-num" id="stat-used">—</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">Revoked</div>
+        <div class="stat-num red" id="stat-revoked">—</div>
+      </div>
+    </div>
+
+    <!-- Generate keys -->
+    <div class="card">
+      <div class="card-title">Generate New License Keys</div>
+      <div class="alert alert-error"   id="gen-error"></div>
+      <div class="alert alert-success" id="gen-success"></div>
+      <div class="gen-row">
+        <div class="form-group">
+          <label for="key-qty">Number of keys</label>
+          <input type="number" id="key-qty" class="qty-input" value="1" min="1" max="50" />
+        </div>
+        <div class="form-group">
+          <label for="key-note">Label / Note (optional)</label>
+          <input type="text" id="key-note" placeholder="e.g. QuantX Academy Batch 1" style="width:280px;" />
+        </div>
+        <button class="btn btn-gold" id="gen-btn" onclick="generateKeys()">
+          Generate Keys
+        </button>
+      </div>
+
+      <!-- Output box -->
+      <div class="keys-output" id="keys-output">
+        <div class="keys-output-title">✅ New keys generated — share these with your users</div>
+        <ul class="key-list" id="key-list"></ul>
+        <div class="copy-all-row">
+          <button class="btn btn-ghost btn-sm" onclick="copyAll()">Copy All Keys</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Keys table -->
+    <div class="card">
+      <div class="card-header-row">
+        <div class="card-title" style="margin-bottom:0;">All License Keys</div>
+        <button class="btn btn-ghost btn-sm" onclick="loadKeys()">↻ Refresh</button>
+      </div>
+
+      <div class="filter-row">
+        <div>
+          <label>Filter by status</label>
+          <select id="filter-status" onchange="loadKeys()">
+            <option value="all">All keys</option>
+            <option value="available">Available</option>
+            <option value="used">Activated</option>
+            <option value="revoked">Revoked</option>
+          </select>
+        </div>
+        <div>
+          <label>Search</label>
+          <input type="text" id="search-input" class="search-input" placeholder="Key, email, or note…" oninput="loadKeys()" />
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>License Key</th>
+              <th>Status</th>
+              <th>Activated By</th>
+              <th>Activated At</th>
+              <th>Note</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="keys-table-body">
+            <tr><td colspan="6" class="empty-cell">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Users overview -->
+    <div class="card">
+      <div class="card-header-row">
+        <div class="card-title" style="margin-bottom:0;">Activated Users</div>
+        <button class="btn btn-ghost btn-sm" onclick="loadUsers()">↻ Refresh</button>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Name</th>
+              <th>Marketing Opt-in</th>
+              <th>License Key</th>
+              <th>Weekly Wallet</th>
+              <th>Currency</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body">
+            <tr><td colspan="6" class="empty-cell">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /admin-content -->
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script>
+    /* ── CONFIG ── set your admin email address here ── */
+    const ADMIN_EMAILS = ['narkocapitals@gmail.com']; // ← replace with your email
+
+    /* ── PATH HELPER ── */
+    function basePath() {
+      const p = window.location.pathname;
+      return window.location.origin + p.substring(0, p.lastIndexOf('/') + 1);
+    }
+    function goTo(file) { window.location.href = basePath() + file; }
+
+    /* ── ALERT ── */
+    function showAlert(id, msg) {
+      ['gen-error','gen-success'].forEach(i => {
+        const el = document.getElementById(i);
+        if (el) { el.classList.remove('show'); el.textContent = ''; }
+      });
+      const el = document.getElementById(id);
+      if (el) { el.textContent = msg; el.classList.add('show'); }
+    }
+
+    /* ── KEY GENERATOR ── */
+    function generateKeyString() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0,O,I,1 to avoid confusion
+      let key = '';
+      for (let i = 0; i < 16; i++) {
+        if (i > 0 && i % 4 === 0) key += '-';
+        key += chars[Math.floor(Math.random() * chars.length)];
+      }
+      return key; // e.g. ABCD-EFGH-JKLM-NPQR
+    }
+
+    function rawKey(formatted) { return formatted.replace(/-/g, ''); }
+
+    async function generateKeys() {
+      const qty  = parseInt(document.getElementById('key-qty').value) || 1;
+      const note = document.getElementById('key-note').value.trim();
+      if (qty < 1 || qty > 50) { showAlert('gen-error', 'Enter a number between 1 and 50.'); return; }
+
+      const btn = document.getElementById('gen-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Generating…';
+
+      const keys = [];
+      for (let i = 0; i < qty; i++) {
+        keys.push({
+          key_value: rawKey(generateKeyString()),
+          key_display: generateKeyString(), // formatted version for display
+          is_active: true,
+          used_by: null,
+          used_email: null,
+          used_at: null,
+          note: note || null,
+        });
+      }
+
+      // Insert formatted display and raw lookup into DB
+      const rows = keys.map(k => ({
+        key_value: k.key_value,   // raw — used for lookups
+        is_active: true,
+        used_by:   null,
+        used_email:null,
+        used_at:   null,
+        note:      note || null,
+      }));
+
+      const { error } = await supabase.from('license_keys').insert(rows);
+      btn.disabled = false;
+      btn.innerHTML = 'Generate Keys';
+
+      if (error) { showAlert('gen-error', '❌ Failed to save keys: ' + error.message); return; }
+
+      // Show generated keys
+      const list = document.getElementById('key-list');
+      list.innerHTML = '';
+      // We need to fetch back to get the formatted display
+      // For display, re-format from raw
+      keys.forEach(k => {
+        const display = k.key_value.match(/.{1,4}/g).join('-');
+        const li = document.createElement('li');
+        li.className = 'key-item';
+        li.innerHTML = `
+          <span class="key-value">${display}</span>
+          <button class="copy-btn" onclick="copyKey(this, '${display}')">Copy</button>
+        `;
+        list.appendChild(li);
+      });
+
+      document.getElementById('keys-output').style.display = 'block';
+      showAlert('gen-success', `✅ ${qty} key${qty>1?'s':''} generated and saved to the database.`);
+      loadKeys();
+      updateStats();
+    }
+
+    function copyKey(btn, key) {
+      navigator.clipboard.writeText(key).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      });
+    }
+
+    function copyAll() {
+      const keys = [...document.querySelectorAll('.key-value')].map(el => el.textContent).join('\n');
+      navigator.clipboard.writeText(keys).then(() => {
+        const btn = event.target;
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy All Keys', 2000);
+      });
+    }
+
+    /* ── LOAD KEYS TABLE ── */
+    async function loadKeys() {
+      const status = document.getElementById('filter-status').value;
+      const search = document.getElementById('search-input').value.trim().toLowerCase();
+      const body   = document.getElementById('keys-table-body');
+      body.innerHTML = `<tr><td colspan="6" class="empty-cell">Loading…</td></tr>`;
+
+      let query = supabase.from('license_keys').select('*').order('created_at', { ascending: false });
+      if (status === 'available') query = query.eq('is_active', true).is('used_by', null);
+      if (status === 'used')      query = query.not('used_by', 'is', null);
+      if (status === 'revoked')   query = query.eq('is_active', false).is('used_by', null);
+
+      const { data, error } = await query;
+      if (error || !data) { body.innerHTML = `<tr><td colspan="6" class="empty-cell">Error loading keys.</td></tr>`; return; }
+
+      let rows = data;
+      if (search) {
+        rows = rows.filter(r =>
+          (r.key_value||'').toLowerCase().includes(search) ||
+          (r.used_email||'').toLowerCase().includes(search) ||
+          (r.note||'').toLowerCase().includes(search)
+        );
+      }
+
+      if (!rows.length) { body.innerHTML = `<tr><td colspan="6" class="empty-cell">No keys found.</td></tr>`; return; }
+
+      body.innerHTML = rows.map(r => {
+        const display   = r.key_value.match(/.{1,4}/g).join('-');
+        const isUsed    = !!r.used_by;
+        const isRevoked = !r.is_active && !r.used_by;
+        const statusBadge = isUsed
+          ? `<span class="badge badge-green">Activated</span>`
+          : isRevoked
+          ? `<span class="badge badge-red">Revoked</span>`
+          : `<span class="badge badge-gold">Available</span>`;
+        const usedAt  = r.used_at ? new Date(r.used_at).toLocaleDateString('en-ZA') : '—';
+        const action  = !isUsed && r.is_active
+          ? `<button class="btn-revoke" onclick="revokeKey('${r.id}')">Revoke</button>`
+          : '—';
+        return `<tr>
+          <td><span class="key-mono">${display}</span></td>
+          <td>${statusBadge}</td>
+          <td style="font-size:12px;color:var(--text-muted);">${r.used_email || '—'}</td>
+          <td style="font-size:12px;color:var(--text-muted);">${usedAt}</td>
+          <td style="font-size:12px;color:var(--text-dim);">${r.note || '—'}</td>
+          <td>${action}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    /* ── REVOKE KEY ── */
+    async function revokeKey(id) {
+      if (!confirm('Revoke this key? It will no longer be usable.')) return;
+      await supabase.from('license_keys').update({ is_active: false }).eq('id', id);
+      loadKeys();
+      updateStats();
+    }
+
+    /* ── LOAD USERS TABLE ── */
+    async function loadUsers() {
+      const body = document.getElementById('users-table-body');
+      body.innerHTML = `<tr><td colspan="6" class="empty-cell">Loading…</td></tr>`;
+
+      // Fetch all license_keys that have been activated
+      const { data: keys } = await supabase
+        .from('license_keys')
+        .select('used_by, used_email, key_value')
+        .not('used_by', 'is', null);
+
+      // Fetch riskpilot_data for these users
+      const { data: profiles } = await supabase
+        .from('riskpilot_data')
+        .select('user_id, weekly_wallet, currency, license_key');
+
+      // Fetch user metadata (name, marketing) via admin — using our own table since auth.users needs service role
+      // We'll join what we can from riskpilot_data and license_keys
+      const profileMap = {};
+      (profiles||[]).forEach(p => { profileMap[p.user_id] = p; });
+
+      if (!keys || !keys.length) {
+        body.innerHTML = `<tr><td colspan="6" class="empty-cell">No activated users yet.</td></tr>`;
+        return;
+      }
+
+      body.innerHTML = keys.map(k => {
+        const p = profileMap[k.used_by] || {};
+        const wallet = p.weekly_wallet != null ? (p.currency === 'USD' ? '$ ' : 'R ') + parseFloat(p.weekly_wallet).toFixed(2) : '—';
+        const display = (k.key_value||'').match(/.{1,4}/g)?.join('-') || k.key_value;
+        return `<tr>
+          <td style="font-size:13px;">${k.used_email || '—'}</td>
+          <td style="font-size:12px;color:var(--text-muted);">—</td>
+          <td style="font-size:12px;">—</td>
+          <td><span class="key-mono" style="font-size:12px;">${display}</span></td>
+          <td style="font-size:13px;color:var(--green);font-weight:600;">${wallet}</td>
+          <td style="font-size:12px;color:var(--text-muted);">${p.currency || '—'}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    /* ── STATS ── */
+    async function updateStats() {
+      const { data } = await supabase.from('license_keys').select('id, is_active, used_by');
+      if (!data) return;
+      const total     = data.length;
+      const used      = data.filter(r => r.used_by).length;
+      const revoked   = data.filter(r => !r.is_active && !r.used_by).length;
+      const available = total - used - revoked;
+      document.getElementById('stat-total').textContent     = total;
+      document.getElementById('stat-available').textContent = available;
+      document.getElementById('stat-used').textContent      = used;
+      document.getElementById('stat-revoked').textContent   = revoked;
+    }
+
+    /* ── SIGN OUT ── */
+    async function handleSignOut() {
+      await supabase.auth.signOut();
+      goTo('auth.html');
+    }
+
+    /* ── BOOT ── */
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!data.session) { goTo('auth.html'); return; }
+
+      const email = data.session.user.email;
+      const isAdmin = ADMIN_EMAILS.map(e => e.toLowerCase()).includes(email.toLowerCase());
+
+      if (!isAdmin) {
+        document.getElementById('access-denied').style.display = 'block';
+        return;
+      }
+
+      document.getElementById('admin-content').style.display = 'block';
+      document.getElementById('admin-email').textContent = email;
+
+      await updateStats();
+      await loadKeys();
+      await loadUsers();
+    });
+  </script>
+</body>
+</html>

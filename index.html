@@ -8,27 +8,18 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      min-height: 100vh;
-      background: #0d0f14;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
-      color: #e8ecf4;
+      min-height: 100vh; background: #0d0f14;
+      display: flex; align-items: center; justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; color: #e8ecf4;
     }
     .splash { text-align: center; animation: fadein 0.4s ease; }
     @keyframes fadein { from { opacity:0; transform:translateY(8px); } to { opacity:1; } }
     .logo { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-top: 14px; }
-    .logo-r { color: #e8ecf4; }
-    .logo-p { color: #d4a017; }
+    .logo-r { color: #e8ecf4; } .logo-p { color: #d4a017; }
     .tag { font-size: 10px; color: #4a5270; letter-spacing: 2.5px; text-transform: uppercase; margin-top: 5px; }
-    .dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: #d4a017; margin: 20px auto 0;
-      animation: pulse 1.2s ease-in-out infinite;
-    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #d4a017; margin: 20px auto 0; animation: pulse 1.2s ease-in-out infinite; }
     @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.6)} }
-    .err { font-size: 12px; color: #f05060; margin-top: 16px; display: none; }
+    .err { font-size: 12px; color: #f05060; margin-top: 16px; display: none; max-width: 300px; line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -44,46 +35,48 @@
     <div class="err" id="err">Could not connect — check your Supabase keys in supabase-config.js</div>
   </div>
 
-  <!-- Load Supabase CDN first, then our config, then the router script -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script>
-    /* ── router ── */
     (function () {
       function base() {
-        var p = window.location.pathname;           // e.g. /riskpilot/index.html  or  /riskpilot/
-        // Strip trailing filename if present
+        var p = window.location.pathname;
         var dir = p.endsWith('/') ? p : p.substring(0, p.lastIndexOf('/') + 1);
-        return window.location.origin + dir;        // e.g. https://user.github.io/riskpilot/
+        return window.location.origin + dir;
       }
+      function go(file) { window.location.replace(base() + file); }
 
-      function go(file) {
-        window.location.replace(base() + file);
-      }
+      // Safety net — if still on splash after 6s, go to auth
+      var fallback = setTimeout(function () { go('auth.html'); }, 6000);
 
-      // Safety net: if still on splash after 6 seconds, force redirect to auth
-      var fallbackTimer = setTimeout(function () {
-        go('auth.html');
-      }, 6000);
-
-      // Check whether supabase client was created successfully
       if (!window.supabase || typeof window.supabase.auth === 'undefined') {
-        clearTimeout(fallbackTimer);
-        document.getElementById('dot').style.display  = 'none';
-        document.getElementById('err').style.display  = 'block';
-        console.error('RiskPilot: Supabase client not initialised. Check supabase-config.js');
+        clearTimeout(fallback);
+        document.getElementById('dot').style.display = 'none';
+        document.getElementById('err').style.display = 'block';
         return;
       }
 
       window.supabase.auth.getSession()
         .then(function (result) {
-          clearTimeout(fallbackTimer);
+          clearTimeout(fallback);
           var session = result && result.data && result.data.session;
-          go(session ? 'dashboard.html' : 'auth.html');
+          if (!session) { go('auth.html'); return; }
+
+          // Logged in — check license before deciding where to send them
+          var userId = session.user.id;
+          window.supabase
+            .from('riskpilot_data')
+            .select('license_valid')
+            .eq('user_id', userId)
+            .single()
+            .then(function (res) {
+              var licensed = res.data && res.data.license_valid === true;
+              go(licensed ? 'dashboard.html' : 'license.html');
+            })
+            .catch(function () { go('license.html'); });
         })
-        .catch(function (err) {
-          clearTimeout(fallbackTimer);
-          console.error('RiskPilot: getSession failed:', err);
+        .catch(function () {
+          clearTimeout(fallback);
           go('auth.html');
         });
     })();

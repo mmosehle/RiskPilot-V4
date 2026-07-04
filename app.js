@@ -69,6 +69,19 @@ async function boot() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) { goTo('auth.html'); return; }
   state.user = session.user;
+
+  // ── LICENSE CHECK ── every page load verifies the user has a valid license
+  const { data: profile } = await supabase
+    .from('riskpilot_data')
+    .select('license_valid')
+    .eq('user_id', session.user.id)
+    .single();
+
+  if (!profile || profile.license_valid !== true) {
+    goTo('license.html');
+    return;
+  }
+
   updateSidebarUser();
   await loadUserData();
   renderCalendar();

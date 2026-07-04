@@ -433,13 +433,20 @@
     if (password.length < 8) { showAlert('signup-error', 'Password must be at least 8 characters.'); return; }
     if (password !== confirm) { showAlert('signup-error', 'Passwords do not match.'); return; }
     setLoading('signup-btn', true, 'Create Account');
-    const { error } = await supabase.auth.signUp({
+    const { data: signupData, error } = await supabase.auth.signUp({
       email, password,
       options: { data: { name, surname, marketing_emails: marketing } }
     });
     setLoading('signup-btn', false, 'Create Account');
     if (error) { showAlert('signup-error', error.message); return; }
-    showAlert('signup-success', '✅ Account created! Check your email to confirm your address, then sign in.');
+    // Signup successful — go straight to license activation
+    // (Supabase auto-signs them in when email confirmation is disabled)
+    if (signupData.session) {
+      goTo('license.html');
+    } else {
+      // Email confirmation is ON — tell them to confirm then sign in
+      showAlert('signup-success', '✅ Account created! Check your email to confirm your address, then sign in to activate your license.');
+    }
   }
 
   async function handleReset() {
@@ -455,9 +462,20 @@
     showAlert('reset-success', '📧 Reset link sent! Check your email inbox (and spam folder).');
   }
 
-  // If already logged in, skip auth page
-  supabase.auth.getSession().then(({ data }) => {
-    if (data.session) goTo('dashboard.html');
+  // If already logged in — check license status and route accordingly
+  supabase.auth.getSession().then(async ({ data }) => {
+    if (!data.session) return;
+    const userId = data.session.user.id;
+    const { data: profile } = await supabase
+      .from('riskpilot_data')
+      .select('license_valid')
+      .eq('user_id', userId)
+      .single();
+    if (profile?.license_valid === true) {
+      goTo('dashboard.html');
+    } else {
+      goTo('license.html');
+    }
   });
 
   // Allow Enter key to submit
