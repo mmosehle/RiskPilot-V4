@@ -359,21 +359,33 @@
     goTo('auth.html');
   }
 
-  /* ── GUARD: must be logged in to see this page ── */
-  /* ── Also skip this page if already licensed    ── */
-  supabase.auth.getSession().then(async ({ data }) => {
-    if (!data.session) { goTo('auth.html'); return; }
-
-    const userId = data.session.user.id;
+  /* ── GUARD: must be logged in; skip if already licensed ── */
+  let guardRan = false;
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (guardRan) return;
+    guardRan = true;
+    if (!session) { goTo('auth.html'); return; }
     const { data: profile } = await supabase
       .from('riskpilot_data')
       .select('license_valid')
-      .eq('user_id', userId)
+      .eq('user_id', session.user.id)
       .single();
-
-    // Already licensed — skip straight to dashboard
     if (profile?.license_valid === true) { goTo('dashboard.html'); }
   });
+
+  // Fallback in case onAuthStateChange is slow
+  setTimeout(async () => {
+    if (guardRan) return;
+    guardRan = true;
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) { goTo('auth.html'); return; }
+    const { data: profile } = await supabase
+      .from('riskpilot_data')
+      .select('license_valid')
+      .eq('user_id', data.session.user.id)
+      .single();
+    if (profile?.license_valid === true) { goTo('dashboard.html'); }
+  }, 4000);
 
   // Allow Enter key
   document.getElementById('license-input').addEventListener('keydown', e => {

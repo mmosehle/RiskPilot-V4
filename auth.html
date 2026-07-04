@@ -463,13 +463,14 @@
   }
 
   // If already logged in — check license status and route accordingly
-  supabase.auth.getSession().then(async ({ data }) => {
-    if (!data.session) return;
-    const userId = data.session.user.id;
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (!session) return;
+    // Ignore sign-out events
+    if (event === 'SIGNED_OUT') return;
     const { data: profile } = await supabase
       .from('riskpilot_data')
       .select('license_valid')
-      .eq('user_id', userId)
+      .eq('user_id', session.user.id)
       .single();
     if (profile?.license_valid === true) {
       goTo('dashboard.html');

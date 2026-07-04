@@ -354,7 +354,7 @@
   <script src="supabase-config.js"></script>
   <script>
     /* ── CONFIG ── set your admin email address here ── */
-    const ADMIN_EMAILS = ['narkocapitals@gmail.com']; // ← replace with your email
+    const ADMIN_EMAILS = ['YOUR_ADMIN_EMAIL@gmail.com']; // ← replace with your email
 
     /* ── PATH HELPER ── */
     function basePath() {
@@ -582,11 +582,21 @@
       goTo('auth.html');
     }
 
-    /* ── BOOT ── */
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!data.session) { goTo('auth.html'); return; }
+    /* ── BOOT ──
+       We use onAuthStateChange instead of getSession() because on a direct
+       URL visit the session may not be restored from localStorage yet when
+       getSession() fires. onAuthStateChange fires only once the client has
+       finished restoring — giving us a reliable session every time.
+    ── */
+    let booted = false;
 
-      const email = data.session.user.email;
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (booted) return;   // only run once
+      booted = true;
+
+      if (!session) { goTo('auth.html'); return; }
+
+      const email   = session.user.email;
       const isAdmin = ADMIN_EMAILS.map(e => e.toLowerCase()).includes(email.toLowerCase());
 
       if (!isAdmin) {
@@ -601,6 +611,30 @@
       await loadKeys();
       await loadUsers();
     });
+
+    // Fallback: if onAuthStateChange hasn't fired after 4 seconds,
+    // try getSession() directly (handles edge cases in some browsers)
+    setTimeout(async () => {
+      if (booted) return;
+      booted = true;
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) { goTo('auth.html'); return; }
+
+      const email   = data.session.user.email;
+      const isAdmin = ADMIN_EMAILS.map(e => e.toLowerCase()).includes(email.toLowerCase());
+
+      if (!isAdmin) {
+        document.getElementById('access-denied').style.display = 'block';
+        return;
+      }
+
+      document.getElementById('admin-content').style.display = 'block';
+      document.getElementById('admin-email').textContent = email;
+
+      await updateStats();
+      await loadKeys();
+      await loadUsers();
+    }, 4000);
   </script>
 </body>
 </html>
