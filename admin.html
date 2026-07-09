@@ -193,6 +193,7 @@
           <option value="all">All keys</option>
           <option value="available">Available</option>
           <option value="used">Activated</option>
+          <option value="suspended">Suspended</option>
           <option value="revoked">Revoked</option>
         </select>
       </div>
@@ -217,7 +218,7 @@
     </div>
     <div class="tscroll">
       <table>
-        <thead><tr><th>Email</th><th>License Key</th><th>Weekly Wallet</th><th>Currency</th><th>Last Active</th></tr></thead>
+        <thead><tr><th>Email</th><th>License Key</th><th>Access</th><th>Weekly Wallet</th><th>Last Active</th></tr></thead>
         <tbody id="users-body"><tr><td colspan="5" class="ec">Loading…</td></tr></tbody>
       </table>
     </div>
@@ -228,359 +229,230 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
-/* ───────────────────────────────────────────────────
+/* ─────────────────────────────────────────────
    CHANGE THIS to your own secret passphrase.
-   Access admin via:
-   admin.html?key=YOUR_SECRET_HERE
-─────────────────────────────────────────────────── */
+   Access admin via: admin.html?key=YOUR_SECRET
+───────────────────────────────────────────── */
 const SECRET = 'QuantXAdmin2025';
 
-/* ── helpers ── */
+/* helpers */
 function q(id){ return document.getElementById(id); }
 function show(id){ q(id).style.display='block'; }
-function hide(id){ q(id).style.display='none'; }
 function fmt(raw){ return (raw||'').replace(/-/g,'').match(/.{1,4}/g)?.join('-')||raw||''; }
 function fmtDate(iso){ return iso ? new Date(iso).toLocaleDateString('en-ZA') : '—'; }
 
-function showAlert(eid, msg){
+function showAlert(eid,msg){
   ['gen-err','gen-ok'].forEach(i=>{const e=q(i);if(e){e.classList.remove('show');e.textContent=''}});
-  const e=q(eid); if(e){e.textContent=msg;e.classList.add('show');}
+  const e=q(eid);if(e){e.textContent=msg;e.classList.add('show');}
 }
 
-/* ── key generator ── */
+/* key generator */
 function makeKey(){
   const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let k='';
-  for(let i=0;i<16;i++){
-    if(i>0&&i%4===0)k+='-';
-    k+=c[Math.floor(Math.random()*c.length)];
-  }
-  return k; // formatted: ABCD-EFGH-JKLM-NPQR
+  for(let i=0;i<16;i++){if(i>0&&i%4===0)k+='-';k+=c[Math.floor(Math.random()*c.length)];}
+  return k;
 }
-function raw(k){ return k.replace(/-/g,''); }
+function rawKey(k){ return k.replace(/-/g,''); }
 
-/* ── generate ── */
+/* generate */
 async function generateKeys(){
-  const qty  = parseInt(q('qty').value)||1;
-  const note = q('note').value.trim();
+  const qty=parseInt(q('qty').value)||1;
+  const note=q('note').value.trim();
   if(qty<1||qty>50){showAlert('gen-err','Enter a number between 1 and 50.');return;}
-
   const btn=q('gen-btn');
   btn.disabled=true;
-  btn.innerHTML='<span class="spin"></span>Generating…';
-
-  const rows=[];
-  const display=[];
-  for(let i=0;i<qty;i++){
-    const k=makeKey();
-    display.push(k);
-    rows.push({key_value:raw(k),is_active:true,used_by:null,used_email:null,used_at:null,note:note||null});
-  }
-
+  btn.innerHTML='<span class="spin"></span>Generating...';
+  const rows=[];const display=[];
+  for(let i=0;i<qty;i++){const k=makeKey();display.push(k);rows.push({key_value:rawKey(k),is_active:true,used_by:null,used_email:null,used_at:null,note:note||null});}
   try{
     const {error}=await supabase.from('license_keys').insert(rows);
     if(error) throw error;
-
-    const list=q('key-list');
-    list.innerHTML='';
+    const list=q('key-list');list.innerHTML='';
     display.forEach(k=>{
-      const li=document.createElement('li');
-      li.className='ki';
-      li.innerHTML=`<span class="kv">${k}</span><button class="cbtn" onclick="copyKey(this,'${k}')">Copy</button>`;
+      const li=document.createElement('li');li.className='ki';
+      li.innerHTML='<span class="kv">'+k+'</span><button class="cbtn" onclick="copyKey(this,\''+k+'\')">Copy</button>';
       list.appendChild(li);
     });
     show('keys-out');
-    showAlert('gen-ok',`✅ ${qty} key${qty>1?'s':''} generated.`);
-    loadKeys();
-    loadStats();
-  }catch(e){
-    showAlert('gen-err','❌ Error: '+e.message);
-  }
-
-  btn.disabled=false;
-  btn.innerHTML='Generate Keys';
+    showAlert('gen-ok','Keys generated: '+qty);
+    loadKeys();loadStats();
+  }catch(e){showAlert('gen-err','Error: '+e.message);}
+  btn.disabled=false;btn.innerHTML='Generate Keys';
 }
 
 function copyKey(btn,k){
-  navigator.clipboard.writeText(k).then(()=>{
-    btn.textContent='Copied!';btn.classList.add('copied');
-    setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);
-  });
+  navigator.clipboard.writeText(k).then(()=>{btn.textContent='Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);});
 }
-
 function copyAll(){
   const keys=[...document.querySelectorAll('.kv')].map(e=>e.textContent).join('\n');
-  navigator.clipboard.writeText(keys).then(()=>{
-    const b=event.target;b.textContent='Copied!';
-    setTimeout(()=>b.textContent='Copy All Keys',2000);
-  });
+  navigator.clipboard.writeText(keys).then(()=>{const b=event.target;b.textContent='Copied!';setTimeout(()=>b.textContent='Copy All Keys',2000);});
 }
 
-/* ── load keys ── */
+/* load keys table */
 async function loadKeys(){
   const status=q('f-status').value;
   const search=(q('f-search').value||'').trim().toLowerCase();
   const body=q('keys-body');
-  body.innerHTML='<tr><td colspan="7" class="ec">Loading…</td></tr>';
-
+  body.innerHTML='<tr><td colspan="7" class="ec">Loading...</td></tr>';
   try{
     let query=supabase.from('license_keys').select('*').order('created_at',{ascending:false});
     if(status==='available') query=query.eq('is_active',true).is('used_by',null);
-    if(status==='used')      query=query.not('used_by','is',null);
+    if(status==='used')      query=query.not('used_by','is',null).eq('is_active',true);
+    if(status==='suspended') query=query.not('used_by','is',null).eq('is_active',false);
     if(status==='revoked')   query=query.eq('is_active',false).is('used_by',null);
-
     const {data,error}=await query;
     if(error) throw error;
-
     let rows=data||[];
-    if(search) rows=rows.filter(r=>
-      (r.key_value||'').toLowerCase().includes(search)||
-      (r.used_email||'').toLowerCase().includes(search)||
-      (r.note||'').toLowerCase().includes(search)
-    );
-
+    if(search) rows=rows.filter(r=>(r.key_value||'').toLowerCase().includes(search)||(r.used_email||'').toLowerCase().includes(search)||(r.note||'').toLowerCase().includes(search));
     if(!rows.length){body.innerHTML='<tr><td colspan="7" class="ec">No keys found.</td></tr>';return;}
-
     body.innerHTML=rows.map(r=>{
-      const isUsed             = !!r.used_by;
-      const isDeactivatedUser  = isUsed && !r.is_active;   // activated by user but admin deactivated
-      const isRevokedUnused    = !r.used_by && !r.is_active; // never used, revoked by admin
-      const isAvailable        = !r.used_by && r.is_active;  // ready to be claimed
-
-      const badge = isDeactivatedUser
-        ? '<span class="badge br">Suspended</span>'
-        : isUsed
-        ? '<span class="badge bg">Activated</span>'
-        : isRevokedUnused
-        ? '<span class="badge br">Revoked</span>'
-        : '<span class="badge bo">Available</span>';
-
-      // Deactivate — show for available keys AND active-user keys
-      const deactivateBtn = r.is_active
-        ? `<button class="rvk" onclick="deactivateKey('${r.id}')" title="${isUsed?'Suspend user access':'Deactivate unused key'}">${isUsed?'Suspend User':'Deactivate'}</button>`
-        : '<span style="color:var(--dim);font-size:12px;">—</span>';
-
-      // Reactivate — show for any inactive key (unused revoked OR suspended user)
-      const reactivateBtn = !r.is_active
-        ? `<button class="rvk" style="border-color:var(--gold-b);color:var(--gold);" onclick="reactivateKey('${r.id}')" title="${isUsed?'Restore user access':'Make key available again'}">${isUsed?'Restore Access':'Reactivate'}</button>`
-        : '';
-
-      // Delete — always available
-      const deleteBtn = `<button class="rvk" style="border-color:var(--red-b);color:var(--red);background:var(--red-bg);" onclick="deleteKey('${r.id}')">Delete</button>`;
-
-      return `<tr>
-        <td><span class="km">${fmt(r.key_value)}</span></td>
-        <td>${badge}</td>
-        <td style="font-size:12px;color:var(--muted)">${r.used_email||'—'}</td>
-        <td style="font-size:12px;color:var(--muted)">${fmtDate(r.used_at)}</td>
-        <td style="font-size:12px;color:var(--dim)">${r.note||'—'}</td>
-        <td>${deactivateBtn}${reactivateBtn}</td>
-        <td>${deleteBtn}</td>
-      </tr>`;
+      const isUsed        = !!r.used_by;
+      const isSuspended   = isUsed && !r.is_active;
+      const isRevokedFree = !r.used_by && !r.is_active;
+      const isAvailable   = !r.used_by && r.is_active;
+      const badge = isSuspended   ? '<span class="badge br">Suspended</span>'
+                  : isUsed        ? '<span class="badge bg">Activated</span>'
+                  : isRevokedFree ? '<span class="badge br">Revoked</span>'
+                  :                 '<span class="badge bo">Available</span>';
+      const deactivateCol = r.is_active
+        ? '<button class="rvk" onclick="deactivateKey(\''+r.id+'\')">'+(isUsed?'Suspend User':'Deactivate')+'</button>'
+        : '<button class="rvk" style="border-color:var(--gold-b);color:var(--gold)" onclick="reactivateKey(\''+r.id+'\')">'+(isUsed?'Restore Access':'Reactivate')+'</button>';
+      const deleteCol = '<button class="rvk" style="border-color:var(--red-b);color:var(--red);background:var(--red-bg)" onclick="deleteKey(\''+r.id+'\')">Delete</button>';
+      return '<tr><td><span class="km">'+fmt(r.key_value)+'</span></td><td>'+badge+'</td><td style="font-size:12px;color:var(--muted)">'+( r.used_email||'—')+'</td><td style="font-size:12px;color:var(--muted)">'+fmtDate(r.used_at)+'</td><td style="font-size:12px;color:var(--dim)">'+(r.note||'—')+'</td><td>'+deactivateCol+'</td><td>'+deleteCol+'</td></tr>';
     }).join('');
-  }catch(e){
-    body.innerHTML=`<tr><td colspan="7" class="ec">Error: ${e.message}</td></tr>`;
-  }
+  }catch(e){body.innerHTML='<tr><td colspan="7" class="ec">Error: '+e.message+'</td></tr>';}
 }
 
-/* ── key management helpers ── */
-
-// Fetch a key row BEFORE making changes so we always have used_by
+/* key management helpers */
 async function getKeyRow(id){
-  const {data} = await supabase
-    .from('license_keys')
-    .select('id, key_value, is_active, used_by, used_email')
-    .eq('id', id)
-    .single();
-  return data || null;
+  const {data}=await supabase.from('license_keys').select('id,key_value,is_active,used_by,used_email').eq('id',id).single();
+  return data||null;
 }
-
-// Update the key flag
-async function setKeyActive(id, active){
-  const {error} = await supabase
-    .from('license_keys')
-    .update({is_active: active})
-    .eq('id', id);
+async function setKeyActive(id,active){
+  const {error}=await supabase.from('license_keys').update({is_active:active}).eq('id',id);
   return error;
 }
-
-// Update the user's license_valid flag in riskpilot_data
-async function setUserLicense(userId, valid){
+async function setUserLicense(userId,valid){
   if(!userId) return null;
-  const {error} = await supabase
-    .from('riskpilot_data')
-    .update({license_valid: valid})
-    .eq('user_id', userId);
+  const {error}=await supabase.from('riskpilot_data').update({license_valid:valid}).eq('user_id',userId);
   return error;
 }
-
-// Refresh all three tables and stats
 async function refreshAll(){
-  await Promise.all([loadKeys(), loadStats(), loadUsers()]);
+  await Promise.all([loadKeys(),loadStats(),loadUsers()]);
 }
 
-/* ── deactivate ── */
+/* deactivate */
 async function deactivateKey(id){
-  const row = await getKeyRow(id);
-  if(!row){ alert('Could not find key. Please refresh and try again.'); return; }
-
-  const hasUser = !!row.used_by;
-  const msg = hasUser
-    ? `Suspend "${row.used_email}"?
-
-They will immediately lose access to RiskPilot and be redirected to the license page. You can restore their access at any time.`
-    : `Deactivate this key?
-
-It will no longer be claimable by any new user.`;
-
+  const row=await getKeyRow(id);
+  if(!row){alert('Key not found. Please refresh.');return;}
+  const msg=row.used_by
+    ? 'Suspend access for '+row.used_email+'? They will be locked out immediately.'
+    : 'Deactivate this key? It will no longer be claimable.';
   if(!confirm(msg)) return;
-
-  // 1. Fetch → 2. Update key → 3. Update user profile (in parallel is fine here)
-  const keyErr = await setKeyActive(id, false);
-  if(keyErr){ alert('Error updating key: ' + keyErr.message); return; }
-
-  if(hasUser){
-    const profErr = await setUserLicense(row.used_by, false);
-    if(profErr){ alert('Key deactivated but profile update failed: ' + profErr.message + '
-
-Run this SQL manually in Supabase:
-UPDATE riskpilot_data SET license_valid = false WHERE user_id = '' + row.used_by + '';'); }
-  }
-
-  await refreshAll();
-  alert(hasUser
-    ? '✅ ' + row.used_email + ' has been suspended. They no longer have access.'
-    : '✅ Key deactivated.');
-}
-
-/* ── reactivate ── */
-async function reactivateKey(id){
-  const row = await getKeyRow(id);
-  if(!row){ alert('Could not find key. Please refresh and try again.'); return; }
-
-  const hasUser = !!row.used_by;
-  const msg = hasUser
-    ? `Restore access for "${row.used_email}"?
-
-They will immediately regain full access to RiskPilot.`
-    : `Reactivate this key?
-
-It will become available for a new user to claim.`;
-
-  if(!confirm(msg)) return;
-
-  const keyErr = await setKeyActive(id, true);
-  if(keyErr){ alert('Error updating key: ' + keyErr.message); return; }
-
-  if(hasUser){
-    const profErr = await setUserLicense(row.used_by, true);
-    if(profErr){ alert('Key reactivated but profile update failed: ' + profErr.message + '
-
-Run this SQL manually:
-UPDATE riskpilot_data SET license_valid = true WHERE user_id = '' + row.used_by + '';'); }
-  }
-
-  await refreshAll();
-  alert(hasUser
-    ? '✅ Access restored for ' + row.used_email + '. They can now use RiskPilot again.'
-    : '✅ Key reactivated and available.');
-}
-
-/* ── delete ── */
-async function deleteKey(id){
-  const row = await getKeyRow(id);
-  if(!row){ alert('Could not find key. Please refresh and try again.'); return; }
-
-  const userWarn = row.used_by
-    ? '
-
-⚠️ This key belongs to ' + row.used_email + '. Deleting it will permanently remove their access.'
-    : '';
-
-  if(!confirm('Permanently DELETE this key? This cannot be undone.' + userWarn)) return;
-  if(!confirm('Final confirmation — delete forever?')) return;
-
-  // Revoke user first if linked
+  const keyErr=await setKeyActive(id,false);
+  if(keyErr){alert('Error: '+keyErr.message);return;}
   if(row.used_by){
-    await setUserLicense(row.used_by, false);
+    const profErr=await setUserLicense(row.used_by,false);
+    if(profErr) console.warn('Profile update failed:',profErr.message);
   }
-
-  const {error} = await supabase.from('license_keys').delete().eq('id', id);
-  if(error){ alert('Error deleting key: ' + error.message); return; }
-
   await refreshAll();
-  alert('✅ Key deleted.' + (row.used_by ? ' ' + row.used_email + ''s access has been revoked.' : ''));
+  alert(row.used_by ? row.used_email+' has been suspended.' : 'Key deactivated.');
 }
 
-/* ── load users ── */
+/* reactivate */
+async function reactivateKey(id){
+  const row=await getKeyRow(id);
+  if(!row){alert('Key not found. Please refresh.');return;}
+  const msg=row.used_by
+    ? 'Restore access for '+row.used_email+'? They will regain full access.'
+    : 'Reactivate this key? It will become claimable again.';
+  if(!confirm(msg)) return;
+  const keyErr=await setKeyActive(id,true);
+  if(keyErr){alert('Error: '+keyErr.message);return;}
+  if(row.used_by){
+    const profErr=await setUserLicense(row.used_by,true);
+    if(profErr) console.warn('Profile update failed:',profErr.message);
+  }
+  await refreshAll();
+  alert(row.used_by ? 'Access restored for '+row.used_email+'.' : 'Key reactivated.');
+}
+
+/* delete */
+async function deleteKey(id){
+  const row=await getKeyRow(id);
+  if(!row){alert('Key not found. Please refresh.');return;}
+  const warn=row.used_by ? ' WARNING: This will permanently remove access for '+row.used_email+'.' : '';
+  if(!confirm('Permanently DELETE this key? This cannot be undone.'+warn)) return;
+  if(!confirm('Final confirmation — delete forever?')) return;
+  if(row.used_by) await setUserLicense(row.used_by,false);
+  const {error}=await supabase.from('license_keys').delete().eq('id',id);
+  if(error){alert('Error: '+error.message);return;}
+  await refreshAll();
+  alert('Key deleted.'+(row.used_by?' '+row.used_email+' access revoked.':''));
+}
+
+/* revoke (alias kept for compatibility) */
+async function revokeKey(id){ await deactivateKey(id); }
+
+/* load users */
 async function loadUsers(){
   const body=q('users-body');
-  body.innerHTML='<tr><td colspan="5" class="ec">Loading…</td></tr>';
+  body.innerHTML='<tr><td colspan="5" class="ec">Loading...</td></tr>';
   try{
     const {data:keys,error:ke}=await supabase.from('license_keys').select('used_by,used_email,key_value,used_at').not('used_by','is',null);
     if(ke) throw ke;
     if(!keys||!keys.length){body.innerHTML='<tr><td colspan="5" class="ec">No activated users yet.</td></tr>';return;}
-
-    const {data:profiles}=await supabase.from('riskpilot_data').select('user_id,weekly_wallet,currency,last_saved');
+    const {data:profiles}=await supabase.from('riskpilot_data').select('user_id,weekly_wallet,currency,last_saved,license_valid');
     const pm={};(profiles||[]).forEach(p=>{pm[p.user_id]=p;});
-
     body.innerHTML=keys.map(k=>{
       const p=pm[k.used_by]||{};
       const cur=p.currency||'ZAR';
       const sym=cur==='USD'?'$':'R';
       const wallet=p.weekly_wallet!=null?sym+parseFloat(p.weekly_wallet).toFixed(2):'—';
       const last=p.last_saved?fmtDate(p.last_saved):'—';
-      return `<tr>
-        <td style="font-size:13px">${k.used_email||'—'}</td>
-        <td><span class="km" style="font-size:12px">${fmt(k.key_value)}</span></td>
-        <td style="font-size:13px;color:var(--green);font-weight:600">${wallet}</td>
-        <td style="font-size:12px;color:var(--muted)">${cur}</td>
-        <td style="font-size:12px;color:var(--muted)">${last}</td>
-      </tr>`;
+      const accessBadge=p.license_valid===false?'<span class="badge br">Suspended</span>':'<span class="badge bg">Active</span>';
+      return '<tr><td style="font-size:13px">'+k.used_email+'</td><td><span class="km" style="font-size:12px">'+fmt(k.key_value)+'</span></td><td>'+accessBadge+'</td><td style="font-size:13px;color:var(--green);font-weight:600">'+wallet+'</td><td style="font-size:12px;color:var(--muted)">'+last+'</td></tr>';
     }).join('');
-  }catch(e){
-    body.innerHTML=`<tr><td colspan="5" class="ec">Error: ${e.message}</td></tr>`;
-  }
+  }catch(e){body.innerHTML='<tr><td colspan="5" class="ec">Error: '+e.message+'</td></tr>';}
 }
 
-/* ── stats ── */
+/* stats */
 async function loadStats(){
   try{
     const {data}=await supabase.from('license_keys').select('id,is_active,used_by');
-    if(!data)return;
-    const total   =data.length;
-    const used    =data.filter(r=>r.used_by).length;
-    const revoked =data.filter(r=>!r.is_active&&!r.used_by).length;
-    const avail   =total-used-revoked;
+    if(!data) return;
+    const total  =data.length;
+    const used   =data.filter(r=>r.used_by&&r.is_active).length;
+    const susp   =data.filter(r=>r.used_by&&!r.is_active).length;
+    const avail  =data.filter(r=>!r.used_by&&r.is_active).length;
+    const revoked=data.filter(r=>!r.used_by&&!r.is_active).length;
     q('s-total').textContent=total;
     q('s-avail').textContent=avail;
-    q('s-used').textContent =used;
+    q('s-used').textContent =used+(susp?' ('+susp+' suspended)':'');
     q('s-rev').textContent  =revoked;
-  }catch(e){console.warn('Stats error:',e.message);}
+  }catch(e){console.warn('Stats:',e.message);}
 }
 
-/* ── sign out ── */
+/* sign out */
 async function signOut(){
   sessionStorage.removeItem('rp_admin_key');
-  try{ await supabase.auth.signOut(); }catch(e){}
+  try{await supabase.auth.signOut();}catch(e){}
   const p=window.location.pathname;
   const base=window.location.origin+p.substring(0,p.lastIndexOf('/')+1);
   window.location.href=base+'auth.html';
 }
 
-/* ── boot ── */
+/* boot */
 (async function boot(){
   try{
-    // 1. Check URL secret key
     const params  =new URLSearchParams(window.location.search);
     const urlKey  =params.get('key')||'';
     const savedKey=sessionStorage.getItem('rp_admin_key')||'';
     const hasKey  =urlKey===SECRET||savedKey===SECRET;
 
     if(hasKey){
-      // persist in session so refresh keeps access
       sessionStorage.setItem('rp_admin_key',SECRET);
-      // clean key from URL bar without reload
       window.history.replaceState({},'',window.location.pathname);
       q('admin-label').textContent='Admin (Key Access)';
       show('main');
@@ -590,16 +462,9 @@ async function signOut(){
       return;
     }
 
-    // 2. Fallback: check Supabase session
-    if(!window.supabase||typeof window.supabase.auth==='undefined'){
-      show('denied');
-      return;
-    }
-
+    if(!window.supabase||typeof window.supabase.auth==='undefined'){show('denied');return;}
     const {data}=await supabase.auth.getSession();
     if(!data||!data.session){show('denied');return;}
-
-    // You can add email check here if needed
     q('admin-label').textContent=data.session.user.email;
     show('main');
     await loadStats();
@@ -608,11 +473,10 @@ async function signOut(){
 
   }catch(err){
     console.error('Admin boot error:',err);
-    // Show the panel anyway if we have the key — don't silently fail
     const savedKey=sessionStorage.getItem('rp_admin_key')||'';
     if(savedKey===SECRET){
       show('main');
-      q('admin-label').textContent='Admin (Key Access)';
+      q('admin-label').textContent='Admin';
       loadStats();loadKeys();loadUsers();
     }else{
       show('denied');
