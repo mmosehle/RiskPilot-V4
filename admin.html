@@ -204,7 +204,7 @@
     <div class="tscroll">
       <table>
         <thead><tr><th>License Key</th><th>Status</th><th>Activated By</th><th>Date</th><th>Note</th><th>Deactivate</th><th>Delete</th></tr></thead>
-        <tbody id="keys-body"><tr><td colspan="6" class="ec">Loading…</td></tr></tbody>
+        <tbody id="keys-body"><tr><td colspan="7" class="ec">Loading…</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -321,7 +321,7 @@ async function loadKeys(){
   const status=q('f-status').value;
   const search=(q('f-search').value||'').trim().toLowerCase();
   const body=q('keys-body');
-  body.innerHTML='<tr><td colspan="6" class="ec">Loading…</td></tr>';
+  body.innerHTML='<tr><td colspan="7" class="ec">Loading…</td></tr>';
 
   try{
     let query=supabase.from('license_keys').select('*').order('created_at',{ascending:false});
@@ -339,7 +339,7 @@ async function loadKeys(){
       (r.note||'').toLowerCase().includes(search)
     );
 
-    if(!rows.length){body.innerHTML='<tr><td colspan="6" class="ec">No keys found.</td></tr>';return;}
+    if(!rows.length){body.innerHTML='<tr><td colspan="7" class="ec">No keys found.</td></tr>';return;}
 
     body.innerHTML=rows.map(r=>{
       const isUsed             = !!r.used_by;
@@ -379,96 +379,137 @@ async function loadKeys(){
       </tr>`;
     }).join('');
   }catch(e){
-    body.innerHTML=`<tr><td colspan="6" class="ec">Error: ${e.message}</td></tr>`;
+    body.innerHTML=`<tr><td colspan="7" class="ec">Error: ${e.message}</td></tr>`;
   }
 }
 
-/* ── key management ── */
+/* ── key management helpers ── */
+
+// Fetch a key row BEFORE making changes so we always have used_by
+async function getKeyRow(id){
+  const {data} = await supabase
+    .from('license_keys')
+    .select('id, key_value, is_active, used_by, used_email')
+    .eq('id', id)
+    .single();
+  return data || null;
+}
+
+// Update the key flag
+async function setKeyActive(id, active){
+  const {error} = await supabase
+    .from('license_keys')
+    .update({is_active: active})
+    .eq('id', id);
+  return error;
+}
+
+// Update the user's license_valid flag in riskpilot_data
+async function setUserLicense(userId, valid){
+  if(!userId) return null;
+  const {error} = await supabase
+    .from('riskpilot_data')
+    .update({license_valid: valid})
+    .eq('user_id', userId);
+  return error;
+}
+
+// Refresh all three tables and stats
+async function refreshAll(){
+  await Promise.all([loadKeys(), loadStats(), loadUsers()]);
+}
+
+/* ── deactivate ── */
 async function deactivateKey(id){
-  if(!confirm('Deactivate this key?\n\nThe user linked to this key will IMMEDIATELY lose access to RiskPilot and be sent to the license page. You can reactivate it at any time to restore their access.'))return;
+  const row = await getKeyRow(id);
+  if(!row){ alert('Could not find key. Please refresh and try again.'); return; }
 
-  // 1. Mark the key as inactive
-  const {error:keyErr} = await supabase
-    .from('license_keys')
-    .update({is_active: false})
-    .eq('id', id);
-  if(keyErr){ alert('Error updating key: '+keyErr.message); return; }
+  const hasUser = !!row.used_by;
+  const msg = hasUser
+    ? `Suspend "${row.used_email}"?
 
-  // 2. Find which user owns this key and revoke their access
-  const {data:keyRow} = await supabase
-    .from('license_keys')
-    .select('used_by')
-    .eq('id', id)
-    .single();
+They will immediately lose access to RiskPilot and be redirected to the license page. You can restore their access at any time.`
+    : `Deactivate this key?
 
-  if(keyRow && keyRow.used_by){
-    const {error:profErr} = await supabase
-      .from('riskpilot_data')
-      .update({license_valid: false})
-      .eq('user_id', keyRow.used_by);
-    if(profErr){ alert('Key deactivated but could not revoke user access: '+profErr.message); }
+It will no longer be claimable by any new user.`;
+
+  if(!confirm(msg)) return;
+
+  // 1. Fetch → 2. Update key → 3. Update user profile (in parallel is fine here)
+  const keyErr = await setKeyActive(id, false);
+  if(keyErr){ alert('Error updating key: ' + keyErr.message); return; }
+
+  if(hasUser){
+    const profErr = await setUserLicense(row.used_by, false);
+    if(profErr){ alert('Key deactivated but profile update failed: ' + profErr.message + '
+
+Run this SQL manually in Supabase:
+UPDATE riskpilot_data SET license_valid = false WHERE user_id = '' + row.used_by + '';'); }
   }
 
-  loadKeys(); loadStats(); loadUsers();
-  alert('✅ Key deactivated. The user has lost access to RiskPilot immediately.');
+  await refreshAll();
+  alert(hasUser
+    ? '✅ ' + row.used_email + ' has been suspended. They no longer have access.'
+    : '✅ Key deactivated.');
 }
 
+/* ── reactivate ── */
 async function reactivateKey(id){
-  if(!confirm('Reactivate this key?\n\nThe user linked to this key will immediately regain full access to RiskPilot.'))return;
+  const row = await getKeyRow(id);
+  if(!row){ alert('Could not find key. Please refresh and try again.'); return; }
 
-  // 1. Mark key as active again
-  const {error:keyErr} = await supabase
-    .from('license_keys')
-    .update({is_active: true})
-    .eq('id', id);
-  if(keyErr){ alert('Error updating key: '+keyErr.message); return; }
+  const hasUser = !!row.used_by;
+  const msg = hasUser
+    ? `Restore access for "${row.used_email}"?
 
-  // 2. Restore the user's license_valid flag if a user is linked
-  const {data:keyRow} = await supabase
-    .from('license_keys')
-    .select('used_by')
-    .eq('id', id)
-    .single();
+They will immediately regain full access to RiskPilot.`
+    : `Reactivate this key?
 
-  if(keyRow && keyRow.used_by){
-    const {error:profErr} = await supabase
-      .from('riskpilot_data')
-      .update({license_valid: true})
-      .eq('user_id', keyRow.used_by);
-    if(profErr){ alert('Key reactivated but could not restore user access: '+profErr.message); }
+It will become available for a new user to claim.`;
+
+  if(!confirm(msg)) return;
+
+  const keyErr = await setKeyActive(id, true);
+  if(keyErr){ alert('Error updating key: ' + keyErr.message); return; }
+
+  if(hasUser){
+    const profErr = await setUserLicense(row.used_by, true);
+    if(profErr){ alert('Key reactivated but profile update failed: ' + profErr.message + '
+
+Run this SQL manually:
+UPDATE riskpilot_data SET license_valid = true WHERE user_id = '' + row.used_by + '';'); }
   }
 
-  loadKeys(); loadStats(); loadUsers();
-  alert('✅ Key reactivated. The user has regained access to RiskPilot.');
+  await refreshAll();
+  alert(hasUser
+    ? '✅ Access restored for ' + row.used_email + '. They can now use RiskPilot again.'
+    : '✅ Key reactivated and available.');
 }
 
+/* ── delete ── */
 async function deleteKey(id){
-  // Check if key has a user linked — warn admin
-  const {data:keyRow} = await supabase
-    .from('license_keys')
-    .select('used_by, used_email, key_value')
-    .eq('id', id)
-    .single();
+  const row = await getKeyRow(id);
+  if(!row){ alert('Could not find key. Please refresh and try again.'); return; }
 
-  const userWarning = (keyRow && keyRow.used_by)
-    ? `\n\n⚠️ WARNING: This key is activated by ${keyRow.used_email}. Deleting it will permanently revoke their access with no way to restore it via this key.`
+  const userWarn = row.used_by
+    ? '
+
+⚠️ This key belongs to ' + row.used_email + '. Deleting it will permanently remove their access.'
     : '';
 
-  if(!confirm('Permanently DELETE this key? This cannot be undone.' + userWarning))return;
-  if(!confirm('Final confirmation — delete this key forever?'))return;
+  if(!confirm('Permanently DELETE this key? This cannot be undone.' + userWarn)) return;
+  if(!confirm('Final confirmation — delete forever?')) return;
 
-  // If user is linked, revoke their access first
-  if(keyRow && keyRow.used_by){
-    await supabase
-      .from('riskpilot_data')
-      .update({license_valid: false})
-      .eq('user_id', keyRow.used_by);
+  // Revoke user first if linked
+  if(row.used_by){
+    await setUserLicense(row.used_by, false);
   }
 
   const {error} = await supabase.from('license_keys').delete().eq('id', id);
-  if(error){ alert('Error: '+error.message); return; }
-  loadKeys(); loadStats(); loadUsers();
-  alert('✅ Key deleted.' + (keyRow?.used_by ? ' User access has been revoked.' : ''));
+  if(error){ alert('Error deleting key: ' + error.message); return; }
+
+  await refreshAll();
+  alert('✅ Key deleted.' + (row.used_by ? ' ' + row.used_email + ''s access has been revoked.' : ''));
 }
 
 /* ── load users ── */
