@@ -229,269 +229,298 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
-/* ─────────────────────────────────────────────
-   CHANGE THIS to your own secret passphrase.
-   Access admin via: admin.html?key=YOUR_SECRET
-───────────────────────────────────────────── */
 const SECRET = 'QuantXAdmin2025';
 
-/* helpers */
 function q(id){ return document.getElementById(id); }
 function show(id){ q(id).style.display='block'; }
 function fmt(raw){ return (raw||'').replace(/-/g,'').match(/.{1,4}/g)?.join('-')||raw||''; }
-function fmtDate(iso){ return iso ? new Date(iso).toLocaleDateString('en-ZA') : '—'; }
-
+function fmtDate(iso){ return iso?new Date(iso).toLocaleDateString('en-ZA'):'—'; }
 function showAlert(eid,msg){
-  ['gen-err','gen-ok'].forEach(i=>{const e=q(i);if(e){e.classList.remove('show');e.textContent=''}});
-  const e=q(eid);if(e){e.textContent=msg;e.classList.add('show');}
+  ['gen-err','gen-ok'].forEach(function(i){var e=q(i);if(e){e.classList.remove('show');e.textContent='';}});
+  var e=q(eid);if(e){e.textContent=msg;e.classList.add('show');}
 }
 
-/* key generator */
 function makeKey(){
-  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let k='';
-  for(let i=0;i<16;i++){if(i>0&&i%4===0)k+='-';k+=c[Math.floor(Math.random()*c.length)];}
+  var c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',k='';
+  for(var i=0;i<16;i++){if(i>0&&i%4===0)k+='-';k+=c[Math.floor(Math.random()*c.length)];}
   return k;
 }
-function rawKey(k){ return k.replace(/-/g,''); }
+function rawKey(k){return k.replace(/-/g,'');}
 
-/* generate */
 async function generateKeys(){
-  const qty=parseInt(q('qty').value)||1;
-  const note=q('note').value.trim();
+  var qty=parseInt(q('qty').value)||1,note=q('note').value.trim();
   if(qty<1||qty>50){showAlert('gen-err','Enter a number between 1 and 50.');return;}
-  const btn=q('gen-btn');
-  btn.disabled=true;
-  btn.innerHTML='<span class="spin"></span>Generating...';
-  const rows=[];const display=[];
-  for(let i=0;i<qty;i++){const k=makeKey();display.push(k);rows.push({key_value:rawKey(k),is_active:true,used_by:null,used_email:null,used_at:null,note:note||null});}
+  var btn=q('gen-btn');btn.disabled=true;btn.innerHTML='<span class="spin"></span>Generating...';
+  var rows=[],display=[];
+  for(var i=0;i<qty;i++){var k=makeKey();display.push(k);rows.push({key_value:rawKey(k),is_active:true,used_by:null,used_email:null,used_at:null,note:note||null});}
   try{
-    const {error}=await supabase.from('license_keys').insert(rows);
-    if(error) throw error;
-    const list=q('key-list');list.innerHTML='';
-    display.forEach(k=>{
-      const li=document.createElement('li');li.className='ki';
-      li.innerHTML='<span class="kv">'+k+'</span><button class="cbtn" onclick="copyKey(this,\''+k+'\')">Copy</button>';
+    var res=await supabase.from('license_keys').insert(rows);
+    if(res.error)throw res.error;
+    var list=q('key-list');list.innerHTML='';
+    display.forEach(function(k){
+      var li=document.createElement('li');li.className='ki';
+      li.innerHTML='<span class="kv">'+k+'</span><button class="cbtn" data-key="'+k+'">Copy</button>';
+      li.querySelector('.cbtn').addEventListener('click',function(){copyKey(this,this.dataset.key);});
       list.appendChild(li);
     });
     show('keys-out');
-    showAlert('gen-ok','Keys generated: '+qty);
-    await loadKeys();
-    await loadStats();
+    showAlert('gen-ok',qty+' key(s) generated successfully.');
+    await loadKeys();await loadStats();
   }catch(e){showAlert('gen-err','Error: '+e.message);}
   btn.disabled=false;btn.innerHTML='Generate Keys';
 }
 
 function copyKey(btn,k){
-  navigator.clipboard.writeText(k).then(()=>{btn.textContent='Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);});
+  navigator.clipboard.writeText(k).then(function(){
+    btn.textContent='Copied!';btn.classList.add('copied');
+    setTimeout(function(){btn.textContent='Copy';btn.classList.remove('copied');},2000);
+  });
 }
 function copyAll(){
-  const keys=[...document.querySelectorAll('.kv')].map(e=>e.textContent).join('\n');
-  navigator.clipboard.writeText(keys).then(()=>{const b=event.target;b.textContent='Copied!';setTimeout(()=>b.textContent='Copy All Keys',2000);});
+  var keys=Array.from(document.querySelectorAll('.kv')).map(function(e){return e.textContent;}).join('\n');
+  navigator.clipboard.writeText(keys).then(function(){
+    var b=event.target;b.textContent='Copied!';setTimeout(function(){b.textContent='Copy All Keys';},2000);
+  });
 }
 
-/* load keys table */
+/* DB WRITE — all mutations go through here so errors are always visible */
+async function dbWrite(table,op,payload,matchCol,matchVal){
+  var q2=supabase.from(table),res;
+  if(op==='update') res=await q2.update(payload).eq(matchCol,matchVal);
+  if(op==='delete') res=await q2.delete().eq(matchCol,matchVal);
+  if(op==='insert') res=await q2.insert(payload);
+  if(res.error){
+    console.error('[Admin] '+op+' on '+table+' failed:',res.error);
+    throw new Error(res.error.message||JSON.stringify(res.error));
+  }
+  return res;
+}
+
+async function getKeyRow(id){
+  var res=await supabase.from('license_keys').select('id,key_value,is_active,used_by,used_email').eq('id',id).single();
+  if(res.error)console.error('getKeyRow:',res.error.message);
+  return res.data||null;
+}
+
+async function refreshAll(){await Promise.all([loadKeys(),loadStats(),loadUsers()]);}
+
+/* DEACTIVATE — unused available key only */
+async function deactivateKey(id){
+  var row=await getKeyRow(id);
+  if(!row){alert('Key not found. Refresh the page.');return;}
+  if(!confirm('Deactivate this key? It will no longer be claimable.'))return;
+  try{
+    await dbWrite('license_keys','update',{is_active:false},'id',id);
+    await refreshAll();
+    alert('Key deactivated.');
+  }catch(e){alert('Failed: '+e.message+' — Run the SQL permissions in Supabase.');}
+}
+
+/* REACTIVATE — unused deactivated key */
+async function reactivateKey(id){
+  var row=await getKeyRow(id);
+  if(!row){alert('Key not found. Refresh the page.');return;}
+  if(!confirm('Reactivate this key? A user will be able to claim it again.'))return;
+  try{
+    await dbWrite('license_keys','update',{is_active:true},'id',id);
+    await refreshAll();
+    alert('Key reactivated.');
+  }catch(e){alert('Failed: '+e.message+' — Run the SQL permissions in Supabase.');}
+}
+
+/* SUSPEND USER — lock out a user who claimed a key */
+async function suspendUser(id){
+  var row=await getKeyRow(id);
+  if(!row){alert('Key not found. Refresh the page.');return;}
+  if(!confirm('Suspend '+row.used_email+'? They will immediately lose access to RiskPilot.'))return;
+  try{
+    await dbWrite('license_keys','update',{is_active:false},'id',id);
+    await dbWrite('riskpilot_data','update',{license_valid:false},'user_id',row.used_by);
+    await refreshAll();
+    alert(row.used_email+' has been suspended.');
+  }catch(e){alert('Failed: '+e.message+' — Run the SQL permissions in Supabase.');}
+}
+
+/* RESTORE ACCESS — re-enable a suspended user */
+async function restoreAccess(id){
+  var row=await getKeyRow(id);
+  if(!row){alert('Key not found. Refresh the page.');return;}
+  if(!confirm('Restore access for '+row.used_email+'? They will regain full access.'))return;
+  try{
+    await dbWrite('license_keys','update',{is_active:true},'id',id);
+    await dbWrite('riskpilot_data','update',{license_valid:true},'user_id',row.used_by);
+    await refreshAll();
+    alert('Access restored for '+row.used_email+'.');
+  }catch(e){alert('Failed: '+e.message+' — Run the SQL permissions in Supabase.');}
+}
+
+/* DELETE key */
+async function deleteKey(id){
+  var row=await getKeyRow(id);
+  if(!row){alert('Key not found. Refresh the page.');return;}
+  var warn=row.used_by?' WARNING: '+row.used_email+' will permanently lose access.':'';
+  if(!confirm('Permanently DELETE this key?'+warn))return;
+  if(!confirm('Final confirmation — delete forever?'))return;
+  try{
+    if(row.used_by)await dbWrite('riskpilot_data','update',{license_valid:false},'user_id',row.used_by);
+    await dbWrite('license_keys','delete',null,'id',id);
+    await refreshAll();
+    alert('Key deleted.'+(row.used_by?' '+row.used_email+' access revoked.':''));
+  }catch(e){alert('Failed: '+e.message+' — Run the SQL permissions in Supabase.');}
+}
+
+/* LOAD KEYS TABLE */
 async function loadKeys(){
-  const status=q('f-status').value;
-  const search=(q('f-search').value||'').trim().toLowerCase();
-  const body=q('keys-body');
+  var status=q('f-status').value,search=(q('f-search').value||'').trim().toLowerCase();
+  var body=q('keys-body');
   body.innerHTML='<tr><td colspan="7" class="ec">Loading...</td></tr>';
   try{
-    let query=supabase.from('license_keys').select('*').order('created_at',{ascending:false});
+    var query=supabase.from('license_keys').select('*').order('created_at',{ascending:false});
     if(status==='available') query=query.eq('is_active',true).is('used_by',null);
     if(status==='used')      query=query.not('used_by','is',null).eq('is_active',true);
     if(status==='suspended') query=query.not('used_by','is',null).eq('is_active',false);
     if(status==='revoked')   query=query.eq('is_active',false).is('used_by',null);
-    const {data,error}=await query;
-    if(error){
-      // RLS may be blocking — show specific message
-      if(error.code==='PGRST301'||error.message.includes('RLS')||error.message.includes('policy')){
-        body.innerHTML='<tr><td colspan="7" class="ec">Access denied by database policy. Run the RLS fix SQL in Supabase (see README).</td></tr>';
-        return;
-      }
-      throw error;
-    }
-    let rows=data||[];
-    if(search) rows=rows.filter(r=>(r.key_value||'').toLowerCase().includes(search)||(r.used_email||'').toLowerCase().includes(search)||(r.note||'').toLowerCase().includes(search));
+    var res=await query;
+    if(res.error)throw res.error;
+    var rows=res.data||[];
+    if(search)rows=rows.filter(function(r){
+      return (r.key_value||'').toLowerCase().indexOf(search)>-1||(r.used_email||'').toLowerCase().indexOf(search)>-1||(r.note||'').toLowerCase().indexOf(search)>-1;
+    });
     if(!rows.length){body.innerHTML='<tr><td colspan="7" class="ec">No keys found.</td></tr>';return;}
-    body.innerHTML=rows.map(r=>{
-      const isUsed        = !!r.used_by;
-      const isSuspended   = isUsed && !r.is_active;
-      const isRevokedFree = !r.used_by && !r.is_active;
-      const isAvailable   = !r.used_by && r.is_active;
-      const badge = isSuspended   ? '<span class="badge br">Suspended</span>'
-                  : isUsed        ? '<span class="badge bg">Activated</span>'
-                  : isRevokedFree ? '<span class="badge br">Revoked</span>'
-                  :                 '<span class="badge bo">Available</span>';
-      const deactivateCol = r.is_active
-        ? '<button class="rvk" onclick="deactivateKey(\''+r.id+'\')">'+(isUsed?'Suspend User':'Deactivate')+'</button>'
-        : '<button class="rvk" style="border-color:var(--gold-b);color:var(--gold)" onclick="reactivateKey(\''+r.id+'\')">'+(isUsed?'Restore Access':'Reactivate')+'</button>';
-      const deleteCol = '<button class="rvk" style="border-color:var(--red-b);color:var(--red);background:var(--red-bg)" onclick="deleteKey(\''+r.id+'\')">Delete</button>';
-      return '<tr><td><span class="km">'+fmt(r.key_value)+'</span></td><td>'+badge+'</td><td style="font-size:12px;color:var(--muted)">'+( r.used_email||'—')+'</td><td style="font-size:12px;color:var(--muted)">'+fmtDate(r.used_at)+'</td><td style="font-size:12px;color:var(--dim)">'+(r.note||'—')+'</td><td>'+deactivateCol+'</td><td>'+deleteCol+'</td></tr>';
+
+    var html=rows.map(function(r){
+      var isUsed        = !!r.used_by;
+      var isSuspended   = isUsed && !r.is_active;
+      var isRevokedFree = !r.used_by && !r.is_active;
+      var isAvailable   = !r.used_by && r.is_active;
+
+      var badge = isSuspended   ? '<span class="badge br">Suspended</span>'
+                : isUsed        ? '<span class="badge bg">Activated</span>'
+                : isRevokedFree ? '<span class="badge br">Revoked</span>'
+                :                 '<span class="badge bo">Available</span>';
+
+      var rid = r.id;
+      var actionCol = '';
+      if(isAvailable)           actionCol='<button class="rvk" data-action="deactivate" data-id="'+rid+'">Deactivate</button>';
+      else if(isRevokedFree)    actionCol='<button class="rvk" style="border-color:var(--gold-b);color:var(--gold)" data-action="reactivate" data-id="'+rid+'">Reactivate</button>';
+      else if(isUsed&&r.is_active) actionCol='<button class="rvk" style="border-color:#c06010;color:#f0a030" data-action="suspend" data-id="'+rid+'">Suspend User</button>';
+      else if(isSuspended)      actionCol='<button class="rvk" style="border-color:var(--gold-b);color:var(--gold)" data-action="restore" data-id="'+rid+'">Restore Access</button>';
+
+      var deleteCol='<button class="rvk" style="border-color:var(--red-b);color:var(--red);background:var(--red-bg)" data-action="delete" data-id="'+rid+'">Delete</button>';
+
+      return '<tr>'
+        +'<td><span class="km">'+fmt(r.key_value)+'</span></td>'
+        +'<td>'+badge+'</td>'
+        +'<td style="font-size:12px;color:var(--muted)">'+(r.used_email||'—')+'</td>'
+        +'<td style="font-size:12px;color:var(--muted)">'+fmtDate(r.used_at)+'</td>'
+        +'<td style="font-size:12px;color:var(--dim)">'+(r.note||'—')+'</td>'
+        +'<td>'+actionCol+'</td>'
+        +'<td>'+deleteCol+'</td>'
+        +'</tr>';
     }).join('');
+    body.innerHTML=html;
+
+    // Attach click events using data attributes — avoids all quoting issues
+    body.querySelectorAll('button[data-action]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var action=this.dataset.action,id=this.dataset.id;
+        if(action==='deactivate') deactivateKey(id);
+        if(action==='reactivate') reactivateKey(id);
+        if(action==='suspend')    suspendUser(id);
+        if(action==='restore')    restoreAccess(id);
+        if(action==='delete')     deleteKey(id);
+      });
+    });
+
   }catch(e){
-    console.error('loadKeys error:', e);
-    body.innerHTML='<tr><td colspan="7" class="ec">Error loading keys: '+e.message+' — check browser console for details.</td></tr>';
+    console.error('loadKeys error:',e);
+    body.innerHTML='<tr><td colspan="7" class="ec">Error: '+e.message+'</td></tr>';
   }
 }
 
-/* key management helpers */
-async function getKeyRow(id){
-  const {data}=await supabase.from('license_keys').select('id,key_value,is_active,used_by,used_email').eq('id',id).single();
-  return data||null;
-}
-async function setKeyActive(id,active){
-  const {error}=await supabase.from('license_keys').update({is_active:active}).eq('id',id);
-  return error;
-}
-async function setUserLicense(userId,valid){
-  if(!userId) return null;
-  const {error}=await supabase.from('riskpilot_data').update({license_valid:valid}).eq('user_id',userId);
-  return error;
-}
-async function refreshAll(){
-  await Promise.all([loadKeys(),loadStats(),loadUsers()]);
-}
-
-/* deactivate */
-async function deactivateKey(id){
-  const row=await getKeyRow(id);
-  if(!row){alert('Key not found. Please refresh.');return;}
-  const msg=row.used_by
-    ? 'Suspend access for '+row.used_email+'? They will be locked out immediately.'
-    : 'Deactivate this key? It will no longer be claimable.';
-  if(!confirm(msg)) return;
-  const keyErr=await setKeyActive(id,false);
-  if(keyErr){alert('Error: '+keyErr.message);return;}
-  if(row.used_by){
-    const profErr=await setUserLicense(row.used_by,false);
-    if(profErr) console.warn('Profile update failed:',profErr.message);
-  }
-  await refreshAll();
-  alert(row.used_by ? row.used_email+' has been suspended.' : 'Key deactivated.');
-}
-
-/* reactivate */
-async function reactivateKey(id){
-  const row=await getKeyRow(id);
-  if(!row){alert('Key not found. Please refresh.');return;}
-  const msg=row.used_by
-    ? 'Restore access for '+row.used_email+'? They will regain full access.'
-    : 'Reactivate this key? It will become claimable again.';
-  if(!confirm(msg)) return;
-  const keyErr=await setKeyActive(id,true);
-  if(keyErr){alert('Error: '+keyErr.message);return;}
-  if(row.used_by){
-    const profErr=await setUserLicense(row.used_by,true);
-    if(profErr) console.warn('Profile update failed:',profErr.message);
-  }
-  await refreshAll();
-  alert(row.used_by ? 'Access restored for '+row.used_email+'.' : 'Key reactivated.');
-}
-
-/* delete */
-async function deleteKey(id){
-  const row=await getKeyRow(id);
-  if(!row){alert('Key not found. Please refresh.');return;}
-  const warn=row.used_by ? ' WARNING: This will permanently remove access for '+row.used_email+'.' : '';
-  if(!confirm('Permanently DELETE this key? This cannot be undone.'+warn)) return;
-  if(!confirm('Final confirmation — delete forever?')) return;
-  if(row.used_by) await setUserLicense(row.used_by,false);
-  const {error}=await supabase.from('license_keys').delete().eq('id',id);
-  if(error){alert('Error: '+error.message);return;}
-  await refreshAll();
-  alert('Key deleted.'+(row.used_by?' '+row.used_email+' access revoked.':''));
-}
-
-/* revoke (alias kept for compatibility) */
-async function revokeKey(id){ await deactivateKey(id); }
-
-/* load users */
+/* LOAD USERS TABLE */
 async function loadUsers(){
-  const body=q('users-body');
+  var body=q('users-body');
   body.innerHTML='<tr><td colspan="5" class="ec">Loading...</td></tr>';
   try{
-    const {data:keys,error:ke}=await supabase.from('license_keys').select('used_by,used_email,key_value,used_at').not('used_by','is',null);
-    if(ke) throw ke;
-    if(!keys||!keys.length){body.innerHTML='<tr><td colspan="5" class="ec">No activated users yet.</td></tr>';return;}
-    const {data:profiles}=await supabase.from('riskpilot_data').select('user_id,weekly_wallet,currency,last_saved,license_valid');
-    const pm={};(profiles||[]).forEach(p=>{pm[p.user_id]=p;});
-    body.innerHTML=keys.map(k=>{
-      const p=pm[k.used_by]||{};
-      const cur=p.currency||'ZAR';
-      const sym=cur==='USD'?'$':'R';
-      const wallet=p.weekly_wallet!=null?sym+parseFloat(p.weekly_wallet).toFixed(2):'—';
-      const last=p.last_saved?fmtDate(p.last_saved):'—';
-      const accessBadge=p.license_valid===false?'<span class="badge br">Suspended</span>':'<span class="badge bg">Active</span>';
-      return '<tr><td style="font-size:13px">'+k.used_email+'</td><td><span class="km" style="font-size:12px">'+fmt(k.key_value)+'</span></td><td>'+accessBadge+'</td><td style="font-size:13px;color:var(--green);font-weight:600">'+wallet+'</td><td style="font-size:12px;color:var(--muted)">'+last+'</td></tr>';
+    var res=await supabase.from('license_keys').select('used_by,used_email,key_value,used_at').not('used_by','is',null);
+    if(res.error)throw res.error;
+    var keys=res.data||[];
+    if(!keys.length){body.innerHTML='<tr><td colspan="5" class="ec">No activated users yet.</td></tr>';return;}
+    var pres=await supabase.from('riskpilot_data').select('user_id,weekly_wallet,currency,last_saved,license_valid');
+    var pm={};(pres.data||[]).forEach(function(p){pm[p.user_id]=p;});
+    body.innerHTML=keys.map(function(k){
+      var p=pm[k.used_by]||{};
+      var cur=p.currency||'ZAR',sym=cur==='USD'?'$':'R';
+      var wallet=p.weekly_wallet!=null?sym+parseFloat(p.weekly_wallet).toFixed(2):'—';
+      var last=p.last_saved?fmtDate(p.last_saved):'—';
+      var ab=p.license_valid===false?'<span class="badge br">Suspended</span>':'<span class="badge bg">Active</span>';
+      return '<tr>'
+        +'<td style="font-size:13px">'+(k.used_email||'—')+'</td>'
+        +'<td><span class="km" style="font-size:12px">'+fmt(k.key_value)+'</span></td>'
+        +'<td>'+ab+'</td>'
+        +'<td style="font-size:13px;color:var(--green);font-weight:600">'+wallet+'</td>'
+        +'<td style="font-size:12px;color:var(--muted)">'+last+'</td>'
+        +'</tr>';
     }).join('');
   }catch(e){body.innerHTML='<tr><td colspan="5" class="ec">Error: '+e.message+'</td></tr>';}
 }
 
-/* stats */
+/* STATS */
 async function loadStats(){
   try{
-    const {data}=await supabase.from('license_keys').select('id,is_active,used_by');
-    if(!data) return;
-    const total  =data.length;
-    const used   =data.filter(r=>r.used_by&&r.is_active).length;
-    const susp   =data.filter(r=>r.used_by&&!r.is_active).length;
-    const avail  =data.filter(r=>!r.used_by&&r.is_active).length;
-    const revoked=data.filter(r=>!r.used_by&&!r.is_active).length;
+    var res=await supabase.from('license_keys').select('id,is_active,used_by');
+    if(!res.data)return;
+    var data=res.data;
+    var total=data.length;
+    var activ=data.filter(function(r){return r.used_by&&r.is_active;}).length;
+    var susp =data.filter(function(r){return r.used_by&&!r.is_active;}).length;
+    var avail=data.filter(function(r){return !r.used_by&&r.is_active;}).length;
+    var revkd=data.filter(function(r){return !r.used_by&&!r.is_active;}).length;
     q('s-total').textContent=total;
     q('s-avail').textContent=avail;
-    q('s-used').textContent =used+(susp?' ('+susp+' suspended)':'');
-    q('s-rev').textContent  =revoked;
+    q('s-used').textContent =activ+(susp?' (+'+susp+' suspended)':'');
+    q('s-rev').textContent  =revkd;
   }catch(e){console.warn('Stats:',e.message);}
 }
 
-/* sign out */
+/* SIGN OUT */
 async function signOut(){
   sessionStorage.removeItem('rp_admin_key');
   try{await supabase.auth.signOut();}catch(e){}
-  const p=window.location.pathname;
-  const base=window.location.origin+p.substring(0,p.lastIndexOf('/')+1);
+  var p=window.location.pathname;
+  var base=window.location.origin+p.substring(0,p.lastIndexOf('/')+1);
   window.location.href=base+'auth.html';
 }
 
-/* boot */
-(async function boot(){
+/* BOOT */
+(async function(){
   try{
-    const params  =new URLSearchParams(window.location.search);
-    const urlKey  =params.get('key')||'';
-    const savedKey=sessionStorage.getItem('rp_admin_key')||'';
-    const hasKey  =urlKey===SECRET||savedKey===SECRET;
-
+    var params=new URLSearchParams(window.location.search);
+    var urlKey=params.get('key')||'';
+    var savedKey=sessionStorage.getItem('rp_admin_key')||'';
+    var hasKey=urlKey===SECRET||savedKey===SECRET;
     if(hasKey){
       sessionStorage.setItem('rp_admin_key',SECRET);
       window.history.replaceState({},'',window.location.pathname);
       q('admin-label').textContent='Admin (Key Access)';
       show('main');
-      await loadStats();
-      await loadKeys();
-      await loadUsers();
+      await loadStats();await loadKeys();await loadUsers();
       return;
     }
-
     if(!window.supabase||typeof window.supabase.auth==='undefined'){show('denied');return;}
-    const {data}=await supabase.auth.getSession();
-    if(!data||!data.session){show('denied');return;}
-    q('admin-label').textContent=data.session.user.email;
+    var sd=await supabase.auth.getSession();
+    if(!sd.data||!sd.data.session){show('denied');return;}
+    q('admin-label').textContent=sd.data.session.user.email;
     show('main');
-    await loadStats();
-    await loadKeys();
-    await loadUsers();
-
+    await loadStats();await loadKeys();await loadUsers();
   }catch(err){
-    console.error('Admin boot error:',err);
-    const savedKey=sessionStorage.getItem('rp_admin_key')||'';
+    console.error('Boot error:',err);
+    var savedKey=sessionStorage.getItem('rp_admin_key')||'';
     if(savedKey===SECRET){
-      show('main');
-      q('admin-label').textContent='Admin';
+      show('main');q('admin-label').textContent='Admin';
       loadStats();loadKeys();loadUsers();
-    }else{
-      show('denied');
-    }
+    }else{show('denied');}
   }
 })();
 </script>
