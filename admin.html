@@ -276,7 +276,8 @@ async function generateKeys(){
     });
     show('keys-out');
     showAlert('gen-ok','Keys generated: '+qty);
-    loadKeys();loadStats();
+    await loadKeys();
+    await loadStats();
   }catch(e){showAlert('gen-err','Error: '+e.message);}
   btn.disabled=false;btn.innerHTML='Generate Keys';
 }
@@ -302,7 +303,14 @@ async function loadKeys(){
     if(status==='suspended') query=query.not('used_by','is',null).eq('is_active',false);
     if(status==='revoked')   query=query.eq('is_active',false).is('used_by',null);
     const {data,error}=await query;
-    if(error) throw error;
+    if(error){
+      // RLS may be blocking — show specific message
+      if(error.code==='PGRST301'||error.message.includes('RLS')||error.message.includes('policy')){
+        body.innerHTML='<tr><td colspan="7" class="ec">Access denied by database policy. Run the RLS fix SQL in Supabase (see README).</td></tr>';
+        return;
+      }
+      throw error;
+    }
     let rows=data||[];
     if(search) rows=rows.filter(r=>(r.key_value||'').toLowerCase().includes(search)||(r.used_email||'').toLowerCase().includes(search)||(r.note||'').toLowerCase().includes(search));
     if(!rows.length){body.innerHTML='<tr><td colspan="7" class="ec">No keys found.</td></tr>';return;}
@@ -321,7 +329,10 @@ async function loadKeys(){
       const deleteCol = '<button class="rvk" style="border-color:var(--red-b);color:var(--red);background:var(--red-bg)" onclick="deleteKey(\''+r.id+'\')">Delete</button>';
       return '<tr><td><span class="km">'+fmt(r.key_value)+'</span></td><td>'+badge+'</td><td style="font-size:12px;color:var(--muted)">'+( r.used_email||'—')+'</td><td style="font-size:12px;color:var(--muted)">'+fmtDate(r.used_at)+'</td><td style="font-size:12px;color:var(--dim)">'+(r.note||'—')+'</td><td>'+deactivateCol+'</td><td>'+deleteCol+'</td></tr>';
     }).join('');
-  }catch(e){body.innerHTML='<tr><td colspan="7" class="ec">Error: '+e.message+'</td></tr>';}
+  }catch(e){
+    console.error('loadKeys error:', e);
+    body.innerHTML='<tr><td colspan="7" class="ec">Error loading keys: '+e.message+' — check browser console for details.</td></tr>';
+  }
 }
 
 /* key management helpers */
