@@ -441,12 +441,14 @@
     if (error) { showAlert('signup-error', error.message); return; }
     // Signup successful — go straight to license activation
     // (Supabase auto-signs them in when email confirmation is disabled)
-    if (signupData.session) {
-      goTo('license.html');
-    } else {
-      // Email confirmation is ON — tell them to confirm then sign in
-      showAlert('signup-success', '✅ Account created! Check your email to confirm your address, then sign in to activate your license.');
-    }
+    // Show success message then redirect to sign in page after 2.5 seconds
+    showAlert('signup-success', '✅ Account created successfully! Redirecting you to sign in…');
+    setTimeout(() => {
+      showForm('login');
+      // Pre-fill email so they just need to type their password
+      const emailEl = document.getElementById('login-email');
+      if (emailEl) emailEl.value = email;
+    }, 2500);
   }
 
   async function handleReset() {

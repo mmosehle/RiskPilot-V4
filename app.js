@@ -353,7 +353,7 @@ function refreshBudgetStatus() {
   const bar = document.getElementById('budget-bar');
   if (bar) { bar.style.width = pct + '%'; bar.className = 'progress-fill' + (pct >= 100 ? ' danger' : pct >= 70 ? ' warn' : ''); }
 
-  const settled = state.journal.filter(t => t.outcome !== 'pending');
+  const settled = state.journal.filter(t => t.outcome === 'win' || t.outcome === 'loss');
   const wins    = settled.filter(t => t.outcome === 'win').length;
   const wr      = settled.length > 0 ? ((wins / settled.length) * 100).toFixed(0) + '%' : '0%';
   const wrd     = document.getElementById('win-rate-display');
@@ -452,19 +452,42 @@ function logTrade() {
   alert('✅ Trade logged! Click "Mark Win" or "Mark Loss" to record the outcome.');
 }
 
-function markTradeResult(result) {
-  if (!state.currentTrade) { alert('Please fill in trade details and click Log Trade first.'); return; }
-  const pending = state.journal.find(t => t.outcome === 'pending');
-  if (!pending) { alert('No pending trade found. Log a trade first.'); return; }
-  pending.outcome = result;
-  if (result === 'win') state.weeklyWallet += pending.riskZAR + pending.profitZAR;
+// markTradeResult — works from both calculator buttons and inline journal buttons
+// tradeId is optional; if omitted it finds the first pending trade
+function markTradeResult(result, tradeId) {
+  let trade;
+  if (tradeId) {
+    trade = state.journal.find(t => t.id === tradeId);
+  } else {
+    // legacy: find first pending
+    trade = state.journal.find(t => t.outcome === 'pending');
+    if (!trade && !state.currentTrade) {
+      alert('No pending trade found. Log a trade first.'); return;
+    }
+  }
+  if (!trade) { alert('Trade not found.'); return; }
+
+  if (result === 'not_triggered') {
+    // Refund the risk amount back to today's budget
+    state.usedToday = Math.max(0, state.usedToday - trade.riskZAR);
+    trade.outcome = 'not_triggered';
+    refreshBudgetStatus();
+    renderJournal();
+    renderCalendar();
+    saveUserData();
+    alert('⏭️ Trade marked as Not Triggered. Daily budget has been restored.');
+    return;
+  }
+
+  trade.outcome = result;
+  if (result === 'win') state.weeklyWallet += trade.riskZAR + trade.profitZAR;
   refreshBudgetStatus();
   renderJournal();
   renderCalendar();
   saveUserData();
   alert(result === 'win'
-    ? '🏆 Win recorded! +' + fmt(pending.riskZAR + pending.profitZAR) + ' added to your Weekly Wallet.'
-    : '📉 Loss recorded. ' + fmt(pending.riskZAR) + ' deducted.');
+    ? '🏆 Win recorded! +' + fmt(trade.riskZAR + trade.profitZAR) + ' added to your Weekly Wallet.'
+    : '📉 Loss recorded. ' + fmt(trade.riskZAR) + ' deducted.');
 }
 
 function attachUrls() {
@@ -495,20 +518,46 @@ function renderJournal() {
   if (!body) return;
 
   if (!state.journal.length) {
-    body.innerHTML = `<tr><td colspan="8" class="empty-cell">No trades logged yet.</td></tr>`;
+    body.innerHTML = `<tr><td colspan="9" class="empty-cell">No trades logged yet.</td></tr>`;
     return;
   }
   body.innerHTML = state.journal.map(t => {
-    const ob  = t.outcome==='win'?'badge-green':t.outcome==='loss'?'badge-red':'badge-amber';
-    const ol  = t.outcome==='win'?'Win':t.outcome==='loss'?'Loss':'Pending';
-    const pnl = t.outcome==='win'?t.profitZAR:t.outcome==='loss'?-t.riskZAR:null;
-    const ps  = pnl!==null?`<span class="${pnl>=0?'green':'red'}">${pnl>=0?'+':''}${fmt(Math.abs(pnl))}</span>`:'—';
-    const sb  = t.setup==='high'?'badge-blue':'badge-amber';
-    const sl  = t.setup==='high'?'High Prec.':'Standard';
-    const sc  = [
+    const isPending      = t.outcome === 'pending';
+    const isNotTriggered = t.outcome === 'not_triggered';
+
+    const ob = t.outcome==='win'    ? 'badge-green'
+             : t.outcome==='loss'   ? 'badge-red'
+             : isNotTriggered       ? 'badge-skip'
+             :                        'badge-amber';
+    const ol = t.outcome==='win'    ? 'Win'
+             : t.outcome==='loss'   ? 'Loss'
+             : isNotTriggered       ? 'Not Triggered'
+             :                        'Pending';
+
+    const pnl = t.outcome==='win'  ? t.profitZAR
+              : t.outcome==='loss' ? -t.riskZAR
+              : null;
+    const ps  = pnl!==null
+      ? `<span class="${pnl>=0?'green':'red'}">${pnl>=0?'+':''}${fmt(Math.abs(pnl))}</span>`
+      : '—';
+
+    const sb = t.setup==='high'?'badge-blue':'badge-amber';
+    const sl = t.setup==='high'?'High Prec.':'Standard';
+
+    const sc = [
       t.beforeUrl?`<a href="${t.beforeUrl}" class="screenshot-link" target="_blank" rel="noopener">Before</a>`:'',
       t.afterUrl ?`<a href="${t.afterUrl}"  class="screenshot-link" target="_blank" rel="noopener">After</a>`:'',
     ].filter(Boolean).join('')||'<span style="color:var(--text-dim)">—</span>';
+
+    // Inline action buttons — only shown for pending trades
+    const actions = isPending
+      ? `<div class="journal-actions">
+           <button class="ja-btn ja-win"  onclick="markTradeResult('win',${t.id})">✓ Win</button>
+           <button class="ja-btn ja-loss" onclick="markTradeResult('loss',${t.id})">✗ Loss</button>
+           <button class="ja-btn ja-nt"   onclick="markTradeResult('not_triggered',${t.id})">⏭ N/T</button>
+         </div>`
+      : `<span style="color:var(--text-dim);font-size:12px;">—</span>`;
+
     return `<tr>
       <td><span class="inst-name">${INSTRUMENTS[t.inst].label}</span></td>
       <td style="color:var(--text-muted);font-size:12px;">${t.date}</td>
@@ -518,6 +567,7 @@ function renderJournal() {
       <td style="font-weight:700;">1:${t.rr}</td>
       <td>${ps}</td>
       <td>${sc}</td>
+      <td>${actions}</td>
     </tr>`;
   }).join('');
 }
@@ -536,7 +586,8 @@ function renderCalendar() {
   const dayMap      = {};
 
   state.journal.forEach(t => {
-    if (t.outcome === 'pending') return;
+    // Only count settled trades (win/loss) — not pending or not_triggered
+    if (t.outcome !== 'win' && t.outcome !== 'loss') return;
     const [ty,tm,td] = t.date.split('-').map(Number);
     if (ty !== y || tm-1 !== m) return;
     if (!dayMap[td]) dayMap[td] = 0;
@@ -556,7 +607,7 @@ function renderCalendar() {
   const grid = document.getElementById('calendar-grid');
   if (grid) grid.innerHTML = html;
 
-  const settled   = state.journal.filter(t => t.outcome !== 'pending');
+  const settled   = state.journal.filter(t => t.outcome === 'win' || t.outcome === 'loss');
   const wins      = settled.filter(t => t.outcome === 'win');
   const losses    = settled.filter(t => t.outcome === 'loss');
   const totProfit = wins.reduce((s,t) => s+t.profitZAR, 0);

@@ -798,3 +798,37 @@ select optgroup { color: var(--text-muted); font-size: 11px; }
   .profile-info-grid { grid-template-columns: 1fr; }
   .profile-field { grid-column: auto !important; }
 }
+
+/* ══════════════════════════════════════════
+   JOURNAL INLINE ACTION BUTTONS
+══════════════════════════════════════════ */
+.journal-actions {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.ja-btn {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.ja-btn:active { transform: scale(0.96); }
+.ja-win  { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
+.ja-win:hover  { background: #163d2a; }
+.ja-loss { background: var(--red-bg);   color: var(--red);   border-color: var(--red-border); }
+.ja-loss:hover { background: #3d1018; }
+.ja-nt   { background: var(--bg3);     color: var(--text-muted); border-color: var(--border); }
+.ja-nt:hover   { color: var(--text); background: var(--surface2); }
+
+/* Not Triggered badge */
+.badge-skip {
+  background: var(--bg3);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
