@@ -71,7 +71,13 @@
 
 </div>
 <div class="page-body">
-  <div class="section-label">Across All Accounts</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div class="section-label" style="margin-bottom:0">Across All Accounts</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:12px;color:var(--text-muted)">Currency: <strong id="cur-label" style="color:var(--gold)">ZAR</strong></span>
+      <button id="cur-toggle-btn" onclick="toggleCurrency()" style="padding:6px 12px;font-size:12px;font-weight:700;font-family:inherit;background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);border-radius:8px;cursor:pointer;">Show in USD</button>
+    </div>
+  </div>
   <div class="hero-stats">
     <div class="hs-tile"><div class="hs-label">Total Trades</div><div class="hs-val" id="h-total">—</div></div>
     <div class="hs-tile"><div class="hs-label">Overall Win Rate</div><div class="hs-val gold" id="h-wr">—</div></div>
@@ -114,17 +120,29 @@ function fmtR(n){return 'R '+Math.abs(n||0).toLocaleString('en-ZA',{minimumFract
   renderAll();
 })();
 
+var displayCur='ZAR',usdZar=18.52;
+function toZAR(v,cur){return cur==='USD'?v*usdZar:v;}
+function fmtCur(v){return displayCur==='USD'?'$'+(v/usdZar).toFixed(0):'R '+Math.abs(v).toFixed(0);}
+function toggleCurrency(){
+  displayCur=displayCur==='ZAR'?'USD':'ZAR';
+  S('cur-toggle-btn').textContent='Show in '+(displayCur==='ZAR'?'USD':'ZAR');
+  S('cur-label').textContent=displayCur;
+  renderAll();
+}
+
 function renderAll(){
   var settled=allTrades.filter(function(t){return t.outcome==='win'||t.outcome==='loss';});
   var wins=settled.filter(function(t){return t.outcome==='win';});
   var wr=settled.length>0?((wins.length/settled.length)*100).toFixed(1)+'%':'—';
-  var totP=wins.reduce(function(s,t){return s+parseFloat(t.profit_zar||0);},0);
-  var totL=settled.filter(function(t){return t.outcome==='loss';}).reduce(function(s,t){return s+parseFloat(t.risk_amount||0);},0);
+
+  var totPzar=0,totLzar=0;
+  wins.forEach(function(t){var acc=accounts.find(function(a){return a.id===t.account_id;});totPzar+=toZAR(parseFloat(t.profit_zar||0),acc?acc.currency:'ZAR');});
+  settled.filter(function(t){return t.outcome==='loss';}).forEach(function(t){var acc=accounts.find(function(a){return a.id===t.account_id;});totLzar+=toZAR(parseFloat(t.risk_amount||0),acc?acc.currency:'ZAR');});
 
   S('h-total').textContent=settled.length;
   S('h-wr').textContent=wr;
-  S('h-profit').textContent=fmtR(totP);
-  S('h-loss').textContent=fmtR(totL);
+  S('h-profit').textContent=fmtCur(totPzar);
+  S('h-loss').textContent=fmtCur(totLzar);
 
   // Equity curve
   var eq=0,labels=[],data=[];
@@ -137,7 +155,7 @@ function renderAll(){
     new Chart(document.getElementById('equity-chart'),{
       type:'line',
       data:{labels:labels,datasets:[{label:'Equity',data:data,borderColor:'#d4a017',backgroundColor:'rgba(212,160,23,0.08)',fill:true,tension:0.3,pointRadius:2,borderWidth:2}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#4a5270',maxTicksLimit:8,font:{size:10}},grid:{color:'rgba(42,48,72,0.5)'}},y:{ticks:{color:'#4a5270',font:{size:10},callback:function(v){return 'R'+v.toFixed(0);}},grid:{color:'rgba(42,48,72,0.5)'}}}}
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#4a5270',maxTicksLimit:8,font:{size:10}},grid:{color:'rgba(42,48,72,0.5)'}},y:{ticks:{color:'#4a5270',font:{size:10},callback:function(v){return fmtCur(v);}},grid:{color:'rgba(42,48,72,0.5)'}}}}
     });
   }
 
@@ -170,13 +188,12 @@ function renderAll(){
     var s2=accTrades.filter(function(t){return t.outcome==='win'||t.outcome==='loss';});
     var w2=s2.filter(function(t){return t.outcome==='win';});
     var wr2=s2.length>0?((w2.length/s2.length)*100).toFixed(0)+'%':'—';
-    var p2=w2.reduce(function(s,t){return s+parseFloat(t.profit_zar||0);},0);
-    var sym=acc.currency==='USD'?'$':'R';
+    var p2zarRaw=w2.reduce(function(s,t){return s+toZAR(parseFloat(t.profit_zar||0),acc.currency);},0);
     return '<div class="acc-row">'
       +'<div class="ar-info"><div class="ar-name">'+esc(acc.account_name)+'</div><div class="ar-meta">'+(acc.account_type==='prop'?'Prop Firm':'Personal')+' · '+acc.currency+' · '+s2.length+' trades</div></div>'
       +'<div class="ar-stats">'
       +'<div class="ar-stat"><div class="ar-stat-lbl">Win Rate</div><div class="ar-stat-val gold">'+wr2+'</div></div>'
-      +'<div class="ar-stat"><div class="ar-stat-lbl">Total Profit</div><div class="ar-stat-val green">'+sym+p2.toFixed(0)+'</div></div>'
+      +'<div class="ar-stat"><div class="ar-stat-lbl">Total Profit</div><div class="ar-stat-val green">'+fmtCur(p2zarRaw)+'</div></div>'
       +'</div></div>';
   }).join('');
 }

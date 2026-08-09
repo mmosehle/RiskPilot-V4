@@ -94,3 +94,30 @@ SELECT * FROM trade_journal
 WHERE account_id = 'YOUR_ACCOUNT_ID_HERE'
 ORDER BY trade_date DESC;
 */
+
+/* ══════════════════════════════════════
+   V6 ADDITIONS — Run these in Supabase SQL Editor
+   (safe to add to your existing v5 tables)
+══════════════════════════════════════ */
+
+-- Add R:R mode columns to trading_accounts
+ALTER TABLE trading_accounts
+  ADD COLUMN IF NOT EXISTS rr_mode   TEXT DEFAULT 'dynamic',  -- 'fixed' | 'dynamic'
+  ADD COLUMN IF NOT EXISTS rr_ratio  NUMERIC DEFAULT NULL;    -- e.g. 3 for 1:3
+
+-- Verify the columns were added:
+-- SELECT column_name FROM information_schema.columns WHERE table_name='trading_accounts';
+
+/* ══════════════════════════════════════
+   V7 ADDITIONS — Run in Supabase SQL Editor
+══════════════════════════════════════ */
+
+-- Add current_balance column to trading_accounts
+-- Tracks the live balance for prop firm accounts
+ALTER TABLE trading_accounts
+  ADD COLUMN IF NOT EXISTS current_balance NUMERIC DEFAULT NULL;
+
+-- Initialize current_balance = account_size for existing prop accounts that don't have it yet
+UPDATE trading_accounts
+SET current_balance = account_size
+WHERE account_type = 'prop' AND current_balance IS NULL AND account_size IS NOT NULL;

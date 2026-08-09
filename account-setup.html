@@ -233,8 +233,12 @@
         </div>
       </div>
       <div class="form-group">
-        <label for="pr-size">Account Balance (<span id="pr-sym">$</span>)</label>
+        <label for="pr-size">Initial Account Balance (<span id="pr-sym">$</span>)</label>
         <input type="number" id="pr-size" placeholder="e.g. 10000" min="0"/>
+      </div>
+      <div class="form-group">
+        <label for="pr-current">Current Account Balance (<span class="pr-sym2">$</span>) <span style="color:var(--text-dim);font-weight:400;font-size:10px;">— if different from initial (e.g. already in profit/drawdown)</span></label>
+        <input type="number" id="pr-current" placeholder="Leave blank if same as initial" min="0"/>
       </div>
       <div class="form-row-2">
         <div class="form-group">
@@ -341,7 +345,7 @@ let wizard = {
   rr_mode:    null,    // 'fixed' | 'dynamic'
   rr_ratio:   3,       // default for fixed
   p_name:'', p_weekly_budget:0, p_profit_goal:0,
-  pr_name:'', pr_size:0, pr_profit:0, pr_daily:0, pr_max:0,
+  pr_name:'', pr_size:0, pr_current:null, pr_profit:0, pr_daily:0, pr_max:0,
 };
 
 function base(){ const p=window.location.pathname; return window.location.origin+p.substring(0,p.lastIndexOf('/')+1); }
@@ -408,7 +412,7 @@ function setCur(scope, cur){
   } else {
     document.getElementById('pr-cur-usd').classList.toggle('active',cur==='USD');
     document.getElementById('pr-cur-zar').classList.toggle('active',cur==='ZAR');
-    document.getElementById('pr-sym').textContent=sym;
+    document.getElementById('pr-sym').textContent=sym;document.querySelectorAll('.pr-sym2').forEach(function(e){e.textContent=sym;});
   }
 }
 
@@ -433,6 +437,8 @@ function validateStep2(type){
     if(size<=0){ showError('Please enter the account balance.'); return; }
     if(prof<=0||dail<=0||maxl<=0){ showError('Please enter all percentage limits.'); return; }
     wizard.pr_name=name; wizard.pr_size=size;
+    var curVal=parseFloat(document.getElementById('pr-current').value)||size;
+    wizard.pr_current=curVal;
     wizard.pr_profit=prof; wizard.pr_daily=dail; wizard.pr_max=maxl;
   }
   goToStep(3);
@@ -601,7 +607,8 @@ async function createAccount(){
       weekly_budget:    isProp ? null : wizard.p_weekly_budget,
       profit_goal:      isProp ? null : wizard.p_profit_goal,
       // prop
-      account_size:     isProp ? wizard.pr_size  : null,
+      account_size:     isProp ? wizard.pr_size    : null,
+      current_balance:  isProp ? wizard.pr_current : null,
       profit_target_pct:isProp ? wizard.pr_profit: null,
       daily_loss_pct:   isProp ? wizard.pr_daily : null,
       max_loss_pct:     isProp ? wizard.pr_max   : null,

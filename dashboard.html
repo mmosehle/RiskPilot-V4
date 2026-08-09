@@ -222,9 +222,9 @@ input::placeholder{color:var(--text-dim);}
 <!-- MAIN -->
 <div class="main">
   <div class="tab-nav">
-    <button class="tab-btn active" onclick="sw('journal')">&#128218; Trade Journal</button>
-    <button class="tab-btn" onclick="sw('calendar')">&#128197; P&amp;L Calendar</button>
-    <button class="tab-btn" onclick="sw('stats')">&#128202; Statistics</button>
+    <button class="tab-btn active" onclick="sw('journal')">Trade Journal</button>
+    <button class="tab-btn" onclick="sw('calendar')">P&L Calendar</button>
+    <button class="tab-btn" onclick="sw('stats')">Statistics</button>
   </div>
   <div class="page">
     <!-- JOURNAL -->
@@ -351,7 +351,20 @@ function renderJournal(){
 async function markT(id,outcome){
   var t=trades.find(function(x){return x.id===id;});if(!t)return;
   await supabase.from('trade_journal').update({outcome:outcome}).eq('id',id);
-  if(outcome==='win'){var nw=parseFloat(acc.weekly_wallet||0)+parseFloat(t.profit_zar||0)+parseFloat(t.risk_amount||0);await supabase.from('trading_accounts').update({weekly_wallet:nw}).eq('id',acc.id);acc.weekly_wallet=nw;}
+  var risk=parseFloat(t.risk_amount||0),profit=parseFloat(t.profit_zar||0);
+  if(acc.account_type==='prop'){
+    var cur=parseFloat(acc.current_balance||acc.account_size||0);
+    if(outcome==='win') cur+=profit;
+    else if(outcome==='loss') cur-=risk;
+    await supabase.from('trading_accounts').update({current_balance:cur}).eq('id',acc.id);
+    acc.current_balance=cur;
+  } else {
+    if(outcome==='win'){
+      var nw=parseFloat(acc.weekly_wallet||0)+risk+profit;
+      await supabase.from('trading_accounts').update({weekly_wallet:nw}).eq('id',acc.id);
+      acc.weekly_wallet=nw;
+    }
+  }
   await loadT();
 }
 function buildSel(){
@@ -471,6 +484,11 @@ async function handleSignOut(){await supabase.auth.signOut();goTo('auth.html');}
       <div class="ms-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
       <div class="ms-info"><div class="ms-lbl">All Accounts</div><div class="ms-sub">View and manage all accounts</div></div>
       <svg class="ms-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <a class="ms-link" href="trading-news.html">
+      <div class="ms-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg></div>
+      <div class="ms-body"><div class="ms-lbl">Trading News</div><div class="ms-sub">High impact news — coming soon</div></div>
+      <svg class="ms-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
     <a class="ms-link" href="social.html">
       <div class="ms-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>

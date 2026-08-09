@@ -278,7 +278,11 @@ function base(){var p=window.location.pathname;return window.location.origin+p.s
 function goTo(f){window.location.href=base()+f;}
 function S(id){return document.getElementById(id);}
 function sym(){return account&&account.currency==='USD'?'$':'R';}
-function fmtZar(n){var v=account&&account.currency==='USD'?n/usdZar:n;return sym()+' '+Math.abs(v).toLocaleString('en-ZA',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtZar(n){
+  // n is always in ZAR internally; convert for display
+  var v=account&&account.currency==='USD'?n/usdZar:n;
+  return sym()+' '+Math.abs(v).toFixed(2);
+}
 function showErr(m){var e=S('err');e.textContent=m;e.classList.add('show');}
 function clearErr(){S('err').textContent='';S('err').classList.remove('show');}
 
@@ -469,10 +473,14 @@ function calc(){
 function getRisk(){
   var acc=account;
   if(acc.account_type==='prop'){
-    var size=parseFloat(acc.account_size||0);
-    var riskUSD=setupType==='A'?size*0.005:size*0.0025;
-    return acc.currency==='USD'?riskUSD*usdZar:riskUSD;
+    // Always use INITIAL account_size for risk %, regardless of current_balance
+    var initSize=parseFloat(acc.account_size||0);
+    // Risk in account currency
+    var riskInAccCur=setupType==='A'?initSize*0.005:initSize*0.0025;
+    // Convert to ZAR for internal storage (profit_zar column)
+    return acc.currency==='USD'?riskInAccCur*usdZar:riskInAccCur;
   }
+  // Personal: daily budget
   var daily=parseFloat(acc.weekly_budget||0)/5;
   return setupType==='A'?daily:daily*0.5;
 }

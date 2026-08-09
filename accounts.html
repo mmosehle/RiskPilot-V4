@@ -202,7 +202,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
           </div>
           <div class="ah-btns">
             <button class="btn-add" onclick="goToAdd()">+ Add Trade</button>
-            <button class="btn-dash" onclick="goToDash()">&#128202; Dashboard</button>
+            <button class="btn-dash" onclick="goToDash()">Dashboard</button>
           </div>
         </div>
         <div class="m-grid" id="prop-m" style="display:none">
@@ -277,6 +277,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="ms-body"><div class="ms-lbl">All Accounts</div><div class="ms-sub">View and manage all accounts</div></div>
       <svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
+    <a class="ms-link" href="trading-news.html">
+      <div class="ms-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg></div>
+      <div class="ms-body"><div class="ms-lbl">Trading News</div><div class="ms-sub">High impact news — coming soon</div></div>
+      <svg class="ms-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
     <a class="ms-link" href="social.html">
       <div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
       <div class="ms-body"><div class="ms-lbl">Follow Us</div><div class="ms-sub">Instagram &amp; Discord</div></div>
@@ -349,28 +354,35 @@ async function showAcc(id){
   var a=accs.find(function(x){return x.id===id;});if(!a)return;
   S('active-sec').classList.add('show');
   var ip=a.account_type==='prop',s=sym(a);
+  var curBal=parseFloat(a.current_balance||a.account_size||0);
   S('ah-name').textContent=a.account_name;
-  S('ah-meta').textContent=(ip?'Prop Firm':'Personal Funded')+' · '+a.currency+(ip?' · '+s+Number(a.account_size||0).toLocaleString():'· Weekly: '+s+Number(a.weekly_budget||0).toLocaleString());
+  S('ah-meta').textContent=(ip?'Prop Firm':'Personal Funded')+' · '+a.currency
+    +(ip?' · Initial: '+s+Number(a.account_size||0).toLocaleString()+' · Current: '+s+curBal.toLocaleString()
+        :'· Weekly: '+s+Number(a.weekly_budget||0).toLocaleString());
   var tr=await supabase.from('trade_journal').select('*').eq('account_id',id).order('created_at',{ascending:false});
   allT=tr.data||[];
   var today=new Date().toISOString().slice(0,10);
   if(ip){
     S('prop-m').style.display='grid';S('pers-m').style.display='none';
-    var sz=parseFloat(a.account_size||0),pp=parseFloat(a.profit_target_pct||0),dp=parseFloat(a.daily_loss_pct||0),mp=parseFloat(a.max_loss_pct||0);
-    var pt=sz*pp/100,dl=sz*dp/100,ml=sz*mp/100;
-    var earn=allT.filter(function(t){return t.outcome==='win';}).reduce(function(x,t){return x+parseFloat(t.profit_zar||0);},0);
-    var tdL=allT.filter(function(t){return t.outcome==='loss'&&t.trade_date===today;}).reduce(function(x,t){return x+parseFloat(t.risk_amount||0);},0);
-    var ttL=allT.filter(function(t){return t.outcome==='loss';}).reduce(function(x,t){return x+parseFloat(t.risk_amount||0);},0);
-    S('pm-p').textContent=s+earn.toFixed(0)+' / '+s+pt.toFixed(0)+' ('+pp+'%)';
-    S('pm-d').textContent=s+tdL.toFixed(0)+' / '+s+dl.toFixed(0)+' ('+dp+'%)';
-    S('pm-m').textContent=s+ttL.toFixed(0)+' / '+s+ml.toFixed(0)+' ('+mp+'%)';
-    S('pm-pf').style.width=Math.min(100,pt>0?(earn/pt)*100:0)+'%';
-    S('pm-df').style.width=Math.min(100,dl>0?(tdL/dl)*100:0)+'%';
-    S('pm-mf').style.width=Math.min(100,ml>0?(ttL/ml)*100:0)+'%';
+    // Use INITIAL balance for risk % calcs, current balance for progress
+    var initSz=parseFloat(a.account_size||0);
+    var pp=parseFloat(a.profit_target_pct||0),dp=parseFloat(a.daily_loss_pct||0),mp=parseFloat(a.max_loss_pct||0);
+    var pt=initSz*pp/100, dl=initSz*dp/100, ml=initSz*mp/100;
+    // Profit = current balance vs initial
+    var profitSoFar=curBal-initSz;
+    var todayLoss=allT.filter(function(t){return t.outcome==='loss'&&t.trade_date===today;}).reduce(function(x,t){return x+parseFloat(t.risk_amount||0);},0);
+    var totalLoss=allT.filter(function(t){return t.outcome==='loss';}).reduce(function(x,t){return x+parseFloat(t.risk_amount||0);},0);
+    S('pm-p').textContent=(profitSoFar>=0?'+':'')+s+profitSoFar.toFixed(0)+' / '+s+pt.toFixed(0)+' ('+pp+'%)';
+    S('pm-d').textContent=s+todayLoss.toFixed(0)+' / '+s+dl.toFixed(0)+' ('+dp+'%)';
+    S('pm-m').textContent=s+totalLoss.toFixed(0)+' / '+s+ml.toFixed(0)+' ('+mp+'%)';
+    S('pm-pf').style.width=Math.min(100,pt>0?(Math.max(0,profitSoFar)/pt)*100:0)+'%';
+    S('pm-df').style.width=Math.min(100,dl>0?(todayLoss/dl)*100:0)+'%';
+    S('pm-mf').style.width=Math.min(100,ml>0?(totalLoss/ml)*100:0)+'%';
   }else{
     S('prop-m').style.display='none';S('pers-m').style.display='grid';
     var wb=parseFloat(a.weekly_budget||0),db=wb/5,gl=parseFloat(a.profit_goal||0),wl=parseFloat(a.weekly_wallet||0);
-    var ut=allT.filter(function(t){return t.trade_date===today&&t.outcome==='pending';}).reduce(function(x,t){return x+parseFloat(t.risk_amount||0);},0);
+    // used today = risk on ALL today's non-NT trades (win, loss, pending)
+    var ut=allT.filter(function(t){return t.trade_date===today&&t.outcome!=='not_triggered';}).reduce(function(x,t){return x+parseFloat(t.risk_amount||0);},0);
     S('pg-t').textContent=gl>0?s+gl.toLocaleString():'—';S('pg-e').textContent=s+wl.toFixed(0);
     S('pg-d').textContent=s+db.toFixed(0);S('pg-u').textContent=s+ut.toFixed(0);
     if(gl>0)S('pg-f').style.width=Math.min(100,(wl/gl)*100)+'%';
@@ -397,7 +409,30 @@ function renderTrades(){
 async function markT(id,outcome){
   var t=allT.find(function(x){return x.id===id;});if(!t)return;
   await supabase.from('trade_journal').update({outcome:outcome}).eq('id',id);
-  if(outcome==='win'){var a=accs.find(function(x){return x.id===t.account_id;});if(a){var nw=parseFloat(a.weekly_wallet||0)+parseFloat(t.profit_zar||0)+parseFloat(t.risk_amount||0);await supabase.from('trading_accounts').update({weekly_wallet:nw}).eq('id',a.id);a.weekly_wallet=nw;}}
+  var a=accs.find(function(x){return x.id===t.account_id;});
+  if(a){
+    var risk=parseFloat(t.risk_amount||0);
+    var profit=parseFloat(t.profit_zar||0);
+    if(a.account_type==='prop'){
+      // Prop: track current_balance changes
+      var cur=parseFloat(a.current_balance||a.account_size||0);
+      if(outcome==='win') cur=cur+profit;
+      else if(outcome==='loss') cur=cur-risk;
+      await supabase.from('trading_accounts').update({current_balance:cur}).eq('id',a.id);
+      a.current_balance=cur;
+    } else {
+      // Personal: wallet = sum of (risk+profit) on wins only; used_today tracked live
+      if(outcome==='win'){
+        var nw=parseFloat(a.weekly_wallet||0)+risk+profit;
+        await supabase.from('trading_accounts').update({weekly_wallet:nw}).eq('id',a.id);
+        a.weekly_wallet=nw;
+      }
+      // on loss/NT: wallet stays same, used_today is recalculated from DB on next load
+    }
+    if(outcome==='not_triggered'){
+      // refund — no balance change needed, recalculate on load
+    }
+  }
   await load();
 }
 
