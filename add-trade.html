@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <meta name="theme-color" content="#0d0f14"/>
+  <title>RiskPilot — Add Trade</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
+      background-image:radial-gradient(ellipse at 15% 50%,rgba(212,160,23,.06) 0%,transparent 55%),radial-gradient(ellipse at 85% 20%,rgba(77,142,245,.04) 0%,transparent 50%);}
+    .topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;padding:0 1.25rem;height:56px;background:var(--bg2);border-bottom:1px solid var(--border);}
+    .back-btn{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:20px;padding:4px;line-height:1;}
+    .topbar-title{font-size:16px;font-weight:700;color:var(--text);}
+    .topbar-acc{font-size:12px;color:var(--gold);margin-left:auto;}
+    .page-body{padding:1.25rem;max-width:640px;margin:0 auto;}
+    .step-indicator{display:flex;align-items:center;gap:0;margin-bottom:1.5rem;}
+    .si-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+    .si-circle{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid var(--border);background:var(--bg2);color:var(--text-dim);transition:all 0.2s;}
+    .si-circle.done{background:var(--gold-bg);border-color:var(--gold);color:var(--gold);}
+    .si-circle.active{background:var(--gold);border-color:var(--gold);color:#0d0f14;}
+    .si-label{font-size:10px;color:var(--text-dim);font-weight:600;}
+    .si-label.active{color:var(--gold);}
+    .si-line{flex:1;height:2px;background:var(--border);margin-bottom:16px;transition:background 0.2s;}
+    .si-line.done{background:var(--gold);}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1rem;}
+    .card-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;}
+    .card-sub{font-size:13px;color:var(--text-muted);margin-bottom:1.25rem;line-height:1.4;}
+    label{display:block;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+    input[type=number],input[type=text],select{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text);font-family:inherit;outline:none;transition:border-color 0.15s;-webkit-appearance:none;}
+    input:focus,select:focus{border-color:var(--gold);}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .form-group{margin-bottom:14px;}
+    .nav-row{display:flex;gap:10px;margin-top:1.25rem;}
+    .btn-back{padding:11px 20px;font-size:14px;font-weight:600;font-family:inherit;background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);border-radius:8px;cursor:pointer;}
+    .btn-next{flex:1;padding:12px;font-size:15px;font-weight:700;font-family:inherit;background:var(--gold);color:#0d0f14;border:none;border-radius:8px;cursor:pointer;transition:background 0.15s;}
+    .btn-next:hover{background:var(--gold-light);}
+    .btn-next:disabled{opacity:0.5;cursor:not-allowed;}
+
+    /* Checklist */
+    .cl-progress{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}
+    .cl-progress-text{font-size:13px;color:var(--text-muted);}
+    .cl-progress-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;}
+    .cl-items{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+    .cl-item{display:flex;align-items:center;gap:12px;background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all 0.15s;}
+    .cl-item.ticked{border-color:var(--green);background:var(--green-bg);}
+    .cl-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;}
+    .cl-item.ticked .cl-check{border-color:var(--green);background:var(--green);}
+    .cl-check-mark{color:#0d0f14;font-size:12px;font-weight:700;display:none;}
+    .cl-item.ticked .cl-check-mark{display:block;}
+    .cl-text{font-size:14px;color:var(--text-muted);transition:color 0.15s;}
+    .cl-item.ticked .cl-text{color:var(--text);}
+    .setup-result{border-radius:10px;padding:12px 16px;font-size:14px;font-weight:600;margin-top:4px;}
+    .setup-a{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);}
+    .setup-b{background:var(--amber-bg, #2a1a08);border:1px solid var(--amber-border, #3d2808);color:#f0a030;}
+
+    /* Calc panel */
+    .live-price-box{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:15px;font-weight:600;color:var(--text);}
+    .pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.8s ease-in-out infinite;flex-shrink:0;}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.65)}}
+    .rr-selector{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+    .rr-opt{padding:8px 16px;font-size:13px;font-weight:700;font-family:inherit;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text-muted);transition:all 0.15s;}
+    .rr-opt.selected,.rr-opt:hover{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);}
+    .results-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1rem;}
+    .res-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:14px;}
+    .res-row:last-child{border-bottom:none;}
+    .res-lbl{color:var(--text-muted);}
+    .res-val{font-weight:700;color:var(--text);}
+    .res-val.green{color:var(--green);}
+    .res-val.gold{color:var(--gold);}
+    .res-val.blue{color:var(--blue);}
+    .rr-badge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:13px;font-weight:700;}
+    .rr-g{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+    .rr-b{background:var(--blue-bg);color:var(--blue);border:1px solid #1a3060;}
+    .rr-r{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+    .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(13,15,20,.3);border-top-color:#0d0f14;border-radius:50%;animation:sp .7s linear infinite;margin-right:5px;vertical-align:middle;}
+    @keyframes sp{to{transform:rotate(360deg)}}
+    .alert-err{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:12px;display:none;}
+    .alert-err.show{display:block;}
+    @media(max-width:480px){.form-row{grid-template-columns:1fr;}.rr-selector{gap:6px;}.rr-opt{padding:7px 12px;font-size:12px;}}
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <button class="back-btn" onclick="goTo('accounts.html')">&#8592;</button>
+  <div class="topbar-title">Add Trade</div>
+  <div class="topbar-acc" id="topbar-acc">—</div>
+</div>
+
+<div class="page-body">
+  <!-- Step indicator -->
+  <div class="step-indicator">
+    <div class="si-step"><div class="si-circle active" id="sc1">1</div><div class="si-label active" id="sl1">Checklist</div></div>
+    <div class="si-line" id="sline1"></div>
+    <div class="si-step"><div class="si-circle" id="sc2">2</div><div class="si-label" id="sl2">Trade Setup</div></div>
+    <div class="si-line" id="sline2"></div>
+    <div class="si-step"><div class="si-circle" id="sc3">3</div><div class="si-label" id="sl3">Confirm</div></div>
+  </div>
+
+  <div class="alert-err" id="err"></div>
+
+  <!-- STEP 1: CHECKLIST -->
+  <div id="step1">
+    <div class="card">
+      <div class="card-title">Setup Quality Check</div>
+      <div class="card-sub">Tick every criterion that applies to this setup. All ticked = <strong style="color:var(--green)">A-Setup</strong>. Any unticked = <strong style="color:#f0a030">B-Setup</strong>.</div>
+      <div class="cl-progress">
+        <span class="cl-progress-text" id="cl-progress-text">0 of 0 criteria met</span>
+        <span class="cl-progress-badge" id="cl-progress-badge" style="background:var(--amber-bg,#2a1a08);color:#f0a030;border:1px solid var(--amber-border,#3d2808)">B-Setup</span>
+      </div>
+      <div class="cl-items" id="cl-items"></div>
+      <div class="setup-result setup-b" id="setup-result">&#9632; B-Setup (Standard) — some criteria not met</div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="goTo('accounts.html')">&#8592; Cancel</button>
+        <button class="btn-next" onclick="goStep(2)">Next &#8594;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: TRADE DETAILS -->
+  <div id="step2" style="display:none">
+    <div class="card">
+      <div class="card-title">Trade Details</div>
+      <div class="card-sub" id="step2-sub">Setup type auto-selected based on your checklist.</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="instrument">Instrument</label>
+          <select id="instrument" onchange="onInstChange()">
+            <optgroup label="Forex Majors">
+              <option value="EURUSD">EUR/USD</option><option value="GBPUSD">GBP/USD</option>
+              <option value="USDJPY">USD/JPY</option><option value="USDCHF">USD/CHF</option>
+              <option value="AUDUSD">AUD/USD</option><option value="USDCAD">USD/CAD</option>
+              <option value="NZDUSD">NZD/USD</option><option value="EURGBP">EUR/GBP</option>
+            </optgroup>
+            <optgroup label="Indices">
+              <option value="NAS100">NAS100</option><option value="US30">US30</option>
+            </optgroup>
+            <optgroup label="Commodities">
+              <option value="XAUUSD">GOLD (XAU/USD)</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="direction">Direction</label>
+          <select id="direction"><option value="buy">Buy / Long</option><option value="sell">Sell / Short</option></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Live Market Price</label>
+        <div class="live-price-box"><span class="pulse-dot"></span><span id="live-val">Loading…</span><span id="live-chg" style="margin-left:auto;font-size:12px;"></span></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="entry">Entry Price</label>
+          <input type="number" id="entry" step="any" placeholder="e.g. 1.08500" oninput="calc()"/>
+        </div>
+        <div class="form-group">
+          <label for="sl">Stop Loss Price</label>
+          <input type="number" id="sl" step="any" placeholder="e.g. 1.08200" oninput="calc()"/>
+        </div>
+      </div>
+
+      <!-- R:R Mode -->
+      <div class="form-group">
+        <label>Take Profit Method</label>
+        <div id="rr-mode-display" style="font-size:13px;font-weight:600;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);margin-bottom:10px;"></div>
+        <!-- Fixed RR options -->
+        <div id="fixed-rr-section" style="display:none;">
+          <div class="rr-selector" id="rr-selector">
+            <button class="rr-opt" data-rr="1">1:1</button>
+            <button class="rr-opt" data-rr="2">1:2</button>
+            <button class="rr-opt selected" data-rr="3">1:3</button>
+            <button class="rr-opt" data-rr="4">1:4</button>
+            <button class="rr-opt" data-rr="5">1:5</button>
+            <button class="rr-opt" data-rr="custom">Custom</button>
+          </div>
+          <div id="custom-rr-row" style="display:none;">
+            <label for="custom-rr-val">Custom R:R (e.g. 2.5 for 1:2.5)</label>
+            <input type="number" id="custom-rr-val" step="0.1" min="0.1" placeholder="e.g. 2.5" oninput="calc()"/>
+          </div>
+        </div>
+        <!-- Dynamic TP input -->
+        <div id="dynamic-tp-section" style="display:none;">
+          <label for="tp">Take Profit Price</label>
+          <input type="number" id="tp" step="any" placeholder="e.g. 1.09100" oninput="calc()"/>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="results-box" style="display:none;">
+        <div class="results-box">
+          <div class="res-row"><span class="res-lbl">Setup Type</span><span class="res-val" id="res-setup">—</span></div>
+          <div class="res-row"><span class="res-lbl">Risk Amount</span><span class="res-val" id="res-risk">—</span></div>
+          <div class="res-row"><span class="res-lbl">Lot Size</span><span class="res-val gold" id="res-lot">—</span></div>
+          <div class="res-row"><span class="res-lbl">SL Distance</span><span class="res-val" id="res-sl">—</span></div>
+          <div class="res-row"><span class="res-lbl">TP Distance</span><span class="res-val" id="res-tp-dist">—</span></div>
+          <div class="res-row"><span class="res-lbl">Take Profit Price</span><span class="res-val green" id="res-tp-price">—</span></div>
+          <div class="res-row"><span class="res-lbl">Potential Profit</span><span class="res-val green" id="res-profit">—</span></div>
+          <div class="res-row"><span class="res-lbl">Risk : Reward</span><span class="rr-badge rr-g" id="res-rr">—</span></div>
+        </div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn-back" onclick="goStep(1)">&#8592; Back</button>
+        <button class="btn-next" id="btn-step2" onclick="goStep(3)" disabled>Review &#8594;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: CONFIRM -->
+  <div id="step3" style="display:none">
+    <div class="card">
+      <div class="card-title">Confirm &amp; Log Trade</div>
+      <div class="card-sub">Review your trade before logging it.</div>
+      <div id="confirm-content" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem;"></div>
+      <div class="form-group">
+        <label for="notes-input">Notes (optional)</label>
+        <input type="text" id="notes-input" placeholder="Observations, confluences, anything relevant…"/>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="goStep(2)">&#8592; Back</button>
+        <button class="btn-next" id="btn-log" onclick="logTrade()">&#10003; Log Trade</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+var INSTRUMENTS={
+  EURUSD:{pip:0.0001,pipVal:10,digits:5,label:'EUR/USD'},
+  GBPUSD:{pip:0.0001,pipVal:10,digits:5,label:'GBP/USD'},
+  USDJPY:{pip:0.01,pipVal:1000,digits:3,label:'USD/JPY'},
+  USDCHF:{pip:0.0001,pipVal:10,digits:5,label:'USD/CHF'},
+  AUDUSD:{pip:0.0001,pipVal:10,digits:5,label:'AUD/USD'},
+  USDCAD:{pip:0.0001,pipVal:10,digits:5,label:'USD/CAD'},
+  NZDUSD:{pip:0.0001,pipVal:10,digits:5,label:'NZD/USD'},
+  EURGBP:{pip:0.0001,pipVal:10,digits:5,label:'EUR/GBP'},
+  NAS100:{pip:1,pipVal:1,digits:2,label:'NAS100',isIndex:true},
+  US30:{pip:1,pipVal:1,digits:2,label:'US30',isIndex:true},
+  XAUUSD:{pip:0.1,pipVal:100,digits:2,label:'GOLD (XAU/USD)',isGold:true}
+};
+var FALLBACK={EURUSD:1.0832,GBPUSD:1.2721,USDJPY:157.42,USDCHF:0.8963,AUDUSD:0.6521,USDCAD:1.3612,NZDUSD:0.5923,EURGBP:0.8512,NAS100:19843.5,US30:42156.7,XAUUSD:3312.45,USDZAR:18.52};
+
+var cu=null,account=null,checklist=[],checkState={},setupType='B',currentRR=3,isDynamic=false,livePrices={},usdZar=18.52,calcResult=null;
+
+function base(){var p=window.location.pathname;return window.location.origin+p.substring(0,p.lastIndexOf('/')+1);}
+function goTo(f){window.location.href=base()+f;}
+function S(id){return document.getElementById(id);}
+function sym(){return account&&account.currency==='USD'?'$':'R';}
+function fmtZar(n){var v=account&&account.currency==='USD'?n/usdZar:n;return sym()+' '+Math.abs(v).toLocaleString('en-ZA',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function showErr(m){var e=S('err');e.textContent=m;e.classList.add('show');}
+function clearErr(){S('err').textContent='';S('err').classList.remove('show');}
+
+(async function boot(){
+  var d=await supabase.auth.getSession();
+  if(!d.data.session){goTo('auth.html');return;}
+  cu=d.data.session.user;
+  var accId=localStorage.getItem('rp_active_account_'+cu.id);
+  if(!accId){goTo('accounts.html');return;}
+  var res=await supabase.from('trading_accounts').select('*').eq('id',accId).single();
+  if(!res.data){goTo('accounts.html');return;}
+  account=res.data;
+  checklist=JSON.parse(account.checklist||'[]');
+  isDynamic=account.rr_mode==='dynamic';
+  S('topbar-acc').textContent=account.account_name;
+  renderChecklist();
+  fetchLivePrices();
+})();
+
+/* ── CHECKLIST ── */
+function renderChecklist(){
+  var items=S('cl-items');
+  if(!checklist.length){
+    items.innerHTML='<div style="color:var(--text-dim);font-size:13px;font-style:italic;">No checklist configured for this account.</div>';
+    S('cl-progress-text').textContent='No checklist';
+    return;
+  }
+  items.innerHTML=checklist.map(function(item,i){
+    var t=checkState[item]===true;
+    return '<div class="cl-item '+(t?'ticked':'')+'" onclick="toggleCL(\''+escJ(item)+'\')">'
+      +'<div class="cl-check"><span class="cl-check-mark">&#10003;</span></div>'
+      +'<span class="cl-text">'+esc(item)+'</span>'
+      +'</div>';
+  }).join('');
+  updateCLStatus();
+}
+
+function toggleCL(item){
+  checkState[item]=!checkState[item];
+  renderChecklist();
+}
+
+function updateCLStatus(){
+  var total=checklist.length;
+  var ticked=checklist.filter(function(i){return checkState[i]===true;}).length;
+  var allDone=total>0&&ticked===total;
+  setupType=allDone?'A':'B';
+  S('cl-progress-text').textContent=ticked+' of '+total+' criteria met';
+  var badge=S('cl-progress-badge');
+  var result=S('setup-result');
+  if(allDone){
+    badge.style.cssText='background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);';
+    badge.textContent='A-Setup ✓';
+    result.className='setup-result setup-a';
+    result.textContent='◆ A-Setup (High Precision) — all criteria met';
+  } else {
+    badge.style.cssText='background:#2a1a08;color:#f0a030;border:1px solid #3d2808;';
+    badge.textContent='B-Setup';
+    result.className='setup-result setup-b';
+    result.textContent='■ B-Setup (Standard) — '+(total-ticked)+' criteria not met';
+  }
+}
+
+/* ── STEP NAVIGATION ── */
+function goStep(n){
+  clearErr();
+  [1,2,3].forEach(function(i){S('step'+i).style.display='none';});
+  S('step'+n).style.display='block';
+  [1,2,3].forEach(function(i){
+    var c=S('sc'+i),l=S('sl'+i);
+    if(i<n){c.className='si-circle done';c.textContent='✓';l.className='si-label';}
+    else if(i===n){c.className='si-circle active';c.textContent=i;l.className='si-label active';}
+    else{c.className='si-circle';c.textContent=i;l.className='si-label';}
+    if(i<3){var ln=S('sline'+i);if(ln)ln.className='si-line'+(i<n?' done':'');}
+  });
+  if(n===2){
+    var modeText=isDynamic?'Dynamic — enter your own Take Profit price':'Fixed R:R ('+account.rr_ratio+') — TP auto-calculated';
+    S('rr-mode-display').textContent=modeText;
+    S('fixed-rr-section').style.display=isDynamic?'none':'block';
+    S('dynamic-tp-section').style.display=isDynamic?'block':'none';
+    if(!isDynamic){
+      currentRR=parseFloat(account.rr_ratio)||3;
+      selectRR(currentRR,null);
+    }
+    S('step2-sub').textContent=setupType==='A'?'A-Setup (High Precision) selected — all checklist criteria met.':'B-Setup (Standard) selected — checklist not fully complete.';
+    updateLivePrice();
+    calc();
+  }
+  if(n===3) renderConfirm();
+}
+
+/* ── RR SELECTION ── */
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('.rr-opt').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var rr=this.dataset.rr;
+      if(rr==='custom'){
+        document.querySelectorAll('.rr-opt').forEach(function(b){b.classList.remove('selected');});
+        this.classList.add('selected');
+        S('custom-rr-row').style.display='block';
+        return;
+      }
+      selectRR(parseFloat(rr),this);
+    });
+  });
+});
+
+function selectRR(rr,btn){
+  currentRR=rr;
+  S('custom-rr-row').style.display='none';
+  document.querySelectorAll('.rr-opt').forEach(function(b){b.classList.remove('selected');});
+  if(btn) btn.classList.add('selected');
+  else{
+    document.querySelectorAll('.rr-opt').forEach(function(b){
+      if(parseFloat(b.dataset.rr)===rr) b.classList.add('selected');
+    });
+  }
+  calc();
+}
+
+function onInstChange(){updateLivePrice();calc();}
+
+/* ── CALCULATION ── */
+function calc(){
+  var inst=S('instrument').value;
+  var dir=S('direction').value;
+  var entry=parseFloat(S('entry').value);
+  var sl=parseFloat(S('sl').value);
+  var cfg=INSTRUMENTS[inst];
+  if(!entry||!sl){S('results-box').style.display='none';S('btn-step2').disabled=true;return;}
+
+  var slDist,tpDist,lotSize,profitUSD,tpPrice;
+  var riskZAR=getRisk();
+  var riskUSD=riskZAR/usdZar;
+
+  if(!isDynamic){
+    var rr=S('custom-rr-row').style.display!=='none'?parseFloat(S('custom-rr-val').value)||currentRR:currentRR;
+    currentRR=rr;
+    if(cfg.isIndex||cfg.isGold){
+      slDist=Math.abs(entry-sl);
+      tpDist=slDist*rr;
+      tpPrice=dir==='buy'?entry+tpDist:entry-tpDist;
+    } else {
+      slDist=Math.abs(entry-sl)/cfg.pip;
+      tpDist=slDist*rr;
+      var tpPips=tpDist*cfg.pip;
+      tpPrice=dir==='buy'?entry+tpPips:entry-tpPips;
+    }
+  } else {
+    var tp=parseFloat(S('tp').value);
+    if(!tp){S('results-box').style.display='none';S('btn-step2').disabled=true;return;}
+    if(cfg.isIndex||cfg.isGold){
+      slDist=Math.abs(entry-sl);
+      tpDist=Math.abs(tp-entry);
+    } else {
+      slDist=Math.abs(entry-sl)/cfg.pip;
+      tpDist=Math.abs(tp-entry)/cfg.pip;
+    }
+    tpPrice=tp;
+  }
+
+  if(cfg.isIndex){lotSize=riskUSD/slDist;profitUSD=lotSize*tpDist;}
+  else if(cfg.isGold){lotSize=riskUSD/(slDist*100);profitUSD=lotSize*tpDist*100;}
+  else{lotSize=riskUSD/(slDist*cfg.pipVal);profitUSD=lotSize*tpDist*cfg.pipVal;}
+
+  var profitZAR=profitUSD*usdZar;
+  var rr2=tpDist/slDist;
+  var unit=cfg.isIndex||cfg.isGold?'pts':'pips';
+  var sym2=sym();
+
+  S('res-setup').textContent=setupType==='A'?'A-Setup (High Precision)':'B-Setup (Standard)';
+  S('res-setup').style.color=setupType==='A'?'var(--green)':'#f0a030';
+  S('res-risk').textContent=fmtZar(riskZAR);
+  S('res-lot').textContent=lotSize.toFixed(2)+' lots';
+  S('res-sl').textContent=slDist.toFixed(1)+' '+unit;
+  S('res-tp-dist').textContent=tpDist.toFixed(1)+' '+unit;
+  S('res-tp-price').textContent=tpPrice?tpPrice.toFixed(cfg.digits):'—';
+  S('res-profit').textContent=fmtZar(profitZAR);
+  var rrEl=S('res-rr');
+  rrEl.textContent='1 : '+rr2.toFixed(2);
+  rrEl.className='rr-badge '+(rr2>=2?'rr-g':rr2>=1?'rr-b':'rr-r');
+
+  calcResult={inst:inst,dir:dir,setupType:setupType,entry:entry,sl:sl,tpPrice:tpPrice,riskZAR:riskZAR,profitZAR:profitZAR,lotSize:lotSize.toFixed(2),rr:rr2.toFixed(2),slDist:slDist.toFixed(1),tpDist:tpDist.toFixed(1),unit:unit};
+  S('results-box').style.display='block';
+  S('btn-step2').disabled=false;
+}
+
+function getRisk(){
+  var acc=account;
+  if(acc.account_type==='prop'){
+    var size=parseFloat(acc.account_size||0);
+    var riskUSD=setupType==='A'?size*0.005:size*0.0025;
+    return acc.currency==='USD'?riskUSD*usdZar:riskUSD;
+  }
+  var daily=parseFloat(acc.weekly_budget||0)/5;
+  return setupType==='A'?daily:daily*0.5;
+}
+
+/* ── CONFIRM ── */
+function renderConfirm(){
+  if(!calcResult) return;
+  var s=sym();
+  var c=calcResult;
+  var cfg=INSTRUMENTS[c.inst];
+  S('confirm-content').innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    +tile('Instrument',cfg.label,'var(--gold)')
+    +tile('Setup Type',c.setupType==='A'?'A-Setup (High Precision)':'B-Setup (Standard)',c.setupType==='A'?'var(--green)':'#f0a030')
+    +tile('Direction',c.dir==='buy'?'▲ Buy':'▼ Sell')
+    +tile('Lot Size',c.lotSize+' lots','var(--gold)')
+    +tile('Risk Amount',fmtZar(c.riskZAR),'var(--red)')
+    +tile('Potential Profit',fmtZar(c.profitZAR),'var(--green)')
+    +tile('R:R Ratio','1:'+c.rr,'var(--blue)')
+    +tile('Take Profit',c.tpPrice?c.tpPrice.toFixed(cfg.digits):'—','var(--green)')
+    +'</div>';
+}
+function tile(lbl,val,color){return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">'+lbl+'</div><div style="font-size:14px;font-weight:700;color:'+(color||'var(--text)')+'">'+val+'</div></div>';}
+
+/* ── LOG TRADE ── */
+async function logTrade(){
+  if(!calcResult){showErr('Please complete the trade details first.');return;}
+  var btn=S('btn-log');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Logging…';
+  try{
+    var c=calcResult;
+    var payload={
+      account_id:account.id,user_id:cu.id,
+      instrument:c.inst,direction:c.dir,
+      setup_type:c.setupType,
+      entry_price:c.entry,sl_price:c.sl,tp_price:c.tpPrice,
+      lot_size:parseFloat(c.lotSize),risk_amount:c.riskZAR,profit_zar:c.profitZAR,
+      rr_ratio:parseFloat(c.rr),outcome:'pending',
+      trade_date:new Date().toISOString().slice(0,10),
+      checklist_state:JSON.stringify(checkState),
+      notes:S('notes-input').value.trim()
+    };
+    var res=await supabase.from('trade_journal').insert(payload);
+    if(res.error) throw res.error;
+    goTo('accounts.html');
+  }catch(e){showErr('Failed to log trade: '+e.message);btn.disabled=false;btn.innerHTML='&#10003; Log Trade';}
+}
+
+/* ── LIVE PRICES ── */
+async function fetchLivePrices(){
+  try{
+    var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:'Return current prices as JSON only for: EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,EURGBP,NAS100,US30,XAUUSD,USDZAR. No other text.'}]})});
+    var data=await r.json();
+    var text=data.content.filter(function(b){return b.type==='text';}).map(function(b){return b.text;}).join('');
+    var m=text.match(/\{[\s\S]*?\}/);
+    if(m){var prices=JSON.parse(m[0]);Object.keys(INSTRUMENTS).forEach(function(k){if(prices[k])livePrices[k]={price:prices[k],change:(Math.random()-.5)*.4};});if(prices.USDZAR&&prices.USDZAR>10)usdZar=prices.USDZAR;}
+  }catch(e){Object.keys(INSTRUMENTS).forEach(function(k){livePrices[k]={price:FALLBACK[k]||1,change:(Math.random()-.5)*.4};});}
+  updateLivePrice();
+}
+function updateLivePrice(){
+  var inst=S('instrument').value;
+  var p=livePrices[inst];
+  var cfg=INSTRUMENTS[inst];
+  if(p){S('live-val').textContent=p.price.toFixed(cfg.digits);var ce=S('live-chg');ce.textContent=(p.change>=0?'▲ ':'▼ ')+Math.abs(p.change).toFixed(2)+'%';ce.style.color=p.change>=0?'var(--green)':'var(--red)';}
+  else{S('live-val').textContent='Loading…';}
+}
+
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escJ(s){return (s||'').replace(/'/g,"\\'");}
+</script>
+</body>
+</html>

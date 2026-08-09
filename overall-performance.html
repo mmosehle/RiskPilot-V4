@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <meta name="theme-color" content="#0d0f14"/>
+  <title>RiskPilot — Overall Performance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+    .topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;padding:0 1.25rem;height:56px;background:var(--bg2);border-bottom:1px solid var(--border);}
+    .back-btn{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:20px;padding:4px;line-height:1;}
+    .topbar-title{font-size:16px;font-weight:700;color:var(--text);}
+    .page-body{padding:1.25rem;max-width:860px;margin:0 auto;}
+    .section-label{font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+    .hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem;}
+    .hs-tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 14px;}
+    .hs-label{font-size:10px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+    .hs-val{font-size:26px;font-weight:800;color:var(--text);}
+    .hs-val.green{color:var(--green);} .hs-val.gold{color:var(--gold);} .hs-val.blue{color:var(--blue);}
+    .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem;}
+    .chart-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:1rem;}
+    .chart-wrap{position:relative;height:220px;}
+    .acc-breakdown{display:flex;flex-direction:column;gap:10px;margin-bottom:1.25rem;}
+    .acc-row{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;display:flex;align-items:center;gap:14px;}
+    .ar-info{flex:1;}
+    .ar-name{font-size:14px;font-weight:700;color:var(--text);}
+    .ar-meta{font-size:12px;color:var(--text-muted);margin-top:2px;}
+    .ar-stats{display:flex;gap:16px;flex-shrink:0;}
+    .ar-stat{text-align:right;}
+    .ar-stat-lbl{font-size:10px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:0.4px;}
+    .ar-stat-val{font-size:15px;font-weight:700;color:var(--text);}
+    .ar-stat-val.green{color:var(--green);} .ar-stat-val.gold{color:var(--gold);}
+    @media(max-width:600px){.hero-stats{grid-template-columns:1fr 1fr;}.ar-stats{gap:10px;}}
+    @media(max-width:380px){.hero-stats{grid-template-columns:1fr;}.ar-stats{flex-direction:column;}}
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <button class="back-btn" onclick="goTo('accounts.html')">&#8592;</button>
+  <div class="topbar-title">Overall Performance</div>
+</div>
+<div class="page-body">
+  <div class="section-label">Across All Accounts</div>
+  <div class="hero-stats">
+    <div class="hs-tile"><div class="hs-label">Total Trades</div><div class="hs-val" id="h-total">—</div></div>
+    <div class="hs-tile"><div class="hs-label">Overall Win Rate</div><div class="hs-val gold" id="h-wr">—</div></div>
+    <div class="hs-tile"><div class="hs-label">Total Profit (ZAR)</div><div class="hs-val green" id="h-profit">—</div></div>
+    <div class="hs-tile"><div class="hs-label">Total Loss (ZAR)</div><div class="hs-val" style="color:var(--red)" id="h-loss">—</div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">Combined Equity Curve (all accounts)</div>
+    <div class="chart-wrap"><canvas id="equity-chart"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">Monthly Orders — All Accounts</div>
+    <div class="chart-wrap"><canvas id="orders-chart"></canvas></div>
+  </div>
+
+  <div class="section-label" style="margin-top:0.5rem">Per Account Breakdown</div>
+  <div class="acc-breakdown" id="acc-breakdown">Loading…</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+var cu=null,accounts=[],allTrades=[];
+function base(){var p=window.location.pathname;return window.location.origin+p.substring(0,p.lastIndexOf('/')+1);}
+function goTo(f){window.location.href=base()+f;}
+function S(id){return document.getElementById(id);}
+function fmtR(n){return 'R '+Math.abs(n||0).toLocaleString('en-ZA',{minimumFractionDigits:0,maximumFractionDigits:0});}
+
+(async function boot(){
+  var d=await supabase.auth.getSession();
+  if(!d.data.session){goTo('auth.html');return;}
+  cu=d.data.session.user;
+  var ar=await supabase.from('trading_accounts').select('*').eq('user_id',cu.id).order('created_at',{ascending:false});
+  accounts=ar.data||[];
+  if(!accounts.length){document.getElementById('acc-breakdown').innerHTML='<div style="text-align:center;padding:2rem;color:var(--text-dim)">No accounts yet.</div>';return;}
+  var tr=await supabase.from('trade_journal').select('*').eq('user_id',cu.id).order('trade_date',{ascending:true});
+  allTrades=tr.data||[];
+  renderAll();
+})();
+
+function renderAll(){
+  var settled=allTrades.filter(function(t){return t.outcome==='win'||t.outcome==='loss';});
+  var wins=settled.filter(function(t){return t.outcome==='win';});
+  var wr=settled.length>0?((wins.length/settled.length)*100).toFixed(1)+'%':'—';
+  var totP=wins.reduce(function(s,t){return s+parseFloat(t.profit_zar||0);},0);
+  var totL=settled.filter(function(t){return t.outcome==='loss';}).reduce(function(s,t){return s+parseFloat(t.risk_amount||0);},0);
+
+  S('h-total').textContent=settled.length;
+  S('h-wr').textContent=wr;
+  S('h-profit').textContent=fmtR(totP);
+  S('h-loss').textContent=fmtR(totL);
+
+  // Equity curve
+  var eq=0,labels=[],data=[];
+  settled.forEach(function(t,i){
+    eq+=t.outcome==='win'?parseFloat(t.profit_zar||0):-parseFloat(t.risk_amount||0);
+    labels.push(t.trade_date||('#'+i));
+    data.push(parseFloat(eq.toFixed(2)));
+  });
+  if(data.length){
+    new Chart(document.getElementById('equity-chart'),{
+      type:'line',
+      data:{labels:labels,datasets:[{label:'Equity',data:data,borderColor:'#d4a017',backgroundColor:'rgba(212,160,23,0.08)',fill:true,tension:0.3,pointRadius:2,borderWidth:2}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#4a5270',maxTicksLimit:8,font:{size:10}},grid:{color:'rgba(42,48,72,0.5)'}},y:{ticks:{color:'#4a5270',font:{size:10},callback:function(v){return 'R'+v.toFixed(0);}},grid:{color:'rgba(42,48,72,0.5)'}}}}
+    });
+  }
+
+  // Monthly bar
+  var monthly={};
+  allTrades.forEach(function(t){
+    var m=(t.trade_date||'').slice(0,7);
+    if(!m)return;
+    if(!monthly[m])monthly[m]={w:0,l:0};
+    if(t.outcome==='win')monthly[m].w++;
+    else if(t.outcome==='loss')monthly[m].l++;
+  });
+  var ml=Object.keys(monthly).sort();
+  if(ml.length){
+    new Chart(document.getElementById('orders-chart'),{
+      type:'bar',
+      data:{labels:ml,datasets:[
+        {label:'Wins',data:ml.map(function(l){return monthly[l].w;}),backgroundColor:'rgba(34,201,132,0.7)',borderRadius:4},
+        {label:'Losses',data:ml.map(function(l){return monthly[l].l;}),backgroundColor:'rgba(240,80,96,0.7)',borderRadius:4}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7a84a0',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(42,48,72,0.5)'}},y:{ticks:{color:'#4a5270',font:{size:10},stepSize:1},grid:{color:'rgba(42,48,72,0.5)'}}}}
+    });
+  }
+
+  // Per account breakdown
+  var ab=S('acc-breakdown');
+  if(!accounts.length){ab.innerHTML='<div style="color:var(--text-dim);font-size:13px;text-align:center;padding:2rem">No accounts.</div>';return;}
+  ab.innerHTML=accounts.map(function(acc){
+    var accTrades=allTrades.filter(function(t){return t.account_id===acc.id;});
+    var s2=accTrades.filter(function(t){return t.outcome==='win'||t.outcome==='loss';});
+    var w2=s2.filter(function(t){return t.outcome==='win';});
+    var wr2=s2.length>0?((w2.length/s2.length)*100).toFixed(0)+'%':'—';
+    var p2=w2.reduce(function(s,t){return s+parseFloat(t.profit_zar||0);},0);
+    var sym=acc.currency==='USD'?'$':'R';
+    return '<div class="acc-row">'
+      +'<div class="ar-info"><div class="ar-name">'+esc(acc.account_name)+'</div><div class="ar-meta">'+(acc.account_type==='prop'?'Prop Firm':'Personal')+' · '+acc.currency+' · '+s2.length+' trades</div></div>'
+      +'<div class="ar-stats">'
+      +'<div class="ar-stat"><div class="ar-stat-lbl">Win Rate</div><div class="ar-stat-val gold">'+wr2+'</div></div>'
+      +'<div class="ar-stat"><div class="ar-stat-lbl">Total Profit</div><div class="ar-stat-val green">'+sym+p2.toFixed(0)+'</div></div>'
+      +'</div></div>';
+  }).join('');
+}
+
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script>
+</body>
+</html>

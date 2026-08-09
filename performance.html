@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <meta name="theme-color" content="#0d0f14"/>
+  <title>RiskPilot — Performance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+    .topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;padding:0 1.25rem;height:56px;background:var(--bg2);border-bottom:1px solid var(--border);}
+    .back-btn{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:20px;padding:4px;line-height:1;}
+    .topbar-info{flex:1;}
+    .topbar-title{font-size:16px;font-weight:700;color:var(--text);}
+    .topbar-sub{font-size:11px;color:var(--gold);}
+    .page-body{padding:1.25rem;max-width:860px;margin:0 auto;}
+    .section-label{font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+    .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:1.5rem;}
+    .stat-tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 14px;}
+    .st-label{font-size:10px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+    .st-val{font-size:22px;font-weight:700;color:var(--text);}
+    .st-val.green{color:var(--green);} .st-val.red{color:var(--red);} .st-val.gold{color:var(--gold);} .st-val.blue{color:var(--blue);}
+    .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem;}
+    .chart-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:1rem;}
+    .chart-wrap{position:relative;height:220px;}
+    .empty{text-align:center;padding:2rem;color:var(--text-dim);font-size:13px;}
+    @media(max-width:600px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:380px){.stats-grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <button class="back-btn" onclick="goTo('accounts.html')">&#8592;</button>
+  <div class="topbar-info">
+    <div class="topbar-title" id="perf-title">Performance</div>
+    <div class="topbar-sub" id="perf-sub">Loading…</div>
+  </div>
+</div>
+<div class="page-body">
+  <div class="section-label">Account Statistics</div>
+  <div class="stats-grid">
+    <div class="stat-tile"><div class="st-label">Total Trades</div><div class="st-val" id="s-total">—</div></div>
+    <div class="stat-tile"><div class="st-label">Win Rate</div><div class="st-val gold" id="s-wr">—</div></div>
+    <div class="stat-tile"><div class="st-label">Avg Profit</div><div class="st-val green" id="s-ap">—</div></div>
+    <div class="stat-tile"><div class="st-label">Avg Loss</div><div class="st-val red" id="s-al">—</div></div>
+    <div class="stat-tile"><div class="st-label">Avg R:R</div><div class="st-val blue" id="s-rr">—</div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">Equity Curve</div>
+    <div class="chart-wrap"><canvas id="equity-chart"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">Total Orders — Monthly</div>
+    <div class="chart-wrap"><canvas id="orders-chart"></canvas></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+var cu=null,account=null,trades=[];
+function base(){var p=window.location.pathname;return window.location.origin+p.substring(0,p.lastIndexOf('/')+1);}
+function goTo(f){window.location.href=base()+f;}
+function S(id){return document.getElementById(id);}
+function sym(){return account&&account.currency==='USD'?'$':'R';}
+function fmtN(n){return sym()+Math.abs(n||0).toFixed(0);}
+
+(async function boot(){
+  var d=await supabase.auth.getSession();
+  if(!d.data.session){goTo('auth.html');return;}
+  cu=d.data.session.user;
+  var accId=localStorage.getItem('rp_perf_account')||localStorage.getItem('rp_active_account_'+cu.id);
+  if(!accId){goTo('accounts.html');return;}
+  var ar=await supabase.from('trading_accounts').select('*').eq('id',accId).single();
+  if(!ar.data){goTo('accounts.html');return;}
+  account=ar.data;
+  S('perf-title').textContent='Performance';
+  S('perf-sub').textContent=account.account_name+' · '+account.currency;
+
+  var tr=await supabase.from('trade_journal').select('*').eq('account_id',accId).order('trade_date',{ascending:true});
+  trades=tr.data||[];
+  renderStats();
+  renderEquity();
+  renderOrders();
+})();
+
+function renderStats(){
+  var settled=trades.filter(function(t){return t.outcome==='win'||t.outcome==='loss';});
+  var wins=settled.filter(function(t){return t.outcome==='win';});
+  var losses=settled.filter(function(t){return t.outcome==='loss';});
+  var wr=settled.length>0?((wins.length/settled.length)*100).toFixed(1)+'%':'—';
+  var ap=wins.length>0?(wins.reduce(function(s,t){return s+parseFloat(t.profit_zar||0);},0)/wins.length):'—';
+  var al=losses.length>0?(losses.reduce(function(s,t){return s+parseFloat(t.risk_amount||0);},0)/losses.length):'—';
+  var rrs=settled.filter(function(t){return t.rr_ratio;}).map(function(t){return parseFloat(t.rr_ratio);});
+  var arr=rrs.length>0?(rrs.reduce(function(a,b){return a+b;},0)/rrs.length):'—';
+  S('s-total').textContent=settled.length;
+  S('s-wr').textContent=wr;
+  S('s-ap').textContent=ap!=='—'?fmtN(ap):'—';
+  S('s-al').textContent=al!=='—'?fmtN(al):'—';
+  S('s-rr').textContent=arr!=='—'?'1:'+arr.toFixed(2):'—';
+}
+
+function renderEquity(){
+  var settled=trades.filter(function(t){return t.outcome==='win'||t.outcome==='loss';});
+  if(!settled.length){return;}
+  var equity=0,labels=[],data=[];
+  settled.forEach(function(t,i){
+    equity+=t.outcome==='win'?parseFloat(t.profit_zar||0):-parseFloat(t.risk_amount||0);
+    labels.push('#'+(i+1)+' '+esc(t.instrument||''));
+    data.push(parseFloat(equity.toFixed(2)));
+  });
+  new Chart(document.getElementById('equity-chart'),{
+    type:'line',
+    data:{labels:labels,datasets:[{label:'Equity',data:data,borderColor:'#d4a017',backgroundColor:'rgba(212,160,23,0.08)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:'#d4a017',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#4a5270',maxTicksLimit:8,font:{size:10}},grid:{color:'rgba(42,48,72,0.5)'}},y:{ticks:{color:'#4a5270',font:{size:10},callback:function(v){return sym()+v.toFixed(0);}},grid:{color:'rgba(42,48,72,0.5)'}}}}
+  });
+}
+
+function renderOrders(){
+  if(!trades.length){return;}
+  var monthly={};
+  trades.forEach(function(t){
+    var m=(t.trade_date||'').slice(0,7);
+    if(!m)return;
+    if(!monthly[m])monthly[m]={wins:0,losses:0,nt:0};
+    if(t.outcome==='win')monthly[m].wins++;
+    else if(t.outcome==='loss')monthly[m].losses++;
+    else if(t.outcome==='not_triggered')monthly[m].nt++;
+  });
+  var labels=Object.keys(monthly).sort();
+  var wins=labels.map(function(l){return monthly[l].wins;});
+  var losses=labels.map(function(l){return monthly[l].losses;});
+  var nt=labels.map(function(l){return monthly[l].nt;});
+  new Chart(document.getElementById('orders-chart'),{
+    type:'bar',
+    data:{labels:labels,datasets:[
+      {label:'Wins',data:wins,backgroundColor:'rgba(34,201,132,0.7)',borderRadius:4},
+      {label:'Losses',data:losses,backgroundColor:'rgba(240,80,96,0.7)',borderRadius:4},
+      {label:'N/T',data:nt,backgroundColor:'rgba(74,82,112,0.5)',borderRadius:4}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7a84a0',font:{size:11}}}},scales:{x:{stacked:false,ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(42,48,72,0.5)'}},y:{ticks:{color:'#4a5270',font:{size:10},stepSize:1},grid:{color:'rgba(42,48,72,0.5)'}}}}
+  });
+}
+
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script>
+</body>
+</html>

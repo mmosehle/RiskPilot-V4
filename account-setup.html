@@ -123,7 +123,12 @@
     <div class="wp-line" id="wline3"></div>
     <div class="wp-step">
       <div class="wp-circle" id="wc4">4</div>
-      <div class="wp-label" id="wl4">Review</div>
+      <div class="wp-label" id="wl4">Risk/Reward</div>
+    </div>
+    <div class="wp-line" id="wline4"></div>
+    <div class="wp-step">
+      <div class="wp-circle" id="wc5">5</div>
+      <div class="wp-label" id="wl5">Review</div>
     </div>
   </div>
 
@@ -241,13 +246,53 @@
       </div>
     </div>
 
-    <!-- ════ STEP 4: REVIEW ════ -->
+    <!-- ════ STEP 4: RISK/REWARD ════ -->
     <div id="step4" style="display:none">
+      <div class="wc-title">Risk to Reward Mode</div>
+      <div class="wc-sub">Choose how Take Profit is calculated when you add a trade.</div>
+      <div class="type-grid">
+        <div class="type-option" id="rr-fixed" onclick="selectRRMode('fixed')">
+          <div class="type-icon">🎯</div>
+          <div class="type-name">Fixed R:R</div>
+          <div class="type-desc">Choose a ratio (1:1 to 1:5 or custom). Take Profit is calculated automatically from your Stop Loss.</div>
+        </div>
+        <div class="type-option" id="rr-dynamic" onclick="selectRRMode('dynamic')">
+          <div class="type-icon">✏️</div>
+          <div class="type-name">Dynamic R:R</div>
+          <div class="type-desc">You manually enter the Take Profit price for every trade. Full control every time.</div>
+        </div>
+      </div>
+      <div id="fixed-rr-options" style="display:none;margin-top:4px;">
+        <label style="margin-bottom:8px;">Default R:R Ratio</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+          <button class="cur-opt" data-rr="1" onclick="pickDefaultRR(1,this)">1:1</button>
+          <button class="cur-opt" data-rr="2" onclick="pickDefaultRR(2,this)">1:2</button>
+          <button class="cur-opt active" data-rr="3" onclick="pickDefaultRR(3,this)">1:3</button>
+          <button class="cur-opt" data-rr="4" onclick="pickDefaultRR(4,this)">1:4</button>
+          <button class="cur-opt" data-rr="5" onclick="pickDefaultRR(5,this)">1:5</button>
+          <button class="cur-opt" data-rr="custom" onclick="pickDefaultRR(0,this)">Custom</button>
+        </div>
+        <div id="custom-rr-wrap" style="display:none;">
+          <div class="form-group" style="margin-bottom:0">
+            <label for="custom-rr">Custom R:R (e.g. 2.5 for 1:2.5)</label>
+            <input type="number" id="custom-rr" step="0.1" min="0.1" placeholder="e.g. 2.5"/>
+          </div>
+        </div>
+        <div class="cl-hint" style="margin-top:6px;">This will be the default. You can still adjust it per trade.</div>
+      </div>
+      <div class="wizard-nav">
+        <button class="btn-back" onclick="goToStep(3)">← Back</button>
+        <button class="btn-next" id="btn-step4" onclick="validateStep4()" disabled>Next →</button>
+      </div>
+    </div>
+
+    <!-- ════ STEP 5: REVIEW ════ -->
+    <div id="step5" style="display:none">
       <div class="wc-title">Review &amp; Create</div>
       <div class="wc-sub">Confirm your account details before creating.</div>
       <div id="review-content" style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem;"></div>
       <div class="wizard-nav">
-        <button class="btn-back" onclick="goToStep(3)">← Back</button>
+        <button class="btn-back" onclick="goToStep(4)">← Back</button>
         <button class="btn-next" id="btn-create" onclick="createAccount()">Create Account</button>
       </div>
     </div>
@@ -261,12 +306,12 @@
 let currentUser = null;
 let wizard = {
   step:       1,
-  type:       null,   // 'personal' | 'prop'
+  type:       null,
   currency:   { personal:'ZAR', prop:'USD' },
   checklist:  [],
-  // personal
-  p_name:     '', p_weekly_budget:0, p_profit_goal:0,
-  // prop
+  rr_mode:    null,    // 'fixed' | 'dynamic'
+  rr_ratio:   3,       // default for fixed
+  p_name:'', p_weekly_budget:0, p_profit_goal:0,
   pr_name:'', pr_size:0, pr_profit:0, pr_daily:0, pr_max:0,
 };
 
@@ -287,30 +332,31 @@ function clearError(){ const e=document.getElementById('wizard-error'); e.textCo
 function goToStep(n){
   clearError();
   wizard.step = n;
-  // Hide all steps
-  [1,2,3,4].forEach(i=>{
-    document.getElementById('step'+i)?.style && (document.getElementById('step'+i).style.display='none');
+  [1,2,3,4,5].forEach(i=>{
+    const el=document.getElementById('step'+i);
+    if(el) el.style.display='none';
   });
   document.getElementById('step2-personal').style.display='none';
   document.getElementById('step2-prop').style.display='none';
 
-  // Show correct step
   if(n===1) document.getElementById('step1').style.display='block';
   if(n===2 && wizard.type==='personal') document.getElementById('step2-personal').style.display='block';
   if(n===2 && wizard.type==='prop')     document.getElementById('step2-prop').style.display='block';
   if(n===3) { document.getElementById('step3').style.display='block'; renderChecklist(); }
-  if(n===4) { document.getElementById('step4').style.display='block'; renderReview(); }
+  if(n===4)   document.getElementById('step4').style.display='block';
+  if(n===5) { document.getElementById('step5').style.display='block'; renderReview(); }
 
   updateProgress(n);
 }
 
 function updateProgress(n){
-  [1,2,3,4].forEach(i=>{
+  [1,2,3,4,5].forEach(i=>{
     const c=document.getElementById('wc'+i), l=document.getElementById('wl'+i);
+    if(!c) return;
     if(i<n){  c.className='wp-circle done';   l.className='wp-label'; c.textContent='✓'; }
     if(i===n){ c.className='wp-circle active'; l.className='wp-label active'; c.textContent=i; }
     if(i>n){  c.className='wp-circle';         l.className='wp-label'; c.textContent=i; }
-    if(i<4){ const line=document.getElementById('wline'+i); if(line) line.className='wp-line'+(i<n?' done':''); }
+    if(i<5){ const line=document.getElementById('wline'+i); if(line) line.className='wp-line'+(i<n?' done':''); }
   });
 }
 
@@ -399,6 +445,35 @@ function validateStep3(){
   clearError();
   if(wizard.checklist.length<3){ showError('Please add at least 3 checklist items.'); return; }
   goToStep(4);
+}
+
+/* R:R MODE */
+function selectRRMode(mode){
+  wizard.rr_mode=mode;
+  document.getElementById('rr-fixed').classList.toggle('selected',mode==='fixed');
+  document.getElementById('rr-dynamic').classList.toggle('selected',mode==='dynamic');
+  document.getElementById('fixed-rr-options').style.display=mode==='fixed'?'block':'none';
+  document.getElementById('btn-step4').disabled=false;
+}
+function pickDefaultRR(rr,btn){
+  document.querySelectorAll('[data-rr]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(rr===0){ document.getElementById('custom-rr-wrap').style.display='block'; }
+  else{ document.getElementById('custom-rr-wrap').style.display='none'; wizard.rr_ratio=rr; }
+}
+function validateStep4(){
+  clearError();
+  if(!wizard.rr_mode){ showError('Please choose a Risk to Reward mode.'); return; }
+  if(wizard.rr_mode==='fixed'){
+    const custom=document.getElementById('custom-rr').value;
+    const wrap=document.getElementById('custom-rr-wrap');
+    if(wrap.style.display!=='none'){
+      const v=parseFloat(custom)||0;
+      if(v<=0){ showError('Please enter a valid custom R:R ratio.'); return; }
+      wizard.rr_ratio=v;
+    }
+  }
+  goToStep(5);
 }
 
 /* ── REVIEW ── */
@@ -491,6 +566,8 @@ async function createAccount(){
       currency:         cur,
       weekly_wallet:    0,
       checklist:        JSON.stringify(wizard.checklist),
+      rr_mode:          wizard.rr_mode,
+      rr_ratio:         wizard.rr_mode==='fixed' ? wizard.rr_ratio : null,
       // personal
       weekly_budget:    isProp ? null : wizard.p_weekly_budget,
       profit_goal:      isProp ? null : wizard.p_profit_goal,
