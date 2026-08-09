@@ -10,9 +10,9 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-    .topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;padding:0 1.25rem;height:56px;background:var(--bg2);border-bottom:1px solid var(--border);}
-    .back-btn{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:20px;padding:4px;line-height:1;}
-    .topbar-title{font-size:16px;font-weight:700;color:var(--text);}
+    
+    
+    
     .page-body{padding:1.25rem;max-width:700px;margin:0 auto;}
     .section-title{font-size:14px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;}
     .acc-list{display:flex;flex-direction:column;gap:10px;margin-bottom:2rem;}
@@ -56,16 +56,14 @@
 .ms-sub{font-size:11px;color:var(--text-dim);margin-top:1px;}
 .ms-chev{width:16px;height:16px;stroke:var(--text-dim);fill:none;flex-shrink:0;}
 .ms-out{width:calc(100% - 24px);margin:10px 12px 0;padding:13px;font-size:14px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:12px;cursor:pointer;}
-@media(max-width:768px){.bnav{display:flex;}}
+@media(max-width:768px){.bnav{display:flex;}.page,.page-body{padding-top:1.25rem!important;}}
 
 /* mobile page padding */
 @media(max-width:768px){.page,.page-body{padding-bottom:80px!important;}}
 </style>
 </head>
 <body>
-<div class="topbar">
-  <button class="back-btn" onclick="goTo('accounts.html')">&#8592;</button>
-  <div class="topbar-title">All Accounts</div>
+
 </div>
 <div class="page-body">
   <div class="section-title" id="acc-count">Loading accounts…</div>

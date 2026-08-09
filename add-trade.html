@@ -11,10 +11,10 @@
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
       background-image:radial-gradient(ellipse at 15% 50%,rgba(212,160,23,.06) 0%,transparent 55%),radial-gradient(ellipse at 85% 20%,rgba(77,142,245,.04) 0%,transparent 50%);}
-    .topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;padding:0 1.25rem;height:56px;background:var(--bg2);border-bottom:1px solid var(--border);}
-    .back-btn{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:20px;padding:4px;line-height:1;}
-    .topbar-title{font-size:16px;font-weight:700;color:var(--text);}
-    .topbar-acc{font-size:12px;color:var(--gold);margin-left:auto;}
+    
+    
+    
+    
     .page-body{padding:1.25rem;max-width:640px;margin:0 auto;}
     .step-indicator{display:flex;align-items:center;gap:0;margin-bottom:1.5rem;}
     .si-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
@@ -105,16 +105,14 @@
 .ms-sub{font-size:11px;color:var(--text-dim);margin-top:1px;}
 .ms-chev{width:16px;height:16px;stroke:var(--text-dim);fill:none;flex-shrink:0;}
 .ms-out{width:calc(100% - 24px);margin:10px 12px 0;padding:13px;font-size:14px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:12px;cursor:pointer;}
-@media(max-width:768px){.bnav{display:flex;}}
+@media(max-width:768px){.bnav{display:flex;}.page,.page-body{padding-top:1.25rem!important;}}
 
 /* mobile page padding */
 @media(max-width:768px){.page,.page-body{padding-bottom:80px!important;}}
 </style>
 </head>
 <body>
-<div class="topbar">
-  <button class="back-btn" onclick="goTo('accounts.html')">&#8592;</button>
-  <div class="topbar-title">Add Trade</div>
+
   <div class="topbar-acc" id="topbar-acc">—</div>
 </div>
 
