@@ -10,19 +10,52 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-.topbar{position:sticky;top:0;z-index:100;height:58px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.25rem;gap:10px;}
-.back-btn{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:20px;padding:6px;line-height:1;border-radius:6px;}
-.back-btn:hover{color:var(--text);}
-.logo-link{display:flex;align-items:center;gap:8px;text-decoration:none;}
-.li{width:30px;height:30px;background:var(--gold-bg);border:1.5px solid var(--gold-border);border-radius:8px;display:flex;align-items:center;justify-content:center;}
-.lt{font-size:16px;font-weight:800;}.lt .r{color:var(--text);}.lt .p{color:var(--gold);}
-.tb-acc{margin-left:auto;font-size:12px;color:var(--gold);font-weight:600;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.tab-nav{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+/* SIDEBAR */
+.sidebar{display:flex;flex-direction:column;width:240px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sb-logo{display:flex;flex-direction:column;align-items:flex-start;padding:1.5rem 1.25rem 1rem;border-bottom:1px solid var(--border);}
+.sb-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+.sb-icon{width:36px;height:36px;background:var(--gold-bg);border:1.5px solid var(--gold-border);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sb-name{font-size:20px;font-weight:800;letter-spacing:-.5px;}.sb-name .r{color:var(--text);}.sb-name .p{color:var(--gold);}
+.sb-tagline{font-size:10px;font-weight:700;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;padding-left:2px;}
+.sb-nav{flex:1;padding:10px 12px;display:flex;flex-direction:column;gap:1px;}
+.sb-section{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;padding:12px 10px 4px;}
+.sb-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;font-family:inherit;width:100%;text-align:left;transition:background .15s,color .15s;margin-bottom:1px;}
+.sb-link:hover{background:var(--surface);color:var(--text);}
+.sb-link.active{background:rgba(212,160,23,.1);color:var(--gold);border:1px solid rgba(212,160,23,.15);}
+.sb-link svg{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;}
+.sb-footer{padding:1rem 1.25rem;border-top:1px solid var(--border);}
+.sb-acc-name{font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-signout{width:100%;padding:9px;font-size:12px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:8px;cursor:pointer;}
+/* MOBILE */
+.topbar{display:none;position:sticky;top:0;z-index:100;height:54px;background:var(--bg2);border-bottom:1px solid var(--border);align-items:center;padding:0 1.25rem;justify-content:space-between;flex-shrink:0;}
+.mob-logo{font-size:18px;font-weight:800;letter-spacing:-.5px;}.mob-logo .r{color:var(--text);}.mob-logo .p{color:var(--gold);}
+.ham-btn{background:none;border:none;cursor:pointer;padding:8px;display:flex;flex-direction:column;gap:5px;}
+.ham-btn span{display:block;width:21px;height:2px;background:var(--text-muted);border-radius:2px;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;backdrop-filter:blur(2px);}
+.overlay.open{display:block;}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:290px;background:var(--bg2);border-left:1px solid var(--border);z-index:301;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;}
+.drawer.open{transform:translateX(0);}
+.d-head{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.25rem 0;}
+.d-title{font-size:15px;font-weight:800;}.d-title .r{color:var(--text);}.d-title .p{color:var(--gold);}
+.d-close{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:22px;line-height:1;padding:4px;border-radius:6px;}
+.d-user{margin:10px 1.25rem 0;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;}
+.d-user-name{font-size:13px;font-weight:700;color:var(--text);}
+.d-user-email{font-size:11px;color:var(--text-dim);margin-top:2px;}
+.d-nav{flex:1;overflow-y:auto;padding:8px 1rem;}
+.d-section{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;padding:8px 12px 4px;}
+.d-link{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;color:var(--text-muted);text-decoration:none;font-size:14px;font-weight:500;cursor:pointer;background:none;border:none;font-family:inherit;width:100%;text-align:left;transition:background .15s,color .15s;margin-bottom:2px;}
+.d-link:hover{background:var(--surface);color:var(--text);}
+.d-link svg{width:17px;height:17px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;}
+.d-footer{padding:1rem 1.25rem;border-top:1px solid var(--border);}
+.d-signout{width:100%;padding:11px;font-size:13px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:10px;cursor:pointer;}
+/* MAIN */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;}
+.tab-nav{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0;}
 .tab-nav::-webkit-scrollbar{display:none;}
-.tab-btn{flex-shrink:0;padding:13px 20px;font-size:13px;font-weight:600;font-family:inherit;color:var(--text-muted);background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.tab-btn{flex-shrink:0;padding:14px 20px;font-size:13px;font-weight:600;font-family:inherit;color:var(--text-muted);background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;white-space:nowrap;}
 .tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
-.page{padding:1.25rem;max-width:960px;margin:0 auto;}
+.page{padding:1.25rem;max-width:900px;width:100%;}
 .tab-s{display:none;}.tab-s.active{display:block;}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;}
 .ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
@@ -34,22 +67,20 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .jt td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
 .jt tbody tr:hover{background:var(--surface2);}.jt tbody tr:last-child td{border-bottom:none;}
 .ec{text-align:center;padding:2.5rem!important;color:var(--text-dim);font-size:13px;font-style:italic;}
-/* Badges */
 .badge{display:inline-block;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
 .bg{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
 .br{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
 .ba{background:#2a1a08;color:#f0a030;border:1px solid #3d2808;}
 .bb{background:var(--blue-bg);color:var(--blue);border:1px solid #1a3060;}
 .bk{background:var(--bg3);color:var(--text-muted);border:1px solid var(--border);}
-/* Actions */
 .ja-wrap{display:flex;gap:4px;}
 .ja{padding:4px 8px;font-size:10px;font-weight:700;font-family:inherit;border-radius:4px;border:1px solid;cursor:pointer;white-space:nowrap;}
 .ja-w{background:var(--green-bg);color:var(--green);border-color:var(--green-border);}
 .ja-l{background:var(--red-bg);color:var(--red);border-color:var(--red-border);}
 .ja-n{background:var(--bg3);color:var(--text-muted);border-color:var(--border);}
-/* Attach form */
+/* Attach */
 .attach{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;margin-top:1rem;}
-.att{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.att-t{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
 .fr{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
 label{display:block;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
 input[type=text],input[type=url],select{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;color:var(--text);font-family:inherit;outline:none;transition:border-color .15s;}
@@ -64,13 +95,11 @@ input::placeholder{color:var(--text-dim);}
 .cd{min-height:50px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 3px;display:flex;flex-direction:column;align-items:center;gap:3px;}
 .cd.empty{visibility:hidden;}.cd.profit{background:var(--green-bg);border-color:var(--green-border);}.cd.loss{background:var(--red-bg);border-color:var(--red-border);}.cd.today{border-color:var(--gold);border-width:1.5px;}
 .cdn{font-size:11px;font-weight:700;color:var(--text-muted);}
-.cdv{font-size:10px;font-weight:700;text-align:center;}
-.cdv.up{color:var(--green);}.cdv.dn{color:var(--red);}
+.cdv{font-size:10px;font-weight:700;text-align:center;}.cdv.up{color:var(--green);}.cdv.dn{color:var(--red);}
 .mnav{display:flex;gap:6px;}
 .mb{padding:6px 12px;font-size:13px;background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);border-radius:6px;cursor:pointer;}
 .sum-tbl{width:100%;border-collapse:collapse;font-size:13px;}
-.sum-tbl tr{border-bottom:1px solid var(--border);}
-.sum-tbl tr:last-child{border-bottom:none;}
+.sum-tbl tr{border-bottom:1px solid var(--border);}.sum-tbl tr:last-child{border-bottom:none;}
 .sum-tbl td{padding:8px 0;color:var(--text-muted);}
 .sum-tbl td:last-child{text-align:right;font-weight:700;color:var(--text);}
 .cal-leg{display:flex;gap:12px;padding-top:8px;border-top:1px solid var(--border);}
@@ -85,101 +114,149 @@ input::placeholder{color:var(--text-dim);}
 .cc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem;}
 .chart-h{font-size:15px;font-weight:700;color:var(--text);margin-bottom:1rem;}
 .cw{position:relative;height:200px;}
-@media(max-width:700px){.cal-wrap{grid-template-columns:1fr;}.sg{grid-template-columns:repeat(2,1fr);}.fr{grid-template-columns:1fr;}}
+/* Responsive */
+@media(max-width:768px){
+  body{display:block;}
+  .sidebar{display:none;}
+  .topbar{display:flex;}
+  .main{display:block;}
+  .page{padding:1rem;}
+  .cal-wrap{grid-template-columns:1fr;}
+  .sg{grid-template-columns:repeat(2,1fr);}
+  .fr{grid-template-columns:1fr;}
+}
 @media(max-width:400px){.sg{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
-<header class="topbar">
-  <button class="back-btn" onclick="goTo('accounts.html')">&#8592;</button>
-  <a class="logo-link" href="accounts.html">
-    <div class="li"><svg viewBox="0 0 32 32" fill="none" width="18" height="18"><polygon points="16,3 29,28 3,28" fill="none" stroke="#d4a017" stroke-width="2.5" stroke-linejoin="round"/><circle cx="16" cy="13" r="2.5" fill="#d4a017"/><line x1="16" y1="16" x2="16" y2="23" stroke="#d4a017" stroke-width="2.5" stroke-linecap="round"/></svg></div>
-    <div class="lt"><span class="r">Risk</span><span class="p">Pilot</span></div>
-  </a>
-  <span class="tb-acc" id="tb-acc">Dashboard</span>
-</header>
 
-<div class="tab-nav">
-  <button class="tab-btn active" onclick="sw('journal')">&#128218; Trade Journal</button>
-  <button class="tab-btn" onclick="sw('calendar')">&#128197; P&amp;L Calendar</button>
-  <button class="tab-btn" onclick="sw('stats')">&#128202; Statistics</button>
+<!-- DESKTOP SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-row">
+      <div class="sb-icon"><svg viewBox="0 0 32 32" fill="none" width="20" height="20"><polygon points="16,3 29,28 3,28" fill="none" stroke="#d4a017" stroke-width="2.5" stroke-linejoin="round"/><circle cx="16" cy="13" r="2.5" fill="#d4a017"/><line x1="16" y1="16" x2="16" y2="23" stroke="#d4a017" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+      <div class="sb-name"><span class="r">Risk</span><span class="p">Pilot</span></div>
+    </div>
+    <div class="sb-tagline">Master Your Risk</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Navigation</div>
+    <a class="sb-link" href="accounts.html"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>My Accounts</a>
+    <a class="sb-link" href="more-accounts.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>All Accounts</a>
+    <a class="sb-link" href="overall-performance.html"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Overall Performance</a>
+    <div class="sb-section">Account</div>
+    <a class="sb-link" href="profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>My Profile</a>
+    <a class="sb-link" href="leaderboard.html"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>Leaderboard</a>
+    <a class="sb-link active" href="dashboard.html"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</a>
+    <div class="sb-section">Community</div>
+    <a class="sb-link" href="social.html"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Follow Us</a>
+  </nav>
+  <div class="sb-footer">
+    <div class="sb-acc-name" id="sb-acc">Loading…</div>
+    <button class="sb-signout" onclick="handleSignOut()">&#8592; Back to Accounts</button>
+  </div>
+</aside>
+
+<!-- MOBILE TOPBAR -->
+<div class="topbar">
+  <div class="mob-logo"><span class="r">Risk</span><span class="p">Pilot</span></div>
+  <button class="ham-btn" onclick="openDrawer()"><span></span><span></span><span></span></button>
 </div>
 
-<div class="page">
+<!-- MOBILE DRAWER -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="d-head"><div class="d-title"><span class="r">Risk</span><span class="p">Pilot</span></div><button class="d-close" onclick="closeDrawer()">&#215;</button></div>
+  <div class="d-user"><div class="d-user-name" id="d-name">—</div><div class="d-user-email" id="d-email">—</div></div>
+  <nav class="d-nav">
+    <div class="d-section">Navigation</div>
+    <a class="d-link" href="accounts.html"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>My Accounts</a>
+    <a class="d-link" href="overall-performance.html"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Overall Performance</a>
+    <div class="d-section">Account</div>
+    <a class="d-link" href="profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>My Profile</a>
+    <a class="d-link" href="leaderboard.html"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>Leaderboard</a>
+    <div class="d-section">Community</div>
+    <a class="d-link" href="social.html"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Follow Us</a>
+  </nav>
+  <div class="d-footer"><button class="d-signout" onclick="handleSignOut()">Sign Out</button></div>
+</div>
 
-  <!-- JOURNAL -->
-  <div class="tab-s active" id="tab-journal">
-    <div class="card">
-      <div class="ch"><div class="ct">Trade Journal</div><span id="jcount" style="font-size:12px;color:var(--text-muted)">Loading…</span></div>
-      <div class="tscroll">
-        <table class="jt">
-          <thead><tr><th>Instrument</th><th>Date</th><th>Setup</th><th>Direction</th><th>Lots</th><th>Risk</th><th>R:R</th><th>Outcome</th><th>P&amp;L</th><th>Actions</th></tr></thead>
-          <tbody id="jbody"><tr><td colspan="10" class="ec">Loading…</td></tr></tbody>
-        </table>
-      </div>
-      <div class="attach">
-        <div class="att">Attach Screenshots &amp; Notes</div>
-        <div style="margin-bottom:10px">
-          <label for="asel">Select Trade</label>
-          <select id="asel"><option value="">— choose a trade —</option></select>
+<!-- MAIN -->
+<div class="main">
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="sw('journal')">&#128218; Trade Journal</button>
+    <button class="tab-btn" onclick="sw('calendar')">&#128197; P&amp;L Calendar</button>
+    <button class="tab-btn" onclick="sw('stats')">&#128202; Statistics</button>
+  </div>
+  <div class="page">
+    <!-- JOURNAL -->
+    <div class="tab-s active" id="tab-journal">
+      <div class="card">
+        <div class="ch"><div class="ct">Trade Journal</div><span id="jcount" style="font-size:12px;color:var(--text-muted)">Loading…</span></div>
+        <div class="tscroll">
+          <table class="jt">
+            <thead><tr><th>Instrument</th><th>Date</th><th>Setup</th><th>Direction</th><th>Lots</th><th>Risk</th><th>R:R</th><th>Outcome</th><th>P&amp;L</th><th>Actions</th></tr></thead>
+            <tbody id="jbody"><tr><td colspan="10" class="ec">Loading…</td></tr></tbody>
+          </table>
         </div>
-        <div class="fr">
-          <div><label for="burl">Before Setup URL</label><input type="url" id="burl" placeholder="https://…"/></div>
-          <div><label for="aurl">After Setup URL</label><input type="url" id="aurl" placeholder="https://…"/></div>
+        <div class="attach">
+          <div class="att-t">Attach Screenshots &amp; Notes</div>
+          <div style="margin-bottom:10px"><label for="asel">Select Trade</label><select id="asel"><option value="">— choose a trade —</option></select></div>
+          <div class="fr">
+            <div><label for="burl">Before URL</label><input type="url" id="burl" placeholder="https://…"/></div>
+            <div><label for="aurl">After URL</label><input type="url" id="aurl" placeholder="https://…"/></div>
+          </div>
+          <div style="margin-bottom:10px"><label for="tnotes">Notes</label><input type="text" id="tnotes" placeholder="Observations, confluences…"/></div>
+          <button class="btn-save" onclick="saveAttach()">Save</button>
         </div>
-        <div style="margin-bottom:10px"><label for="tnotes">Notes</label><input type="text" id="tnotes" placeholder="Observations, confluences…"/></div>
-        <button class="btn-save" onclick="saveAttach()">Save</button>
       </div>
     </div>
-  </div>
-
-  <!-- CALENDAR -->
-  <div class="tab-s" id="tab-calendar">
-    <div class="cal-wrap">
-      <div>
-        <div class="card">
-          <div class="ch"><div class="ct" id="cal-lbl">—</div><div class="mnav"><button class="mb" onclick="prevM()">&#8592;</button><button class="mb" onclick="nextM()">&#8594;</button></div></div>
-          <div class="cal-dh"><span class="cdh">S</span><span class="cdh">M</span><span class="cdh">T</span><span class="cdh">W</span><span class="cdh">T</span><span class="cdh">F</span><span class="cdh">S</span></div>
-          <div class="cal-grid" id="cal-grid"></div>
-          <div class="cal-leg">
-            <span class="leg-i"><span class="leg-d" style="background:var(--green-bg);border:1px solid var(--green-border)"></span>Profit</span>
-            <span class="leg-i"><span class="leg-d" style="background:var(--red-bg);border:1px solid var(--red-border)"></span>Loss</span>
-            <span class="leg-i"><span class="leg-d" style="border:1.5px solid var(--gold)"></span>Today</span>
+    <!-- CALENDAR -->
+    <div class="tab-s" id="tab-calendar">
+      <div class="cal-wrap">
+        <div>
+          <div class="card">
+            <div class="ch"><div class="ct" id="cal-lbl">—</div><div class="mnav"><button class="mb" onclick="prevM()">&#8592;</button><button class="mb" onclick="nextM()">&#8594;</button></div></div>
+            <div class="cal-dh"><span class="cdh">S</span><span class="cdh">M</span><span class="cdh">T</span><span class="cdh">W</span><span class="cdh">T</span><span class="cdh">F</span><span class="cdh">S</span></div>
+            <div class="cal-grid" id="cal-grid"></div>
+            <div class="cal-leg">
+              <span class="leg-i"><span class="leg-d" style="background:var(--green-bg);border:1px solid var(--green-border)"></span>Profit</span>
+              <span class="leg-i"><span class="leg-d" style="background:var(--red-bg);border:1px solid var(--red-border)"></span>Loss</span>
+              <span class="leg-i"><span class="leg-d" style="border:1.5px solid var(--gold)"></span>Today</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="ct" style="margin-bottom:1rem">Summary</div>
+            <table class="sum-tbl">
+              <tr><td>Weekly Wallet</td><td id="cw" style="color:var(--green)">—</td></tr>
+              <tr><td>Win Rate</td><td id="cwr" style="color:var(--gold)">—</td></tr>
+              <tr><td>Wins</td><td id="cwins" style="color:var(--green)">—</td></tr>
+              <tr><td>Losses</td><td id="closs" style="color:var(--red)">—</td></tr>
+              <tr><td>Total Profit</td><td id="cp" style="color:var(--green)">—</td></tr>
+              <tr><td>Total Loss</td><td id="cl" style="color:var(--red)">—</td></tr>
+              <tr><td>Net P&amp;L</td><td id="cn">—</td></tr>
+              <tr><td>Best Day</td><td id="cb" style="color:var(--green)">—</td></tr>
+              <tr><td>Worst Day</td><td id="cw2" style="color:var(--red)">—</td></tr>
+            </table>
           </div>
         </div>
       </div>
-      <div>
-        <div class="card">
-          <div class="ct" style="margin-bottom:1rem">Summary</div>
-          <table class="sum-tbl">
-            <tr><td>Weekly Wallet</td><td id="cw" style="color:var(--green)">—</td></tr>
-            <tr><td>Win Rate</td><td id="cwr" style="color:var(--gold)">—</td></tr>
-            <tr><td>Wins</td><td id="cwins" style="color:var(--green)">—</td></tr>
-            <tr><td>Losses</td><td id="closs" style="color:var(--red)">—</td></tr>
-            <tr><td>Total Profit</td><td id="cp" style="color:var(--green)">—</td></tr>
-            <tr><td>Total Loss</td><td id="cl" style="color:var(--red)">—</td></tr>
-            <tr><td>Net P&amp;L</td><td id="cn">—</td></tr>
-            <tr><td>Best Day</td><td id="cb" style="color:var(--green)">—</td></tr>
-            <tr><td>Worst Day</td><td id="cw2" style="color:var(--red)">—</td></tr>
-          </table>
-        </div>
+    </div>
+    <!-- STATS -->
+    <div class="tab-s" id="tab-stats">
+      <div class="sg">
+        <div class="st"><div class="sl">Total Trades</div><div class="sv" id="s1">—</div></div>
+        <div class="st"><div class="sl">Win Rate</div><div class="sv gold" id="s2">—</div></div>
+        <div class="st"><div class="sl">Avg Profit</div><div class="sv green" id="s3">—</div></div>
+        <div class="st"><div class="sl">Avg Loss</div><div class="sv red" id="s4">—</div></div>
+        <div class="st"><div class="sl">Avg R:R</div><div class="sv blue" id="s5">—</div></div>
       </div>
+      <div class="cc"><div class="chart-h">Equity Curve</div><div class="cw"><canvas id="ec"></canvas></div></div>
+      <div class="cc"><div class="chart-h">Monthly Orders</div><div class="cw"><canvas id="oc"></canvas></div></div>
     </div>
   </div>
-
-  <!-- STATS -->
-  <div class="tab-s" id="tab-stats">
-    <div class="sg">
-      <div class="st"><div class="sl">Total Trades</div><div class="sv" id="s1">—</div></div>
-      <div class="st"><div class="sl">Win Rate</div><div class="sv gold" id="s2">—</div></div>
-      <div class="st"><div class="sl">Avg Profit</div><div class="sv green" id="s3">—</div></div>
-      <div class="st"><div class="sl">Avg Loss</div><div class="sv red" id="s4">—</div></div>
-      <div class="st"><div class="sl">Avg R:R</div><div class="sv blue" id="s5">—</div></div>
-    </div>
-    <div class="cc"><div class="chart-h">Equity Curve</div><div class="cw"><canvas id="ec"></canvas></div></div>
-    <div class="cc"><div class="chart-h">Monthly Orders</div><div class="cw"><canvas id="oc"></canvas></div></div>
-  </div>
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -192,15 +269,14 @@ function goTo(f){window.location.href=base()+f;}
 function S(i){return document.getElementById(i);}
 function sym(){return acc&&acc.currency==='USD'?'$':'R';}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
+function openDrawer(){S('drawer').classList.add('open');S('overlay').classList.add('open');document.body.style.overflow='hidden';}
+function closeDrawer(){S('drawer').classList.remove('open');S('overlay').classList.remove('open');document.body.style.overflow='';}
 function sw(t){
   document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',['journal','calendar','stats'][i]===t);});
   document.querySelectorAll('.tab-s').forEach(function(s){s.classList.remove('active');});
   S('tab-'+t).classList.add('active');
-  if(t==='calendar')renderCal();
-  if(t==='stats')renderStats();
+  if(t==='calendar')renderCal();if(t==='stats')renderStats();
 }
-
 (async function(){
   var d=await supabase.auth.getSession();
   if(!d.data.session){goTo('auth.html');return;}
@@ -210,16 +286,15 @@ function sw(t){
   var ar=await supabase.from('trading_accounts').select('*').eq('id',id).single();
   if(!ar.data){goTo('accounts.html');return;}
   acc=ar.data;
-  S('tb-acc').textContent=acc.account_name;
+  S('sb-acc').textContent=acc.account_name;
+  var nm=(cu.user_metadata&&cu.user_metadata.name?cu.user_metadata.name+' '+(cu.user_metadata.surname||''):'').trim()||cu.email;
+  S('d-name').textContent=nm;S('d-email').textContent=cu.email;
   await loadT();
 })();
-
 async function loadT(){
   var r=await supabase.from('trade_journal').select('*').eq('account_id',acc.id).order('created_at',{ascending:false});
-  trades=r.data||[];
-  renderJournal();buildSel();
+  trades=r.data||[];renderJournal();buildSel();
 }
-
 function renderJournal(){
   var b=S('jbody'),s=sym();
   S('jcount').textContent=trades.length+' trade'+(trades.length!==1?'s':'');
@@ -229,25 +304,22 @@ function renderJournal(){
     var ol=t.outcome==='win'?'Win':t.outcome==='loss'?'Loss':t.outcome==='not_triggered'?'N/T':'Pending';
     var pnl=t.outcome==='win'?parseFloat(t.profit_zar||0):t.outcome==='loss'?-parseFloat(t.risk_amount||0):null;
     var ps=pnl!==null?'<span style="color:'+(pnl>=0?'var(--green)':'var(--red)')+';font-weight:700">'+(pnl>=0?'+':'')+s+Math.abs(pnl).toFixed(0)+'</span>':'—';
-    var lnks=(t.before_url||t.after_url)?'<div style="margin-top:3px;display:flex;gap:5px">'+(t.before_url?'<a href="'+esc(t.before_url)+'" target="_blank" style="font-size:10px;color:var(--blue)">Before &#8599;</a>':'')+(t.after_url?'<a href="'+esc(t.after_url)+'" target="_blank" style="font-size:10px;color:var(--blue)">After &#8599;</a>':'')+'</div>':'';
+    var lnks=(t.before_url||t.after_url)?'<div style="margin-top:3px;display:flex;gap:5px">'+(t.before_url?'<a href="'+esc(t.before_url)+'" target="_blank" style="font-size:10px;color:var(--blue)">Before&#8599;</a>':'')+(t.after_url?'<a href="'+esc(t.after_url)+'" target="_blank" style="font-size:10px;color:var(--blue)">After&#8599;</a>':'')+'</div>':'';
     var act=t.outcome==='pending'?'<div class="ja-wrap"><button class="ja ja-w" data-id="'+t.id+'" data-a="win">&#10003; Win</button><button class="ja ja-l" data-id="'+t.id+'" data-a="loss">&#10007; Loss</button><button class="ja ja-n" data-id="'+t.id+'" data-a="not_triggered">N/T</button></div>':'—';
-    return '<tr><td style="font-weight:600">'+esc(t.instrument||'—')+'</td><td style="font-size:12px;color:var(--text-muted)">'+esc(t.trade_date||'—')+'</td><td><span class="badge '+(t.setup_type==='A'?'bb':'ba')+'">'+(t.setup_type==='A'?'A-Setup':'B-Setup')+'</span></td><td style="font-size:12px">'+(t.direction==='buy'?'&#9650; Buy':'&#9660; Sell')+'</td><td style="color:var(--gold);font-weight:600">'+parseFloat(t.lot_size||0).toFixed(2)+'</td><td>'+s+parseFloat(t.risk_amount||0).toFixed(0)+'</td><td>'+(t.rr_ratio?'1:'+parseFloat(t.rr_ratio).toFixed(2):'—')+'</td><td><span class="badge '+ob+'">'+ol+'</span></td><td>'+ps+lnks+'</td><td>'+act+'</td></tr>';
+    return '<tr><td style="font-weight:600">'+esc(t.instrument||'—')+'</td><td style="font-size:12px;color:var(--text-muted)">'+esc(t.trade_date||'—')+'</td><td><span class="badge '+(t.setup_type==='A'?'bb':'ba')+'">'+(t.setup_type==='A'?'A-Setup':'B-Setup')+'</span></td><td>'+(t.direction==='buy'?'&#9650; Buy':'&#9660; Sell')+'</td><td style="color:var(--gold);font-weight:600">'+parseFloat(t.lot_size||0).toFixed(2)+'</td><td>'+s+parseFloat(t.risk_amount||0).toFixed(0)+'</td><td>'+(t.rr_ratio?'1:'+parseFloat(t.rr_ratio).toFixed(2):'—')+'</td><td><span class="badge '+ob+'">'+ol+'</span></td><td>'+ps+lnks+'</td><td>'+act+'</td></tr>';
   }).join('');
   b.querySelectorAll('button[data-a]').forEach(function(btn){btn.addEventListener('click',function(){markT(this.dataset.id,this.dataset.a);});});
 }
-
 async function markT(id,outcome){
   var t=trades.find(function(x){return x.id===id;});if(!t)return;
   await supabase.from('trade_journal').update({outcome:outcome}).eq('id',id);
   if(outcome==='win'){var nw=parseFloat(acc.weekly_wallet||0)+parseFloat(t.profit_zar||0)+parseFloat(t.risk_amount||0);await supabase.from('trading_accounts').update({weekly_wallet:nw}).eq('id',acc.id);acc.weekly_wallet=nw;}
   await loadT();
 }
-
 function buildSel(){
   var sel=S('asel');sel.innerHTML='<option value="">— choose a trade —</option>';
   trades.forEach(function(t){var o=document.createElement('option');o.value=t.id;o.textContent=esc(t.instrument||'Trade')+' — '+esc(t.trade_date||'')+(t.outcome==='pending'?' (Pending)':'');sel.appendChild(o);});
 }
-
 async function saveAttach(){
   var id=S('asel').value;if(!id){alert('Select a trade first.');return;}
   var r=await supabase.from('trade_journal').update({before_url:S('burl').value.trim()||null,after_url:S('aurl').value.trim()||null,notes:S('tnotes').value.trim()||null}).eq('id',id);
@@ -255,7 +327,6 @@ async function saveAttach(){
   S('burl').value='';S('aurl').value='';S('tnotes').value='';
   await loadT();alert('Saved.');
 }
-
 function renderCal(){
   var y=calY,m=calM,s=sym();
   S('cal-lbl').textContent=MN[m]+' '+y;
@@ -295,7 +366,6 @@ function renderCal(){
 }
 function prevM(){calM--;if(calM<0){calM=11;calY--;}renderCal();}
 function nextM(){calM++;if(calM>11){calM=0;calY++;}renderCal();}
-
 function renderStats(){
   var s=sym();
   var set=trades.filter(function(t){return t.outcome==='win'||t.outcome==='loss';});
@@ -306,18 +376,17 @@ function renderStats(){
   S('s4').textContent=l.length>0?s+(l.reduce(function(a,t){return a+parseFloat(t.risk_amount||0);},0)/l.length).toFixed(0):'—';
   var rrs=set.filter(function(t){return t.rr_ratio;}).map(function(t){return parseFloat(t.rr_ratio);});
   S('s5').textContent=rrs.length?'1:'+(rrs.reduce(function(a,b){return a+b;},0)/rrs.length).toFixed(2):'—';
-  // Equity curve
   if(ecC)ecC.destroy();
   var eq=0,el=[],ed=[];
   set.slice().reverse().forEach(function(t,i){eq+=t.outcome==='win'?parseFloat(t.profit_zar||0):-parseFloat(t.risk_amount||0);el.push('#'+(i+1));ed.push(parseFloat(eq.toFixed(2)));});
   if(ed.length)ecC=new Chart(S('ec'),{type:'line',data:{labels:el,datasets:[{label:'Equity',data:ed,borderColor:'#d4a017',backgroundColor:'rgba(212,160,23,0.08)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:'#d4a017',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#4a5270',maxTicksLimit:10,font:{size:10}},grid:{color:'rgba(42,48,72,0.5)'}},y:{ticks:{color:'#4a5270',font:{size:10},callback:function(v){return s+v.toFixed(0);}},grid:{color:'rgba(42,48,72,0.5)'}}}}});
-  // Orders bar
   if(ocC)ocC.destroy();
   var mo={};
   trades.forEach(function(t){var m=(t.trade_date||'').slice(0,7);if(!m)return;if(!mo[m])mo[m]={w:0,l:0,n:0};if(t.outcome==='win')mo[m].w++;else if(t.outcome==='loss')mo[m].l++;else mo[m].n++;});
   var ml=Object.keys(mo).sort();
   if(ml.length)ocC=new Chart(S('oc'),{type:'bar',data:{labels:ml,datasets:[{label:'Wins',data:ml.map(function(k){return mo[k].w;}),backgroundColor:'rgba(34,201,132,0.75)',borderRadius:4},{label:'Losses',data:ml.map(function(k){return mo[k].l;}),backgroundColor:'rgba(240,80,96,0.75)',borderRadius:4},{label:'N/T',data:ml.map(function(k){return mo[k].n;}),backgroundColor:'rgba(74,82,112,0.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7a84a0',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(42,48,72,0.5)'}},y:{ticks:{color:'#4a5270',font:{size:10},stepSize:1},grid:{color:'rgba(42,48,72,0.5)'}}}}});
 }
+async function handleSignOut(){await supabase.auth.signOut();goTo('auth.html');}
 </script>
 </body>
 </html>

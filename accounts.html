@@ -10,55 +10,73 @@
 <link rel="stylesheet" href="style.css"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
 
-/* ── TOPBAR ── */
-.topbar{
-  position:sticky;top:0;z-index:100;
-  height:60px;background:var(--bg2);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 1.5rem;gap:0;
+/* ═══════════════════════════════════════
+   DESKTOP SIDEBAR (hidden on mobile)
+═══════════════════════════════════════ */
+.sidebar{
+  display:flex;flex-direction:column;
+  width:240px;flex-shrink:0;
+  background:var(--bg2);border-right:1px solid var(--border);
+  position:sticky;top:0;height:100vh;overflow-y:auto;
 }
-.logo-link{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;}
-.logo-icon{width:34px;height:34px;background:var(--gold-bg);border:1.5px solid var(--gold-border);border-radius:9px;display:flex;align-items:center;justify-content:center;}
-.logo-text{font-size:18px;font-weight:800;letter-spacing:-.5px;}
-.logo-text .r{color:var(--text);}.logo-text .p{color:var(--gold);}
+.sb-logo{
+  display:flex;flex-direction:column;align-items:flex-start;
+  padding:1.5rem 1.25rem 1rem;border-bottom:1px solid var(--border);
+}
+.sb-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+.sb-icon{width:36px;height:36px;background:var(--gold-bg);border:1.5px solid var(--gold-border);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sb-name{font-size:20px;font-weight:800;letter-spacing:-.5px;line-height:1;}
+.sb-name .r{color:var(--text);}.sb-name .p{color:var(--gold);}
+.sb-tagline{font-size:10px;font-weight:700;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;padding-left:2px;}
+.sb-nav{flex:1;padding:10px 12px;display:flex;flex-direction:column;gap:1px;}
+.sb-section{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;padding:12px 10px 4px;}
+.sb-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;font-family:inherit;width:100%;text-align:left;transition:background .15s,color .15s;margin-bottom:1px;}
+.sb-link:hover{background:var(--surface);color:var(--text);}
+.sb-link.active{background:rgba(212,160,23,.1);color:var(--gold);border:1px solid rgba(212,160,23,.15);}
+.sb-link svg{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;}
+.sb-footer{padding:1rem 1.25rem;border-top:1px solid var(--border);}
+.sb-user-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-user-email{font-size:11px;color:var(--text-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:10px;}
+.sb-wallet-lbl{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+.sb-wallet-val{font-size:20px;font-weight:800;color:var(--green);margin-bottom:2px;}
+.sb-wallet-sub{font-size:11px;color:var(--text-dim);margin-bottom:10px;}
+.sb-signout{width:100%;padding:9px;font-size:12px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:8px;cursor:pointer;}
 
-/* Desktop nav */
-.desktop-nav{display:flex;align-items:center;gap:2px;margin-left:auto;}
-.nav-a{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;font-family:inherit;transition:background .15s,color .15s;white-space:nowrap;}
-.nav-a:hover{background:var(--surface);color:var(--text);}
-.nav-a svg{width:14px;height:14px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;}
-.nav-sep{width:1px;height:20px;background:var(--border);margin:0 6px;}
-.nav-signout{padding:7px 14px;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);cursor:pointer;transition:background .15s;}
-.nav-signout:hover{background:#3d1018;}
+/* ═══════════════════════════════════════
+   MOBILE TOPBAR (hidden on desktop)
+═══════════════════════════════════════ */
+.topbar{display:none;position:sticky;top:0;z-index:100;height:54px;background:var(--bg2);border-bottom:1px solid var(--border);align-items:center;padding:0 1.25rem;justify-content:space-between;flex-shrink:0;}
+.mob-logo{font-size:18px;font-weight:800;letter-spacing:-.5px;}
+.mob-logo .r{color:var(--text);}.mob-logo .p{color:var(--gold);}
+.ham-btn{background:none;border:none;cursor:pointer;padding:8px;display:flex;flex-direction:column;gap:5px;border-radius:8px;}
+.ham-btn span{display:block;width:21px;height:2px;background:var(--text-muted);border-radius:2px;}
 
-/* Mobile hamburger */
-.ham-btn{display:none;margin-left:auto;background:none;border:none;cursor:pointer;padding:8px;flex-direction:column;gap:5px;border-radius:8px;}
-.ham-btn span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all .2s;}
-
-/* Drawer */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);}
+/* Mobile Drawer */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;backdrop-filter:blur(2px);}
 .overlay.open{display:block;}
-.drawer{position:fixed;top:0;right:0;bottom:0;width:300px;background:var(--bg2);border-left:1px solid var(--border);z-index:301;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:290px;background:var(--bg2);border-left:1px solid var(--border);z-index:301;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;}
 .drawer.open{transform:translateX(0);}
 .d-head{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.25rem 0;}
-.d-logo{display:flex;align-items:center;gap:8px;}
-.d-logo-icon{width:28px;height:28px;background:var(--gold-bg);border:1.5px solid var(--gold-border);border-radius:7px;display:flex;align-items:center;justify-content:center;}
-.d-logo-text{font-size:15px;font-weight:800;}.d-logo-text .r{color:var(--text);}.d-logo-text .p{color:var(--gold);}
+.d-title{font-size:15px;font-weight:800;}.d-title .r{color:var(--text);}.d-title .p{color:var(--gold);}
 .d-close{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:22px;line-height:1;padding:4px;border-radius:6px;}
-.d-user{margin:12px 1.25rem 0;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;}
+.d-user{margin:10px 1.25rem 0;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;}
 .d-user-name{font-size:13px;font-weight:700;color:var(--text);}
 .d-user-email{font-size:11px;color:var(--text-dim);margin-top:2px;}
-.d-nav{flex:1;overflow-y:auto;padding:10px 1rem;}
-.d-section{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;padding:8px 14px 4px;}
-.d-link{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:var(--text-muted);text-decoration:none;font-size:14px;font-weight:500;cursor:pointer;background:none;border:none;font-family:inherit;width:100%;text-align:left;transition:background .15s,color .15s;margin-bottom:2px;}
+.d-nav{flex:1;overflow-y:auto;padding:8px 1rem;}
+.d-section{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;padding:8px 12px 4px;}
+.d-link{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;color:var(--text-muted);text-decoration:none;font-size:14px;font-weight:500;cursor:pointer;background:none;border:none;font-family:inherit;width:100%;text-align:left;transition:background .15s,color .15s;margin-bottom:2px;}
 .d-link:hover{background:var(--surface);color:var(--text);}
 .d-link svg{width:17px;height:17px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;}
 .d-footer{padding:1rem 1.25rem;border-top:1px solid var(--border);}
 .d-signout{width:100%;padding:11px;font-size:13px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:10px;cursor:pointer;}
 
-/* Page */
-.page{padding:1.5rem;max-width:960px;margin:0 auto;}
+/* ═══════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════ */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;}
+.page{padding:1.5rem;max-width:900px;width:100%;}
 .greeting{margin-bottom:1.5rem;}
 .greeting h2{font-size:22px;font-weight:800;color:var(--text);}
 .greeting p{font-size:13px;color:var(--text-muted);margin-top:3px;}
@@ -67,36 +85,36 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .acc-row{display:flex;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;margin-bottom:1.5rem;scrollbar-width:thin;scrollbar-color:var(--border2) transparent;}
 .acc-row::-webkit-scrollbar{height:4px;}
 .acc-row::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-.acc-card{flex-shrink:0;width:205px;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:.95rem 1rem;cursor:pointer;transition:border-color .15s,transform .1s,box-shadow .15s;position:relative;overflow:hidden;}
+.acc-card{flex-shrink:0;width:200px;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:.9rem 1rem;cursor:pointer;transition:border-color .15s,transform .1s,box-shadow .15s;position:relative;overflow:hidden;}
 .acc-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold);opacity:0;transition:opacity .15s;}
 .acc-card:hover{border-color:var(--gold-border);transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.3);}
-.acc-card:hover::before,.acc-card.act::before,.acc-card.act{border-color:var(--gold);}
-.acc-card.act::before{opacity:1;}
+.acc-card:hover::before,.acc-card.act::before{opacity:1;}
+.acc-card.act{border-color:var(--gold);}
 .ac-top{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:8px;}
 .ac-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ac-bdg{font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0;}
 .ac-bdg-p{background:var(--blue-bg);color:var(--blue);border:1px solid #1a3060;}
 .ac-bdg-f{background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-border);}
-.ac-wallet{font-size:22px;font-weight:800;color:var(--green);margin-bottom:3px;}
+.ac-wallet{font-size:21px;font-weight:800;color:var(--green);margin-bottom:3px;}
 .ac-meta{font-size:11px;color:var(--text-dim);}
-.ac-active-row{display:flex;align-items:center;gap:5px;margin-top:8px;}
+.ac-arow{display:flex;align-items:center;gap:5px;margin-top:8px;}
 .ac-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:blink 1.5s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .ac-dot-lbl{font-size:10px;font-weight:700;color:var(--gold);}
-.more-card,.add-card{flex-shrink:0;width:140px;min-height:120px;border:1.5px dashed var(--border2);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;color:var(--text-dim);transition:all .15s;text-align:center;padding:10px;background:transparent;}
+.more-card,.add-card{flex-shrink:0;width:135px;min-height:115px;border:1.5px dashed var(--border2);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;color:var(--text-dim);transition:all .15s;text-align:center;padding:10px;background:transparent;}
 .more-card:hover,.add-card:hover{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);}
 .ci{font-size:24px;}.ct{font-size:11px;font-weight:600;line-height:1.4;}
 
 /* Active section */
 .active-sec{display:none;}.active-sec.show{display:block;}
-.active-hdr{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.35rem;margin-bottom:1rem;}
+.active-hdr{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.25rem;margin-bottom:1rem;}
 .ah-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px;}
 .ah-name{font-size:20px;font-weight:800;color:var(--text);}
 .ah-meta{font-size:12px;color:var(--text-muted);margin-top:3px;}
 .ah-btns{display:flex;gap:8px;flex-wrap:wrap;}
-.btn-add{padding:10px 22px;font-size:14px;font-weight:700;font-family:inherit;background:var(--gold);color:#0d0f14;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;}
+.btn-add{padding:10px 20px;font-size:14px;font-weight:700;font-family:inherit;background:var(--gold);color:#0d0f14;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;}
 .btn-add:hover{background:var(--gold-light);}
-.btn-dash{padding:10px 18px;font-size:14px;font-weight:600;font-family:inherit;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.btn-dash{padding:10px 16px;font-size:14px;font-weight:600;font-family:inherit;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;cursor:pointer;white-space:nowrap;transition:all .15s;}
 .btn-dash:hover{border-color:var(--gold);color:var(--gold);}
 .m-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem;}
 .p-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem;}
@@ -105,18 +123,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .m-val{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}
 .m-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
 .m-fill{height:100%;border-radius:2px;transition:width .4s;}
-
-/* Trades */
 .trades-seg{display:inline-flex;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px;margin-bottom:1rem;}
 .trades-tab{padding:7px 16px;font-size:13px;font-weight:600;border:none;border-radius:6px;cursor:pointer;background:transparent;color:var(--text-muted);font-family:inherit;transition:all .15s;}
 .trades-tab.active{background:var(--gold);color:#0d0f14;}
 .tw{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
 .ts{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-.tt{width:100%;border-collapse:collapse;font-size:13px;min-width:700px;}
-.tt th{text-align:left;padding:9px 13px;font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);background:var(--bg3);}
-.tt td{padding:10px 13px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
-.tt tbody tr:last-child td{border-bottom:none;}
-.tt tbody tr:hover{background:var(--surface2);}
+.tt{width:100%;border-collapse:collapse;font-size:13px;min-width:680px;}
+.tt th{text-align:left;padding:9px 12px;font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);background:var(--bg3);}
+.tt td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+.tt tbody tr:hover{background:var(--surface2);}.tt tbody tr:last-child td{border-bottom:none;}
 .ec{text-align:center;padding:2.5rem!important;color:var(--text-dim);font-size:13px;font-style:italic;}
 .badge{display:inline-block;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
 .bg{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
@@ -132,9 +147,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 /* Responsive */
 @media(max-width:768px){
-  .desktop-nav{display:none;}
-  .ham-btn{display:flex;}
+  body{display:block;}
+  .sidebar{display:none;}
+  .topbar{display:flex;}
+  .main{display:block;}
   .page{padding:1.1rem;}
+  .greeting h2{font-size:19px;}
 }
 @media(max-width:600px){
   .m-grid{grid-template-columns:1fr 1fr;}
@@ -147,49 +165,58 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </head>
 <body>
 
-<!-- TOPBAR -->
-<header class="topbar">
-  <a class="logo-link" href="accounts.html">
-    <div class="logo-icon">
-      <svg viewBox="0 0 32 32" fill="none" width="20" height="20">
-        <polygon points="16,3 29,28 3,28" fill="none" stroke="#d4a017" stroke-width="2.5" stroke-linejoin="round"/>
-        <circle cx="16" cy="13" r="2.5" fill="#d4a017"/>
-        <line x1="16" y1="16" x2="16" y2="23" stroke="#d4a017" stroke-width="2.5" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <div class="logo-text"><span class="r">Risk</span><span class="p">Pilot</span></div>
-  </a>
-
-  <nav class="desktop-nav">
-    <a class="nav-a" href="accounts.html"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>My Accounts</a>
-    <a class="nav-a" href="more-accounts.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>All Accounts</a>
-    <a class="nav-a" href="overall-performance.html"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Overall Performance</a>
-    <a class="nav-a" href="profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Profile</a>
-    <a class="nav-a" href="leaderboard.html"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>Leaderboard</a>
-    <a class="nav-a" href="social.html"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Follow Us</a>
-    <div class="nav-sep"></div>
-    <button class="nav-signout" onclick="handleSignOut()">Sign Out</button>
-  </nav>
-
-  <button class="ham-btn" onclick="openDrawer()" aria-label="Menu">
-    <span></span><span></span><span></span>
-  </button>
-</header>
-
-<!-- DRAWER -->
-<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
-<div class="drawer" id="drawer">
-  <div class="d-head">
-    <div class="d-logo">
-      <div class="d-logo-icon">
-        <svg viewBox="0 0 32 32" fill="none" width="16" height="16">
+<!-- ═══ DESKTOP SIDEBAR ═══ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-row">
+      <div class="sb-icon">
+        <svg viewBox="0 0 32 32" fill="none" width="20" height="20">
           <polygon points="16,3 29,28 3,28" fill="none" stroke="#d4a017" stroke-width="2.5" stroke-linejoin="round"/>
           <circle cx="16" cy="13" r="2.5" fill="#d4a017"/>
           <line x1="16" y1="16" x2="16" y2="23" stroke="#d4a017" stroke-width="2.5" stroke-linecap="round"/>
         </svg>
       </div>
-      <div class="d-logo-text"><span class="r">Risk</span><span class="p">Pilot</span></div>
+      <div class="sb-name"><span class="r">Risk</span><span class="p">Pilot</span></div>
     </div>
+    <div class="sb-tagline">Master Your Risk</div>
+  </div>
+
+  <nav class="sb-nav">
+    <div class="sb-section">Navigation</div>
+    <a class="sb-link active" href="accounts.html"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>My Accounts</a>
+    <a class="sb-link" href="more-accounts.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>All Accounts</a>
+    <a class="sb-link" href="overall-performance.html"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Overall Performance</a>
+    <div class="sb-section">Account</div>
+    <a class="sb-link" href="profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>My Profile</a>
+    <a class="sb-link" href="leaderboard.html"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>Leaderboard</a>
+    <a class="sb-link" href="account-setup.html"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Create New Account</a>
+    <div class="sb-section">Community</div>
+    <a class="sb-link" href="social.html"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Follow Us</a>
+  </nav>
+
+  <div class="sb-footer">
+    <div class="sb-user-name" id="sb-name">—</div>
+    <div class="sb-user-email" id="sb-email">—</div>
+    <div class="sb-wallet-lbl">Weekly Return Wallet</div>
+    <div class="sb-wallet-val" id="sb-wallet">R 0</div>
+    <div class="sb-wallet-sub" id="sb-wr">Win rate: 0%</div>
+    <button class="sb-signout" onclick="handleSignOut()">Sign Out</button>
+  </div>
+</aside>
+
+<!-- ═══ MOBILE TOPBAR ═══ -->
+<div class="topbar">
+  <div class="mob-logo"><span class="r">Risk</span><span class="p">Pilot</span></div>
+  <button class="ham-btn" onclick="openDrawer()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</div>
+
+<!-- ═══ MOBILE DRAWER ═══ -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="d-head">
+    <div class="d-title"><span class="r">Risk</span><span class="p">Pilot</span></div>
     <button class="d-close" onclick="closeDrawer()">&#215;</button>
   </div>
   <div class="d-user">
@@ -213,54 +240,55 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 </div>
 
-<div class="page">
-  <div class="greeting">
-    <h2 id="g-name">My Accounts</h2>
-    <p id="g-sub">Select an account to manage your trades</p>
-  </div>
-
-  <div class="acc-row" id="acc-row">
-    <div class="add-card" onclick="goTo('account-setup.html')"><div class="ci">&#43;</div><div class="ct">New Account</div></div>
-  </div>
-
-  <div class="active-sec" id="active-sec">
-    <div class="active-hdr">
-      <div class="ah-top">
-        <div>
-          <div class="ah-name" id="ah-name">—</div>
-          <div class="ah-meta" id="ah-meta">—</div>
-        </div>
-        <div class="ah-btns">
-          <button class="btn-add" onclick="goToAdd()">&#43; Add Trade</button>
-          <button class="btn-dash" onclick="goToDash()">&#128202; Dashboard</button>
-        </div>
-      </div>
-      <!-- Prop metrics -->
-      <div class="m-grid" id="prop-m" style="display:none">
-        <div class="m-tile"><div class="m-lbl">Profit Progress</div><div class="m-val" id="pm-p">—</div><div class="m-bar"><div class="m-fill" id="pm-pf" style="background:var(--green);width:0%"></div></div></div>
-        <div class="m-tile"><div class="m-lbl">Daily Loss Used</div><div class="m-val" id="pm-d">—</div><div class="m-bar"><div class="m-fill" id="pm-df" style="background:#f0a030;width:0%"></div></div></div>
-        <div class="m-tile"><div class="m-lbl">Max Loss Used</div><div class="m-val" id="pm-m">—</div><div class="m-bar"><div class="m-fill" id="pm-mf" style="background:var(--red);width:0%"></div></div></div>
-      </div>
-      <!-- Personal metrics -->
-      <div class="p-grid" id="pers-m" style="display:none">
-        <div class="m-tile"><div class="m-lbl">Weekly Target</div><div class="m-val" id="pg-t" style="color:var(--gold)">—</div></div>
-        <div class="m-tile"><div class="m-lbl">Weekly Earned</div><div class="m-val" id="pg-e" style="color:var(--green)">—</div><div class="m-bar"><div class="m-fill" id="pg-f" style="background:var(--green);width:0%"></div></div></div>
-        <div class="m-tile"><div class="m-lbl">Daily Budget</div><div class="m-val" id="pg-d">—</div></div>
-        <div class="m-tile"><div class="m-lbl">Used Today</div><div class="m-val" id="pg-u">—</div></div>
-      </div>
+<!-- ═══ MAIN CONTENT ═══ -->
+<div class="main">
+  <div class="page">
+    <div class="greeting">
+      <h2 id="g-name">My Accounts</h2>
+      <p id="g-sub">Select an account to manage your trades</p>
     </div>
 
-    <div class="trades-seg">
-      <button class="trades-tab active" onclick="switchTab('open')">Open &amp; Pending</button>
-      <button class="trades-tab" onclick="switchTab('closed')">Closed Trades</button>
+    <div class="acc-row" id="acc-row">
+      <div class="add-card" onclick="goTo('account-setup.html')"><div class="ci">&#43;</div><div class="ct">New Account</div></div>
     </div>
 
-    <div class="tw"><div class="ts">
-      <table class="tt">
-        <thead><tr><th>Instrument</th><th>Date</th><th>Setup</th><th>Dir</th><th>Lots</th><th>Risk</th><th>R:R</th><th>Outcome</th><th>P&amp;L</th><th>Actions</th></tr></thead>
-        <tbody id="tb"><tr><td colspan="10" class="ec">Select an account to view trades.</td></tr></tbody>
-      </table>
-    </div></div>
+    <div class="active-sec" id="active-sec">
+      <div class="active-hdr">
+        <div class="ah-top">
+          <div>
+            <div class="ah-name" id="ah-name">—</div>
+            <div class="ah-meta" id="ah-meta">—</div>
+          </div>
+          <div class="ah-btns">
+            <button class="btn-add" onclick="goToAdd()">&#43; Add Trade</button>
+            <button class="btn-dash" onclick="goToDash()">&#128202; Dashboard</button>
+          </div>
+        </div>
+        <div class="m-grid" id="prop-m" style="display:none">
+          <div class="m-tile"><div class="m-lbl">Profit Progress</div><div class="m-val" id="pm-p">—</div><div class="m-bar"><div class="m-fill" id="pm-pf" style="background:var(--green);width:0%"></div></div></div>
+          <div class="m-tile"><div class="m-lbl">Daily Loss Used</div><div class="m-val" id="pm-d">—</div><div class="m-bar"><div class="m-fill" id="pm-df" style="background:#f0a030;width:0%"></div></div></div>
+          <div class="m-tile"><div class="m-lbl">Max Loss Used</div><div class="m-val" id="pm-m">—</div><div class="m-bar"><div class="m-fill" id="pm-mf" style="background:var(--red);width:0%"></div></div></div>
+        </div>
+        <div class="p-grid" id="pers-m" style="display:none">
+          <div class="m-tile"><div class="m-lbl">Weekly Target</div><div class="m-val" id="pg-t" style="color:var(--gold)">—</div></div>
+          <div class="m-tile"><div class="m-lbl">Weekly Earned</div><div class="m-val" id="pg-e" style="color:var(--green)">—</div><div class="m-bar"><div class="m-fill" id="pg-f" style="background:var(--green);width:0%"></div></div></div>
+          <div class="m-tile"><div class="m-lbl">Daily Budget</div><div class="m-val" id="pg-d">—</div></div>
+          <div class="m-tile"><div class="m-lbl">Used Today</div><div class="m-val" id="pg-u">—</div></div>
+        </div>
+      </div>
+
+      <div class="trades-seg">
+        <button class="trades-tab active" onclick="switchTab('open')">Open &amp; Pending</button>
+        <button class="trades-tab" onclick="switchTab('closed')">Closed Trades</button>
+      </div>
+
+      <div class="tw"><div class="ts">
+        <table class="tt">
+          <thead><tr><th>Instrument</th><th>Date</th><th>Setup</th><th>Dir</th><th>Lots</th><th>Risk</th><th>R:R</th><th>Outcome</th><th>P&amp;L</th><th>Actions</th></tr></thead>
+          <tbody id="tb"><tr><td colspan="10" class="ec">Select an account to view trades.</td></tr></tbody>
+        </table>
+      </div></div>
+    </div>
   </div>
 </div>
 
@@ -282,10 +310,10 @@ function closeDrawer(){S('drawer').classList.remove('open');S('overlay').classLi
   cu=d.data.session.user;
   var pr=await supabase.from('riskpilot_data').select('license_valid').eq('user_id',cu.id).single();
   if(!pr.data||pr.data.license_valid!==true){goTo('license.html');return;}
-  var nm=(cu.user_metadata&&cu.user_metadata.name)||cu.email;
-  S('g-name').textContent='Welcome, '+nm;
-  var dn=((cu.user_metadata&&cu.user_metadata.name?cu.user_metadata.name+' '+(cu.user_metadata.surname||''):'').trim())||'Trader';
-  S('d-name').textContent=dn;S('d-email').textContent=cu.email;
+  var nm=(cu.user_metadata&&cu.user_metadata.name?cu.user_metadata.name+' '+(cu.user_metadata.surname||''):'').trim()||cu.email;
+  S('g-name').textContent='Welcome, '+(cu.user_metadata&&cu.user_metadata.name?cu.user_metadata.name:cu.email);
+  S('sb-name').textContent=nm;S('sb-email').textContent=cu.email;
+  S('d-name').textContent=nm;S('d-email').textContent=cu.email;
   await load();
 })();
 
@@ -295,6 +323,17 @@ async function load(){
   var saved=localStorage.getItem('rp_active_account_'+cu.id);
   if(saved&&accs.find(function(a){return a.id===saved;}))actId=saved;
   else if(accs.length>0)actId=accs[0].id;
+  // Update sidebar wallet
+  var totalWallet=accs.reduce(function(s,a){return s+parseFloat(a.weekly_wallet||0);},0);
+  var allSettled=[];
+  for(var i=0;i<Math.min(accs.length,1);i++){
+    var r=await supabase.from('trade_journal').select('outcome').eq('account_id',accs[i].id);
+    if(r.data)allSettled=allSettled.concat(r.data);
+  }
+  var wins=allSettled.filter(function(t){return t.outcome==='win';}).length;
+  var settled=allSettled.filter(function(t){return t.outcome==='win'||t.outcome==='loss';}).length;
+  S('sb-wallet').textContent='R '+totalWallet.toFixed(0);
+  S('sb-wr').textContent='Win rate: '+(settled>0?((wins/settled)*100).toFixed(0):0)+'%';
   renderCards();
   if(actId)await showAcc(actId);
 }
@@ -308,7 +347,7 @@ function renderCards(){
     var ip=a.account_type==='prop',s=sym(a),ia=a.id===actId;
     var w=parseFloat(a.weekly_wallet||0);
     var bdg=ip?'<span class="ac-bdg ac-bdg-f">Prop</span>':'<span class="ac-bdg ac-bdg-p">Personal</span>';
-    var dot=ia?'<div class="ac-active-row"><div class="ac-dot"></div><span class="ac-dot-lbl">Active</span></div>':'';
+    var dot=ia?'<div class="ac-arow"><div class="ac-dot"></div><span class="ac-dot-lbl">Active</span></div>':'';
     return '<div class="acc-card '+(ia?'act':'')+'" onclick="sel(\''+a.id+'\')">'
       +'<div class="ac-top"><span class="ac-name">'+esc(a.account_name)+'</span>'+bdg+'</div>'
       +'<div class="ac-wallet">'+s+w.toFixed(0)+'</div>'
@@ -364,7 +403,7 @@ function renderTrades(){
     var pnl=t.outcome==='win'?parseFloat(t.profit_zar||0):t.outcome==='loss'?-parseFloat(t.risk_amount||0):null;
     var ps=pnl!==null?'<span style="color:'+(pnl>=0?'var(--green)':'var(--red)')+';font-weight:700">'+(pnl>=0?'+':'')+s+Math.abs(pnl).toFixed(0)+'</span>':'—';
     var act=t.outcome==='pending'?'<div class="ja-wrap"><button class="ja ja-w" data-id="'+t.id+'" data-a="win">&#10003;</button><button class="ja ja-l" data-id="'+t.id+'" data-a="loss">&#10007;</button><button class="ja ja-n" data-id="'+t.id+'" data-a="not_triggered">N/T</button></div>':'—';
-    return '<tr><td style="font-weight:600">'+esc(t.instrument||'—')+'</td><td style="font-size:12px;color:var(--text-muted)">'+esc(t.trade_date||'—')+'</td><td><span class="badge '+(t.setup_type==='A'?'bb':'ba')+'">'+(t.setup_type==='A'?'A-Setup':'B-Setup')+'</span></td><td style="font-size:12px">'+(t.direction==='buy'?'&#9650;':'&#9660;')+'</td><td style="color:var(--gold);font-weight:600">'+parseFloat(t.lot_size||0).toFixed(2)+'</td><td>'+s+parseFloat(t.risk_amount||0).toFixed(0)+'</td><td>'+(t.rr_ratio?'1:'+parseFloat(t.rr_ratio).toFixed(2):'—')+'</td><td><span class="badge '+ob+'">'+ol+'</span></td><td>'+ps+'</td><td>'+act+'</td></tr>';
+    return '<tr><td style="font-weight:600">'+esc(t.instrument||'—')+'</td><td style="font-size:12px;color:var(--text-muted)">'+esc(t.trade_date||'—')+'</td><td><span class="badge '+(t.setup_type==='A'?'bb':'ba')+'">'+(t.setup_type==='A'?'A-Setup':'B-Setup')+'</span></td><td>'+(t.direction==='buy'?'&#9650;':'&#9660;')+'</td><td style="color:var(--gold);font-weight:600">'+parseFloat(t.lot_size||0).toFixed(2)+'</td><td>'+s+parseFloat(t.risk_amount||0).toFixed(0)+'</td><td>'+(t.rr_ratio?'1:'+parseFloat(t.rr_ratio).toFixed(2):'—')+'</td><td><span class="badge '+ob+'">'+ol+'</span></td><td>'+ps+'</td><td>'+act+'</td></tr>';
   }).join('');
   b.querySelectorAll('button[data-a]').forEach(function(btn){btn.addEventListener('click',function(){markT(this.dataset.id,this.dataset.a);});});
 }
@@ -381,7 +420,6 @@ function switchTab(tab){
   document.querySelectorAll('.trades-tab').forEach(function(b,i){b.classList.toggle('active',(i===0&&tab==='open')||(i===1&&tab==='closed'));});
   renderTrades();
 }
-
 function goToAdd(){if(!actId){alert('Select an account first.');return;}localStorage.setItem('rp_active_account_'+cu.id,actId);goTo('add-trade.html');}
 function goToDash(){if(!actId){alert('Select an account first.');return;}localStorage.setItem('rp_perf_account',actId);localStorage.setItem('rp_active_account_'+cu.id,actId);goTo('dashboard.html');}
 async function handleSignOut(){await supabase.auth.signOut();goTo('auth.html');}
