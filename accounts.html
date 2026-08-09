@@ -12,66 +12,42 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
 
-/* ═══════════════════════════════════════
-   DESKTOP SIDEBAR (hidden on mobile)
-═══════════════════════════════════════ */
-.sidebar{
-  display:flex;flex-direction:column;
-  width:240px;flex-shrink:0;
-  background:var(--bg2);border-right:1px solid var(--border);
-  position:sticky;top:0;height:100vh;overflow-y:auto;
-}
-.sb-logo{
-  display:flex;flex-direction:column;align-items:flex-start;
-  padding:1.5rem 1.25rem 1rem;border-bottom:1px solid var(--border);
-}
+/* ── SIDEBAR (desktop only) ── */
+.sidebar{display:flex;flex-direction:column;width:240px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sb-logo{display:flex;flex-direction:column;align-items:flex-start;padding:1.5rem 1.25rem 1rem;border-bottom:1px solid var(--border);}
 .sb-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
 .sb-icon{width:36px;height:36px;background:var(--gold-bg);border:1.5px solid var(--gold-border);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.sb-name{font-size:20px;font-weight:800;letter-spacing:-.5px;line-height:1;}
-.sb-name .r{color:var(--text);}.sb-name .p{color:var(--gold);}
-.sb-tagline{font-size:10px;font-weight:700;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;padding-left:2px;}
-.sb-nav{flex:1;padding:10px 12px;display:flex;flex-direction:column;gap:1px;}
-.sb-section{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;padding:12px 10px 4px;}
-.sb-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;font-family:inherit;width:100%;text-align:left;transition:background .15s,color .15s;margin-bottom:1px;}
-.sb-link:hover{background:var(--surface);color:var(--text);}
-.sb-link.active{background:rgba(212,160,23,.1);color:var(--gold);border:1px solid rgba(212,160,23,.15);}
-.sb-link svg{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;}
-.sb-footer{padding:1rem 1.25rem;border-top:1px solid var(--border);}
-.sb-user-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sb-user-email{font-size:11px;color:var(--text-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:10px;}
-.sb-wallet-lbl{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
-.sb-wallet-val{font-size:20px;font-weight:800;color:var(--green);margin-bottom:2px;}
-.sb-wallet-sub{font-size:11px;color:var(--text-dim);margin-bottom:10px;}
-.sb-signout{width:100%;padding:9px;font-size:12px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:8px;cursor:pointer;}
+.sb-name{font-size:20px;font-weight:800;letter-spacing:-.5px;}.sb-name .r{color:var(--text);}.sb-name .p{color:var(--gold);}
+.sb-tag{font-size:10px;font-weight:700;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;padding-left:2px;}
+.sb-nav{flex:1;padding:10px 12px;display:flex;flex-direction:column;}
+.sb-sec{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;padding:12px 10px 4px;}
+.sb-a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:background .15s,color .15s;margin-bottom:1px;}
+.sb-a:hover{background:var(--surface);color:var(--text);}
+.sb-a.on{background:rgba(212,160,23,.1);color:var(--gold);border:1px solid rgba(212,160,23,.15);}
+.sb-a svg{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;}
+.sb-foot{padding:1rem 1.25rem;border-top:1px solid var(--border);}
+.sb-uname{font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sb-uemail{font-size:11px;color:var(--text-dim);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:10px;}
+.sb-wlbl{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+.sb-wval{font-size:20px;font-weight:800;color:var(--green);margin-bottom:2px;}
+.sb-wsub{font-size:11px;color:var(--text-dim);margin-bottom:10px;}
+.sb-out{width:100%;padding:9px;font-size:12px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:8px;cursor:pointer;}
 
-/* ═══════════════════════════════════════
-   MOBILE TOPBAR (hidden on desktop)
-═══════════════════════════════════════ */
-.topbar{display:none;position:sticky;top:0;z-index:100;width:100%;height:60px;background:var(--bg2);border-bottom:1px solid var(--border);align-items:center;padding:0 1.5rem;justify-content:space-between;flex-shrink:0;}
-.mob-logo{font-size:26px;font-weight:800;letter-spacing:-.8px;line-height:1;flex:0 0 auto;}
-.mob-logo .r{color:var(--text);}.mob-logo .p{color:var(--gold);}
-
-
-
-
-/* ═══════════════════════════════════════
-   MAIN CONTENT
-═══════════════════════════════════════ */
-.main{flex:1;min-width:0;display:flex;flex-direction:column;}
-.page{padding:1.5rem;max-width:900px;width:100%;}
+/* ── MAIN ── */
+.main{flex:1;min-width:0;}
+.page{padding:1.5rem;max-width:900px;}
 .greeting{margin-bottom:1.5rem;}
 .greeting h2{font-size:22px;font-weight:800;color:var(--text);}
 .greeting p{font-size:13px;color:var(--text-muted);margin-top:3px;}
 
-/* Account cards */
+/* ── ACCOUNT CARDS ── */
 .acc-row{display:flex;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;margin-bottom:1.5rem;scrollbar-width:thin;scrollbar-color:var(--border2) transparent;}
 .acc-row::-webkit-scrollbar{height:4px;}
 .acc-row::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 .acc-card{flex-shrink:0;width:200px;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:.9rem 1rem;cursor:pointer;transition:border-color .15s,transform .1s,box-shadow .15s;position:relative;overflow:hidden;}
 .acc-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold);opacity:0;transition:opacity .15s;}
 .acc-card:hover{border-color:var(--gold-border);transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.3);}
-.acc-card:hover::before,.acc-card.act::before{opacity:1;}
-.acc-card.act{border-color:var(--gold);}
+.acc-card:hover::before,.acc-card.on::before{opacity:1;}.acc-card.on{border-color:var(--gold);}
 .ac-top{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:8px;}
 .ac-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ac-bdg{font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0;}
@@ -82,12 +58,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .ac-arow{display:flex;align-items:center;gap:5px;margin-top:8px;}
 .ac-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:blink 1.5s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.ac-dot-lbl{font-size:10px;font-weight:700;color:var(--gold);}
+.ac-dlbl{font-size:10px;font-weight:700;color:var(--gold);}
 .more-card,.add-card{flex-shrink:0;width:135px;min-height:115px;border:1.5px dashed var(--border2);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;color:var(--text-dim);transition:all .15s;text-align:center;padding:10px;background:transparent;}
 .more-card:hover,.add-card:hover{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);}
 .ci{font-size:24px;}.ct{font-size:11px;font-weight:600;line-height:1.4;}
 
-/* Active section */
+/* ── ACTIVE ACCOUNT ── */
 .active-sec{display:none;}.active-sec.show{display:block;}
 .active-hdr{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.25rem;margin-bottom:1rem;}
 .ah-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px;}
@@ -127,14 +103,41 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .ja-l{background:var(--red-bg);color:var(--red);border-color:var(--red-border);}
 .ja-n{background:var(--bg3);color:var(--text-muted);border-color:var(--border);}
 
-/* Responsive */
+/* ── MOBILE BOTTOM NAV ── */
+.bnav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;height:64px;background:var(--bg2);border-top:1px solid var(--border);align-items:center;justify-content:space-around;padding:0 4px;padding-bottom:env(safe-area-inset-bottom);}
+.bn-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:1;color:var(--text-dim);text-decoration:none;font-size:10px;font-weight:600;letter-spacing:.3px;background:none;border:none;cursor:pointer;font-family:inherit;padding:6px 4px;border-radius:10px;transition:color .15s;min-width:0;}
+.bn-item svg{width:22px;height:22px;flex-shrink:0;}
+.bn-item.active,.bn-item.active svg{color:var(--gold);}
+.bn-add{width:52px;height:52px;border-radius:16px;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(212,160,23,.4);flex-shrink:0;transition:transform .1s;}
+.bn-add:active{transform:scale(.93);}
+.bn-add svg{width:24px;height:24px;stroke:#0d0f14;flex-shrink:0;}
+
+/* More sheet */
+.mo-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;backdrop-filter:blur(3px);}
+.mo-ov.open{display:block;}
+.mo-sh{position:fixed;bottom:0;left:0;right:0;z-index:401;background:var(--bg2);border-radius:22px 22px 0 0;border-top:1px solid var(--border);transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);padding-bottom:calc(24px + env(safe-area-inset-bottom));}
+.mo-sh.open{transform:translateY(0);}
+.ms-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0;}
+.ms-title{font-size:16px;font-weight:800;color:var(--text);padding:16px 20px 8px;}
+.ms-nav{display:flex;flex-direction:column;padding:0 12px;gap:2px;}
+.ms-link{display:flex;align-items:center;gap:14px;padding:13px 14px;border-radius:12px;text-decoration:none;transition:background .15s;}
+.ms-link:active{background:var(--surface);}
+.ms-icon{width:40px;height:40px;border-radius:11px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ms-icon svg{width:18px;height:18px;stroke:var(--text-muted);fill:none;stroke-width:1.8;}
+.ms-body{flex:1;}
+.ms-lbl{font-size:14px;font-weight:600;color:var(--text);}
+.ms-sub{font-size:11px;color:var(--text-dim);margin-top:1px;}
+.ms-chev{width:16px;height:16px;stroke:var(--text-dim);fill:none;flex-shrink:0;}
+.ms-out{width:calc(100% - 24px);margin:10px 12px 0;padding:13px;font-size:14px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:12px;cursor:pointer;}
+
+/* ── RESPONSIVE ── */
 @media(max-width:768px){
   body{display:block;}
   .sidebar{display:none;}
-  .topbar{display:flex;width:100%;}
   .main{display:block;}
-  .page{padding:1.1rem;}
-  .greeting h2{font-size:19px;}
+  .page{padding:1rem 1rem 90px;}
+  .greeting h2{font-size:20px;}
+  .bnav{display:flex;}
 }
 @media(max-width:600px){
   .m-grid{grid-template-columns:1fr 1fr;}
@@ -143,150 +146,51 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   .btn-add,.btn-dash{flex:1;text-align:center;}
 }
 @media(max-width:380px){.m-grid,.p-grid{grid-template-columns:1fr;}}
-/* ═══════════════════════════════════════
-   MOBILE BOTTOM NAV
-═══════════════════════════════════════ */
-.bnav{
-  display:none;
-  position:fixed;bottom:0;left:0;right:0;
-  z-index:200;
-  height:64px;
-  background:var(--bg2);
-  border-top:1px solid var(--border);
-  align-items:center;justify-content:space-around;
-  padding:0 4px;
-  padding-bottom:env(safe-area-inset-bottom);
-  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
-}
-.bn-item{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:3px;flex:1;
-  color:var(--text-dim);text-decoration:none;
-  font-size:10px;font-weight:600;letter-spacing:.3px;
-  background:none;border:none;cursor:pointer;font-family:inherit;
-  padding:6px 4px;border-radius:10px;
-  transition:color .15s;
-  min-width:0;
-}
-.bn-item svg{width:22px;height:22px;flex-shrink:0;}
-.bn-item.active{color:var(--gold);}
-.bn-item:hover{color:var(--text);}
-.bn-add{
-  width:52px;height:52px;border-radius:16px;
-  background:var(--gold);border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 20px rgba(212,160,23,.4);
-  flex-shrink:0;
-  transition:background .15s,transform .1s;
-}
-.bn-add:active{transform:scale(.93);}
-.bn-add svg{width:24px;height:24px;stroke:white;flex-shrink:0;}
-
-/* More sheet */
-.more-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;backdrop-filter:blur(3px);}
-.more-overlay.open{display:block;}
-.more-sheet{
-  position:fixed;bottom:0;left:0;right:0;z-index:401;
-  background:var(--bg2);border-radius:22px 22px 0 0;
-  border-top:1px solid var(--border);
-  transform:translateY(100%);
-  transition:transform .3s cubic-bezier(.4,0,.2,1);
-  padding-bottom:calc(24px + env(safe-area-inset-bottom));
-}
-.more-sheet.open{transform:translateY(0);}
-.ms-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0;}
-.ms-title{font-size:16px;font-weight:800;color:var(--text);padding:16px 20px 8px;}
-.ms-nav{display:flex;flex-direction:column;padding:0 12px;gap:2px;}
-.ms-link{
-  display:flex;align-items:center;gap:14px;
-  padding:13px 14px;border-radius:12px;
-  text-decoration:none;cursor:pointer;
-  transition:background .15s;
-}
-.ms-link:hover,.ms-link:active{background:var(--surface);}
-.ms-icon{
-  width:40px;height:40px;border-radius:11px;
-  background:var(--surface);border:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-.ms-icon svg{width:18px;height:18px;stroke:var(--text-muted);}
-.ms-info{flex:1;min-width:0;}
-.ms-lbl{font-size:14px;font-weight:600;color:var(--text);}
-.ms-sub{font-size:11px;color:var(--text-dim);margin-top:1px;}
-.ms-chevron{width:16px;height:16px;stroke:var(--text-dim);flex-shrink:0;}
-.ms-signout{
-  width:calc(100% - 24px);margin:10px 12px 0;
-  padding:13px;font-size:14px;font-weight:700;font-family:inherit;
-  background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);
-  border-radius:12px;cursor:pointer;
-}
-
-/* Show on mobile, add body padding */
-@media(max-width:768px){
-  .bnav{display:flex;}
-  .main,.page{padding-bottom:80px!important;}
-  body{padding-bottom:0;}
-}
-
 </style>
 </head>
 <body>
 
-<!-- ═══ DESKTOP SIDEBAR ═══ -->
+<!-- DESKTOP SIDEBAR -->
 <aside class="sidebar">
   <div class="sb-logo">
     <div class="sb-logo-row">
-      <div class="sb-icon">
-        <svg viewBox="0 0 32 32" fill="none" width="20" height="20">
-          <polygon points="16,3 29,28 3,28" fill="none" stroke="#d4a017" stroke-width="2.5" stroke-linejoin="round"/>
-          <circle cx="16" cy="13" r="2.5" fill="#d4a017"/>
-          <line x1="16" y1="16" x2="16" y2="23" stroke="#d4a017" stroke-width="2.5" stroke-linecap="round"/>
-        </svg>
-      </div>
+      <div class="sb-icon"><svg viewBox="0 0 32 32" fill="none" width="20" height="20"><polygon points="16,3 29,28 3,28" fill="none" stroke="#d4a017" stroke-width="2.5" stroke-linejoin="round"/><circle cx="16" cy="13" r="2.5" fill="#d4a017"/><line x1="16" y1="16" x2="16" y2="23" stroke="#d4a017" stroke-width="2.5" stroke-linecap="round"/></svg></div>
       <div class="sb-name"><span class="r">Risk</span><span class="p">Pilot</span></div>
     </div>
-    <div class="sb-tagline">Master Your Risk</div>
+    <div class="sb-tag">Master Your Risk</div>
   </div>
-
   <nav class="sb-nav">
-    <div class="sb-section">Navigation</div>
-    <a class="sb-link active" href="accounts.html"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>My Accounts</a>
-    <a class="sb-link" href="more-accounts.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>All Accounts</a>
-    <a class="sb-link" href="overall-performance.html"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Overall Performance</a>
-    <div class="sb-section">Account</div>
-    <a class="sb-link" href="profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>My Profile</a>
-    <a class="sb-link" href="leaderboard.html"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>Leaderboard</a>
-    <a class="sb-link" href="account-setup.html"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Create New Account</a>
-    <div class="sb-section">Community</div>
-    <a class="sb-link" href="social.html"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Follow Us</a>
+    <div class="sb-sec">Navigation</div>
+    <a class="sb-a on" href="accounts.html"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>My Accounts</a>
+    <a class="sb-a" href="more-accounts.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>All Accounts</a>
+    <a class="sb-a" href="overall-performance.html"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Overall Performance</a>
+    <div class="sb-sec">Account</div>
+    <a class="sb-a" href="profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>My Profile</a>
+    <a class="sb-a" href="leaderboard.html"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>Leaderboard</a>
+    <a class="sb-a" href="account-setup.html"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Create New Account</a>
+    <div class="sb-sec">Community</div>
+    <a class="sb-a" href="social.html"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Follow Us</a>
   </nav>
-
-  <div class="sb-footer">
-    <div class="sb-user-name" id="sb-name">—</div>
-    <div class="sb-user-email" id="sb-email">—</div>
-    <div class="sb-wallet-lbl">Weekly Return Wallet</div>
-    <div class="sb-wallet-val" id="sb-wallet">R 0</div>
-    <div class="sb-wallet-sub" id="sb-wr">Win rate: 0%</div>
-    <button class="sb-signout" onclick="handleSignOut()">Sign Out</button>
+  <div class="sb-foot">
+    <div class="sb-uname" id="sb-name">—</div>
+    <div class="sb-uemail" id="sb-email">—</div>
+    <div class="sb-wlbl">Weekly Return Wallet</div>
+    <div class="sb-wval" id="sb-wallet">R 0</div>
+    <div class="sb-wsub" id="sb-wr">Win rate: 0%</div>
+    <button class="sb-out" onclick="handleSignOut()">Sign Out</button>
   </div>
 </aside>
 
-<!-- ═══ MOBILE TOPBAR ═══ -->
-<div class="topbar">
-  <div class="mob-logo"><span class="r">Risk</span><span class="p">Pilot</span></div>
-  
-</div>
-
-<!-- ═══ MAIN CONTENT ═══ -->
+<!-- MAIN -->
 <div class="main">
   <div class="page">
     <div class="greeting">
       <h2 id="g-name">My Accounts</h2>
-      <p id="g-sub">Select an account to manage your trades</p>
+      <p>Select an account to manage your trades</p>
     </div>
 
     <div class="acc-row" id="acc-row">
-      <div class="add-card" onclick="goTo('account-setup.html')"><div class="ci">&#43;</div><div class="ct">New Account</div></div>
+      <div class="add-card" onclick="goTo('account-setup.html')"><div class="ci">+</div><div class="ct">New Account</div></div>
     </div>
 
     <div class="active-sec" id="active-sec">
@@ -297,7 +201,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
             <div class="ah-meta" id="ah-meta">—</div>
           </div>
           <div class="ah-btns">
-            <button class="btn-add" onclick="goToAdd()">&#43; Add Trade</button>
+            <button class="btn-add" onclick="goToAdd()">+ Add Trade</button>
             <button class="btn-dash" onclick="goToDash()">&#128202; Dashboard</button>
           </div>
         </div>
@@ -329,6 +233,59 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 </div>
 
+<!-- MOBILE BOTTOM NAV -->
+<nav class="bnav">
+  <a class="bn-item active" href="accounts.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+    <span>Accounts</span>
+  </a>
+  <a class="bn-item" href="dashboard.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Dashboard</span>
+  </a>
+  <button class="bn-add" onclick="goToAdd()">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <a class="bn-item" href="overall-performance.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span>Performance</span>
+  </a>
+  <button class="bn-item" onclick="openMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+    <span>More</span>
+  </button>
+</nav>
+
+<!-- MORE SHEET -->
+<div class="mo-ov" id="mo-ov" onclick="closeMore()"></div>
+<div class="mo-sh" id="mo-sh">
+  <div class="ms-handle"></div>
+  <div class="ms-title">More</div>
+  <nav class="ms-nav">
+    <a class="ms-link" href="profile.html">
+      <div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+      <div class="ms-body"><div class="ms-lbl">My Profile</div><div class="ms-sub">Edit your personal details</div></div>
+      <svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <a class="ms-link" href="leaderboard.html">
+      <div class="ms-icon"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg></div>
+      <div class="ms-body"><div class="ms-lbl">Leaderboard</div><div class="ms-sub">Top traders — coming soon</div></div>
+      <svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <a class="ms-link" href="more-accounts.html">
+      <div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+      <div class="ms-body"><div class="ms-lbl">All Accounts</div><div class="ms-sub">View and manage all accounts</div></div>
+      <svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <a class="ms-link" href="social.html">
+      <div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
+      <div class="ms-body"><div class="ms-lbl">Follow Us</div><div class="ms-sub">Instagram &amp; Discord</div></div>
+      <svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+  </nav>
+  <button class="ms-out" onclick="handleSignOut()">Sign Out</button>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
@@ -338,8 +295,8 @@ function goTo(f){window.location.href=base()+f;}
 function S(i){return document.getElementById(i);}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function sym(a){return a&&a.currency==='USD'?'$':'R';}
-
-
+function openMore(){S('mo-sh').classList.add('open');S('mo-ov').classList.add('open');document.body.style.overflow='hidden';}
+function closeMore(){S('mo-sh').classList.remove('open');S('mo-ov').classList.remove('open');document.body.style.overflow='';}
 
 (async function(){
   var d=await supabase.auth.getSession();
@@ -347,10 +304,10 @@ function sym(a){return a&&a.currency==='USD'?'$':'R';}
   cu=d.data.session.user;
   var pr=await supabase.from('riskpilot_data').select('license_valid').eq('user_id',cu.id).single();
   if(!pr.data||pr.data.license_valid!==true){goTo('license.html');return;}
-  var nm=(cu.user_metadata&&cu.user_metadata.name?cu.user_metadata.name+' '+(cu.user_metadata.surname||''):'').trim()||cu.email;
-  S('g-name').textContent='Welcome, '+(cu.user_metadata&&cu.user_metadata.name?cu.user_metadata.name:cu.email);
-  S('sb-name').textContent=nm;S('sb-email').textContent=cu.email;
-  S('d-name').textContent=nm;S('d-email').textContent=cu.email;
+  var nm=(cu.user_metadata&&cu.user_metadata.name)||cu.email;
+  S('g-name').textContent='Welcome, '+nm;
+  S('sb-name').textContent=((cu.user_metadata&&cu.user_metadata.name?cu.user_metadata.name+' '+(cu.user_metadata.surname||''):'').trim())||'Trader';
+  S('sb-email').textContent=cu.email;
   await load();
 })();
 
@@ -360,37 +317,29 @@ async function load(){
   var saved=localStorage.getItem('rp_active_account_'+cu.id);
   if(saved&&accs.find(function(a){return a.id===saved;}))actId=saved;
   else if(accs.length>0)actId=accs[0].id;
-  // Update sidebar wallet
-  var totalWallet=accs.reduce(function(s,a){return s+parseFloat(a.weekly_wallet||0);},0);
-  var allSettled=[];
-  for(var i=0;i<Math.min(accs.length,1);i++){
-    var r=await supabase.from('trade_journal').select('outcome').eq('account_id',accs[i].id);
-    if(r.data)allSettled=allSettled.concat(r.data);
-  }
-  var wins=allSettled.filter(function(t){return t.outcome==='win';}).length;
-  var settled=allSettled.filter(function(t){return t.outcome==='win'||t.outcome==='loss';}).length;
-  S('sb-wallet').textContent='R '+totalWallet.toFixed(0);
-  S('sb-wr').textContent='Win rate: '+(settled>0?((wins/settled)*100).toFixed(0):0)+'%';
+  // Sidebar wallet
+  var tw=accs.reduce(function(s,a){return s+parseFloat(a.weekly_wallet||0);},0);
+  S('sb-wallet').textContent='R '+tw.toFixed(0);
   renderCards();
   if(actId)await showAcc(actId);
 }
 
 function renderCards(){
   var row=S('acc-row');
-  var add='<div class="add-card" onclick="goTo(\'account-setup.html\')"><div class="ci">&#43;</div><div class="ct">New Account</div></div>';
+  var add='<div class="add-card" onclick="goTo(\'account-setup.html\')"><div class="ci">+</div><div class="ct">New Account</div></div>';
   if(!accs.length){row.innerHTML=add;return;}
   var vis=accs.slice(0,4);
   var html=vis.map(function(a){
     var ip=a.account_type==='prop',s=sym(a),ia=a.id===actId;
     var w=parseFloat(a.weekly_wallet||0);
     var bdg=ip?'<span class="ac-bdg ac-bdg-f">Prop</span>':'<span class="ac-bdg ac-bdg-p">Personal</span>';
-    var dot=ia?'<div class="ac-arow"><div class="ac-dot"></div><span class="ac-dot-lbl">Active</span></div>':'';
-    return '<div class="acc-card '+(ia?'act':'')+'" onclick="sel(\''+a.id+'\')">'
+    var dot=ia?'<div class="ac-arow"><div class="ac-dot"></div><span class="ac-dlbl">Active</span></div>':'';
+    return '<div class="acc-card '+(ia?'on':'')+'" onclick="sel(\''+a.id+'\')">'
       +'<div class="ac-top"><span class="ac-name">'+esc(a.account_name)+'</span>'+bdg+'</div>'
       +'<div class="ac-wallet">'+s+w.toFixed(0)+'</div>'
       +'<div class="ac-meta">'+a.currency+' · '+(ip?'Prop':'Personal')+'</div>'+dot+'</div>';
   }).join('');
-  if(accs.length>4)html+='<div class="more-card" onclick="goTo(\'more-accounts.html\')"><div class="ci">&#8943;</div><div class="ct">All Accounts<br/>('+(accs.length-4)+' more)</div></div>';
+  if(accs.length>4)html+='<div class="more-card" onclick="goTo(\'more-accounts.html\')"><div class="ci">···</div><div class="ct">All Accounts<br/>('+(accs.length-4)+' more)</div></div>';
   row.innerHTML=html+add;
 }
 
@@ -440,7 +389,7 @@ function renderTrades(){
     var pnl=t.outcome==='win'?parseFloat(t.profit_zar||0):t.outcome==='loss'?-parseFloat(t.risk_amount||0):null;
     var ps=pnl!==null?'<span style="color:'+(pnl>=0?'var(--green)':'var(--red)')+';font-weight:700">'+(pnl>=0?'+':'')+s+Math.abs(pnl).toFixed(0)+'</span>':'—';
     var act=t.outcome==='pending'?'<div class="ja-wrap"><button class="ja ja-w" data-id="'+t.id+'" data-a="win">&#10003;</button><button class="ja ja-l" data-id="'+t.id+'" data-a="loss">&#10007;</button><button class="ja ja-n" data-id="'+t.id+'" data-a="not_triggered">N/T</button></div>':'—';
-    return '<tr><td style="font-weight:600">'+esc(t.instrument||'—')+'</td><td style="font-size:12px;color:var(--text-muted)">'+esc(t.trade_date||'—')+'</td><td><span class="badge '+(t.setup_type==='A'?'bb':'ba')+'">'+(t.setup_type==='A'?'A-Setup':'B-Setup')+'</span></td><td>'+(t.direction==='buy'?'&#9650;':'&#9660;')+'</td><td style="color:var(--gold);font-weight:600">'+parseFloat(t.lot_size||0).toFixed(2)+'</td><td>'+s+parseFloat(t.risk_amount||0).toFixed(0)+'</td><td>'+(t.rr_ratio?'1:'+parseFloat(t.rr_ratio).toFixed(2):'—')+'</td><td><span class="badge '+ob+'">'+ol+'</span></td><td>'+ps+'</td><td>'+act+'</td></tr>';
+    return '<tr><td style="font-weight:600">'+esc(t.instrument||'—')+'</td><td style="font-size:12px;color:var(--text-muted)">'+esc(t.trade_date||'—')+'</td><td><span class="badge '+(t.setup_type==='A'?'bb':'ba')+'">'+(t.setup_type==='A'?'A-Setup':'B-Setup')+'</span></td><td>'+(t.direction==='buy'?'▲':'▼')+'</td><td style="color:var(--gold);font-weight:600">'+parseFloat(t.lot_size||0).toFixed(2)+'</td><td>'+s+parseFloat(t.risk_amount||0).toFixed(0)+'</td><td>'+(t.rr_ratio?'1:'+parseFloat(t.rr_ratio).toFixed(2):'—')+'</td><td><span class="badge '+ob+'">'+ol+'</span></td><td>'+ps+'</td><td>'+act+'</td></tr>';
   }).join('');
   b.querySelectorAll('button[data-a]').forEach(function(btn){btn.addEventListener('click',function(){markT(this.dataset.id,this.dataset.a);});});
 }
@@ -459,60 +408,7 @@ function switchTab(tab){
 }
 function goToAdd(){if(!actId){alert('Select an account first.');return;}localStorage.setItem('rp_active_account_'+cu.id,actId);goTo('add-trade.html');}
 function goToDash(){if(!actId){alert('Select an account first.');return;}localStorage.setItem('rp_perf_account',actId);localStorage.setItem('rp_active_account_'+cu.id,actId);goTo('dashboard.html');}
-
-function openMore(){document.getElementById('more-sheet').classList.add('open');document.getElementById('more-overlay').classList.add('open');document.body.style.overflow='hidden';}
-function closeMore(){document.getElementById('more-sheet').classList.remove('open');document.getElementById('more-overlay').classList.remove('open');document.body.style.overflow='';}
 async function handleSignOut(){await supabase.auth.signOut();goTo('auth.html');}
 </script>
-<!-- ═══ MOBILE BOTTOM NAV ═══ -->
-<nav class="bnav" id="bnav">
-  <a class="bn-item active" href="accounts.html">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
-    <span>Accounts</span>
-  </a>
-  <a class="bn-item" href="dashboard.html">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    <span>Dashboard</span>
-  </a>
-  <button class="bn-add" onclick="goToAdd()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-  </button>
-  <a class="bn-item" href="overall-performance.html">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    <span>Performance</span>
-  </a>
-  <button class="bn-item" onclick="openMore()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
-    <span>More</span>
-  </button>
-</nav>
-<div class="more-overlay" id="more-overlay" onclick="closeMore()"></div>
-<div class="more-sheet" id="more-sheet">
-  <div class="ms-handle"></div>
-  <div class="ms-title">More</div>
-  <nav class="ms-nav">
-    <a class="ms-link" href="profile.html">
-      <div class="ms-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
-      <div class="ms-info"><div class="ms-lbl">My Profile</div><div class="ms-sub">Edit your personal details</div></div>
-      <svg class="ms-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-    </a>
-    <a class="ms-link" href="leaderboard.html">
-      <div class="ms-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg></div>
-      <div class="ms-info"><div class="ms-lbl">Leaderboard</div><div class="ms-sub">Top traders — coming soon</div></div>
-      <svg class="ms-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-    </a>
-    <a class="ms-link" href="more-accounts.html">
-      <div class="ms-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
-      <div class="ms-info"><div class="ms-lbl">All Accounts</div><div class="ms-sub">View and manage all accounts</div></div>
-      <svg class="ms-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-    </a>
-    <a class="ms-link" href="social.html">
-      <div class="ms-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
-      <div class="ms-info"><div class="ms-lbl">Follow Us</div><div class="ms-sub">Instagram &amp; Discord</div></div>
-      <svg class="ms-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-    </a>
-  </nav>
-  <button class="ms-signout" onclick="handleSignOut()">Sign Out</button>
-</div>
 </body>
 </html>

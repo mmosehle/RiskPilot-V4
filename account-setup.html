@@ -99,7 +99,36 @@
       .type-grid   { grid-template-columns:1fr; }
       .form-row-2  { grid-template-columns:1fr; }
     }
-  </style>
+  
+/* ── MOBILE BOTTOM NAV ── */
+.bnav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;height:64px;background:var(--bg2);border-top:1px solid var(--border);align-items:center;justify-content:space-around;padding:0 4px;padding-bottom:env(safe-area-inset-bottom);}
+.bn-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:1;color:var(--text-dim);text-decoration:none;font-size:10px;font-weight:600;letter-spacing:.3px;background:none;border:none;cursor:pointer;font-family:inherit;padding:6px 4px;border-radius:10px;transition:color .15s;min-width:0;}
+.bn-item svg{width:22px;height:22px;flex-shrink:0;}
+.bn-item.active{color:var(--gold);}
+.bn-add{width:52px;height:52px;border-radius:16px;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(212,160,23,.4);flex-shrink:0;transition:transform .1s;}
+.bn-add:active{transform:scale(.93);}
+.bn-add svg{width:24px;height:24px;stroke:#0d0f14;fill:none;stroke-width:2.5;flex-shrink:0;}
+.mo-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;backdrop-filter:blur(3px);}
+.mo-ov.open{display:block;}
+.mo-sh{position:fixed;bottom:0;left:0;right:0;z-index:401;background:var(--bg2);border-radius:22px 22px 0 0;border-top:1px solid var(--border);transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);padding-bottom:calc(24px + env(safe-area-inset-bottom));}
+.mo-sh.open{transform:translateY(0);}
+.ms-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0;}
+.ms-title{font-size:16px;font-weight:800;color:var(--text);padding:16px 20px 8px;}
+.ms-nav{display:flex;flex-direction:column;padding:0 12px;gap:2px;}
+.ms-link{display:flex;align-items:center;gap:14px;padding:13px 14px;border-radius:12px;text-decoration:none;transition:background .15s;}
+.ms-link:active{background:var(--surface);}
+.ms-icon{width:40px;height:40px;border-radius:11px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ms-icon svg{width:18px;height:18px;stroke:var(--text-muted);fill:none;stroke-width:1.8;}
+.ms-body{flex:1;}
+.ms-lbl{font-size:14px;font-weight:600;color:var(--text);}
+.ms-sub{font-size:11px;color:var(--text-dim);margin-top:1px;}
+.ms-chev{width:16px;height:16px;stroke:var(--text-dim);fill:none;flex-shrink:0;}
+.ms-out{width:calc(100% - 24px);margin:10px 12px 0;padding:13px;font-size:14px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:12px;cursor:pointer;}
+@media(max-width:768px){.bnav{display:flex;}}
+
+/* mobile page padding */
+@media(max-width:768px){.page,.page-body{padding-bottom:80px!important;}}
+</style>
 </head>
 <body>
 
@@ -592,6 +621,57 @@ async function createAccount(){
 }
 
 function escHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="bnav">
+  <a class="bn-item active" href="accounts.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><span>Accounts</span></a>
+  <a class="bn-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a>
+  <button class="bn-add" onclick="goToAddTrade()">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <a class="bn-item" href="overall-performance.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Performance</span></a>
+  <button class="bn-item" onclick="openMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+    <span>More</span>
+  </button>
+</nav>
+<div class="mo-ov" id="mo-ov" onclick="closeMore()"></div>
+<div class="mo-sh" id="mo-sh">
+  <div class="ms-handle"></div>
+  <div class="ms-title">More</div>
+  <nav class="ms-nav">
+    <a class="ms-link" href="profile.html">
+      <div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+      <div class="ms-body"><div class="ms-lbl">My Profile</div><div class="ms-sub">Edit your personal details</div></div>
+      <svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <a class="ms-link" href="leaderboard.html">
+      <div class="ms-icon"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg></div>
+      <div class="ms-body"><div class="ms-lbl">Leaderboard</div><div class="ms-sub">Top traders — coming soon</div></div>
+      <svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <a class="ms-link" href="more-accounts.html">
+      <div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+      <div class="ms-body"><div class="ms-lbl">All Accounts</div><div class="ms-sub">View and manage all accounts</div></div>
+      <svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <a class="ms-link" href="social.html">
+      <div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
+      <div class="ms-body"><div class="ms-lbl">Follow Us</div><div class="ms-sub">Instagram &amp; Discord</div></div>
+      <svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+  </nav>
+  <button class="ms-out" id="ms-signout">Sign Out</button>
+</div>
+
+<script src="supabase-config.js"></script>
+<script>
+function goToAddTrade(){var id=localStorage.getItem('rp_active_account_'+(window._cu||''));if(!id)id=localStorage.getItem('rp_perf_account');if(id){window.location.href=base()+'add-trade.html';}else{window.location.href=base()+'accounts.html';}}
+function openMore(){document.getElementById('mo-sh').classList.add('open');document.getElementById('mo-ov').classList.add('open');document.body.style.overflow='hidden';}
+function closeMore(){document.getElementById('mo-sh').classList.remove('open');document.getElementById('mo-ov').classList.remove('open');document.body.style.overflow='';}
+function base(){var p=window.location.pathname;return window.location.origin+p.substring(0,p.lastIndexOf('/')+1);}
+document.addEventListener('DOMContentLoaded',function(){var btn=document.getElementById('ms-signout');if(btn){btn.addEventListener('click',function(){if(window.handleSignOut)handleSignOut();else{supabase.auth.signOut().then(function(){window.location.href=base()+'auth.html';});}});}});
 </script>
 </body>
 </html>
