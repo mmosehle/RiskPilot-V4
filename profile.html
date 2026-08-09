@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<meta name="theme-color" content="#0d0f14"/>
+<title>RiskPilot — My Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
+  background-image:radial-gradient(ellipse at 15% 50%,rgba(212,160,23,.06) 0%,transparent 55%),radial-gradient(ellipse at 85% 20%,rgba(77,142,245,.04) 0%,transparent 50%);}
+.topbar{position:sticky;top:0;z-index:100;height:58px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.25rem;gap:10px;}
+.back-btn{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:20px;padding:6px;line-height:1;border-radius:6px;}
+.back-btn:hover{color:var(--text);}
+.topbar-title{font-size:16px;font-weight:700;color:var(--text);}
+.page{padding:1.5rem;max-width:560px;margin:0 auto;}
+.avatar-block{display:flex;flex-direction:column;align-items:center;margin-bottom:2rem;}
+.avatar{width:80px;height:80px;border-radius:50%;background:var(--gold-bg);border:2.5px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:var(--gold);margin-bottom:12px;}
+.av-name{font-size:20px;font-weight:700;color:var(--text);}
+.av-email{font-size:13px;color:var(--text-muted);margin-top:3px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.25rem;}
+.card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:1.25rem;}
+.fg{margin-bottom:14px;}
+label{display:block;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+input[type=text],input[type=email]{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;color:var(--text);font-family:inherit;outline:none;transition:border-color .15s;}
+input:focus{border-color:var(--gold);}
+input[readonly]{color:var(--text-muted);cursor:not-allowed;}
+.ck-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);}
+.ck-row:last-child{border-bottom:none;}
+.ck-row input[type=checkbox]{width:17px;height:17px;accent-color:var(--gold);cursor:pointer;}
+.ck-label{font-size:13px;color:var(--text);flex:1;}
+.btn-save{width:100%;padding:12px;font-size:15px;font-weight:700;font-family:inherit;background:var(--gold);color:#0d0f14;border:none;border-radius:8px;cursor:pointer;margin-top:4px;}
+.btn-save:hover{background:var(--gold-light);}
+.btn-del{width:100%;padding:12px;font-size:14px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:8px;cursor:pointer;margin-top:10px;}
+.btn-del:hover{background:#3d1018;}
+.alert{border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:12px;display:none;}
+.alert.show{display:block;}
+.alert-ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.alert-err{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(13,15,20,.3);border-top-color:#0d0f14;border-radius:50%;animation:sp .7s linear infinite;margin-right:5px;vertical-align:middle;}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <button class="back-btn" onclick="goTo('accounts.html')">&#8592;</button>
+  <div class="topbar-title">My Profile</div>
+</header>
+<div class="page">
+  <div class="avatar-block">
+    <div class="avatar" id="av-init">—</div>
+    <div class="av-name" id="av-name">Loading…</div>
+    <div class="av-email" id="av-email">—</div>
+  </div>
+
+  <div class="alert alert-ok" id="ok-alert"></div>
+  <div class="alert alert-err" id="err-alert"></div>
+
+  <div class="card">
+    <div class="card-title">Personal Information</div>
+    <div class="fg"><label for="f-name">First Name</label><input type="text" id="f-name" placeholder="Your first name"/></div>
+    <div class="fg"><label for="f-surname">Surname</label><input type="text" id="f-surname" placeholder="Your surname"/></div>
+    <div class="fg"><label for="f-email">Email Address</label><input type="email" id="f-email" readonly/></div>
+    <div class="fg">
+      <label>Marketing Preferences</label>
+      <div class="ck-row">
+        <input type="checkbox" id="mk-email"/>
+        <label for="mk-email" class="ck-label">Receive trading tips &amp; educational content via email</label>
+      </div>
+      <div class="ck-row">
+        <input type="checkbox" id="mk-updates"/>
+        <label for="mk-updates" class="ck-label">Receive product updates and new feature announcements</label>
+      </div>
+    </div>
+    <button class="btn-save" id="btn-save" onclick="saveProfile()">Save Changes</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--red)">Danger Zone</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.5;">Deleting your account is permanent. All your trading accounts, trades, and data will be erased immediately and cannot be recovered.</p>
+    <button class="btn-del" onclick="deleteProfile()">Delete My Account Permanently</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+var cu=null;
+function base(){var p=window.location.pathname;return window.location.origin+p.substring(0,p.lastIndexOf('/')+1);}
+function goTo(f){window.location.href=base()+f;}
+function S(i){return document.getElementById(i);}
+function showOk(m){var e=S('ok-alert');e.textContent=m;e.classList.add('show');S('err-alert').classList.remove('show');setTimeout(function(){e.classList.remove('show');},3000);}
+function showErr(m){var e=S('err-alert');e.textContent=m;e.classList.add('show');S('ok-alert').classList.remove('show');}
+
+(async function(){
+  var d=await supabase.auth.getSession();
+  if(!d.data.session){goTo('auth.html');return;}
+  cu=d.data.session.user;
+  var m=cu.user_metadata||{};
+  var name=m.name||'',sur=m.surname||'';
+  var ini=(name?name[0]:cu.email[0]||'?').toUpperCase();
+  S('av-init').textContent=ini;
+  S('av-name').textContent=(name+' '+sur).trim()||'Trader';
+  S('av-email').textContent=cu.email;
+  S('f-name').value=name;
+  S('f-surname').value=sur;
+  S('f-email').value=cu.email;
+  S('mk-email').checked=m.marketing_email||false;
+  S('mk-updates').checked=m.marketing_updates||false;
+})();
+
+async function saveProfile(){
+  var btn=S('btn-save');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Saving…';
+  try{
+    var name=S('f-name').value.trim(),sur=S('f-surname').value.trim();
+    var res=await supabase.auth.updateUser({data:{name:name,surname:sur,marketing_email:S('mk-email').checked,marketing_updates:S('mk-updates').checked}});
+    if(res.error)throw res.error;
+    var ini=(name?name[0]:cu.email[0]||'?').toUpperCase();
+    S('av-init').textContent=ini;
+    S('av-name').textContent=(name+' '+sur).trim()||'Trader';
+    showOk('Profile updated successfully.');
+  }catch(e){showErr('Error: '+e.message);}
+  btn.disabled=false;btn.innerHTML='Save Changes';
+}
+
+async function deleteProfile(){
+  if(!confirm('Are you sure you want to permanently delete your RiskPilot account?\n\nThis will erase all your accounts, trades, and data. This cannot be undone.'))return;
+  if(!confirm('Final confirmation — delete everything forever?'))return;
+  try{
+    // Delete all trading data
+    await supabase.from('trade_journal').delete().eq('user_id',cu.id);
+    await supabase.from('trading_accounts').delete().eq('user_id',cu.id);
+    await supabase.from('riskpilot_data').delete().eq('user_id',cu.id);
+    await supabase.auth.signOut();
+    goTo('auth.html');
+  }catch(e){showErr('Error deleting account: '+e.message);}
+}
+</script>
+</body>
+</html>

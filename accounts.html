@@ -1,183 +1,252 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <meta name="theme-color" content="#0d0f14"/>
-  <title>RiskPilot — My Accounts</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css"/>
-  <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-    .topbar{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;height:56px;background:var(--bg2);border-bottom:1px solid var(--border);}
-    .topbar-logo{font-size:20px;font-weight:800;letter-spacing:-0.5px;}
-    .topbar-logo .lr{color:var(--text);} .topbar-logo .lp{color:var(--gold);}
-    .hamburger-btn{background:none;border:none;cursor:pointer;padding:8px;display:flex;flex-direction:column;gap:4.5px;}
-    .hamburger-btn span{display:block;width:20px;height:2px;background:var(--text-muted);border-radius:2px;}
-    .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:200;}
-    .drawer-overlay.open{display:block;}
-    .drawer{position:fixed;top:0;right:0;bottom:0;width:280px;background:var(--bg2);border-left:1px solid var(--border);z-index:201;transform:translateX(100%);transition:transform 0.25s ease;display:flex;flex-direction:column;padding:1.5rem 1.25rem;}
-    .drawer.open{transform:translateX(0);}
-    .drawer-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;}
-    .drawer-title{font-size:16px;font-weight:700;color:var(--text);}
-    .drawer-close{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:22px;line-height:1;padding:4px;}
-    .drawer-nav{display:flex;flex-direction:column;gap:3px;flex:1;}
-    .drawer-link{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:8px;color:var(--text-muted);text-decoration:none;font-size:14px;font-weight:500;cursor:pointer;background:none;border:none;font-family:inherit;width:100%;text-align:left;transition:background 0.15s,color 0.15s;}
-    .drawer-link:hover{background:var(--surface);color:var(--text);}
-    .drawer-link svg{width:18px;height:18px;flex-shrink:0;stroke:currentColor;}
-    .drawer-footer{padding-top:1rem;border-top:1px solid var(--border);}
-    .drawer-user-email{font-size:12px;color:var(--text-dim);margin-bottom:10px;word-break:break-all;}
-    .signout-btn-d{width:100%;padding:10px;font-size:13px;font-weight:600;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:8px;cursor:pointer;}
-    .page-body{padding:1.25rem;max-width:900px;margin:0 auto;}
-    .greeting{margin-bottom:1.25rem;}
-    .greeting h2{font-size:20px;font-weight:700;color:var(--text);}
-    .greeting p{font-size:13px;color:var(--text-muted);margin-top:3px;}
-    .accounts-row{display:flex;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;margin-bottom:1.25rem;scrollbar-width:thin;scrollbar-color:var(--border2) transparent;}
-    .accounts-row::-webkit-scrollbar{height:4px;}
-    .accounts-row::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-    .account-card{flex-shrink:0;width:200px;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:.9rem 1rem;cursor:pointer;transition:border-color 0.15s,transform 0.1s;position:relative;overflow:hidden;}
-    .account-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold);opacity:0;transition:opacity 0.15s;}
-    .account-card:hover,.account-card.active{border-color:var(--gold);}
-    .account-card:hover::before,.account-card.active::before{opacity:1;}
-    .ac-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px;}
-    .ac-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .ac-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;text-transform:uppercase;letter-spacing:0.4px;flex-shrink:0;}
-    .ac-badge-p{background:var(--blue-bg);color:var(--blue);border:1px solid #1a3060;}
-    .ac-badge-f{background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-border);}
-    .ac-wallet{font-size:20px;font-weight:700;color:var(--green);margin-bottom:3px;}
-    .ac-meta{font-size:11px;color:var(--text-dim);}
-    .ac-active{display:flex;align-items:center;gap:5px;margin-top:6px;}
-    .ac-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:blink 1.5s infinite;}
-    @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
-    .ac-dot-lbl{font-size:10px;font-weight:700;color:var(--gold);}
-    .more-card,.add-card{flex-shrink:0;width:140px;min-height:110px;background:transparent;border:1.5px dashed var(--border2);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;color:var(--text-dim);transition:all 0.15s;text-align:center;padding:10px;}
-    .more-card:hover,.add-card:hover{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);}
-    .card-icon{font-size:22px;}
-    .card-text{font-size:11px;font-weight:600;line-height:1.3;}
-    .active-section{display:none;}
-    .active-section.show{display:block;}
-    .active-header{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem 1.25rem;margin-bottom:1rem;}
-    .ah-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:10px;}
-    .ah-name{font-size:18px;font-weight:700;color:var(--text);}
-    .ah-meta{font-size:12px;color:var(--text-muted);margin-top:2px;}
-    .ah-actions{display:flex;gap:8px;flex-wrap:wrap;}
-    .btn-add{padding:9px 20px;font-size:14px;font-weight:700;font-family:inherit;background:var(--gold);color:#0d0f14;border:none;border-radius:8px;cursor:pointer;transition:background 0.15s;white-space:nowrap;}
-    .btn-add:hover{background:var(--gold-light);}
-    .btn-perf{padding:9px 16px;font-size:14px;font-weight:600;font-family:inherit;background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);border-radius:8px;cursor:pointer;white-space:nowrap;}
-    .btn-perf:hover{background:var(--bg3);color:var(--text);}
-    .metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem;}
-    .m-tile{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;}
-    .m-lbl{font-size:10px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
-    .m-val{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}
-    .m-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
-    .m-fill{height:100%;border-radius:2px;transition:width 0.4s;}
-    .personal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem;}
-    .trades-seg{display:inline-flex;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px;margin-bottom:1rem;}
-    .trades-tab{padding:7px 16px;font-size:13px;font-weight:600;border:none;border-radius:6px;cursor:pointer;background:transparent;color:var(--text-muted);font-family:inherit;transition:all 0.15s;}
-    .trades-tab.active{background:var(--gold);color:#0d0f14;}
-    .trades-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
-    .trades-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-    .trades-table{width:100%;border-collapse:collapse;font-size:13px;min-width:700px;}
-    .trades-table th{text-align:left;padding:10px 14px;font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border);background:var(--bg3);}
-    .trades-table td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
-    .trades-table tbody tr:last-child td{border-bottom:none;}
-    .trades-table tbody tr:hover{background:var(--surface2);}
-    .empty-cell{text-align:center;padding:2.5rem!important;color:var(--text-dim);font-size:13px;font-style:italic;}
-    .badge{display:inline-block;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;}
-    .bg{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
-    .br{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
-    .ba{background:#2a1a08;color:#f0a030;border:1px solid #3d2808;}
-    .bb{background:var(--blue-bg);color:var(--blue);border:1px solid #1a3060;}
-    .bk{background:var(--bg3);color:var(--text-muted);border:1px solid var(--border);}
-    .ja-wrap{display:flex;gap:4px;}
-    .ja{padding:4px 8px;font-size:10px;font-weight:700;font-family:inherit;border-radius:4px;border:1px solid;cursor:pointer;}
-    .ja-w{background:var(--green-bg);color:var(--green);border-color:var(--green-border);}
-    .ja-l{background:var(--red-bg);color:var(--red);border-color:var(--red-border);}
-    .ja-n{background:var(--bg3);color:var(--text-muted);border-color:var(--border);}
-    @media(max-width:600px){
-      .metrics-grid{grid-template-columns:1fr 1fr;}
-      .personal-grid{grid-template-columns:1fr 1fr;}
-      .ah-actions{width:100%;}
-      .btn-add,.btn-perf{flex:1;text-align:center;}
-    }
-    @media(max-width:380px){.metrics-grid,.personal-grid{grid-template-columns:1fr;}}
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<meta name="theme-color" content="#0d0f14"/>
+<title>RiskPilot — My Accounts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── TOPBAR ── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  height:60px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 1.5rem;gap:0;
+}
+.logo-link{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;}
+.logo-icon{width:34px;height:34px;background:var(--gold-bg);border:1.5px solid var(--gold-border);border-radius:9px;display:flex;align-items:center;justify-content:center;}
+.logo-text{font-size:18px;font-weight:800;letter-spacing:-.5px;}
+.logo-text .r{color:var(--text);}.logo-text .p{color:var(--gold);}
+
+/* Desktop nav */
+.desktop-nav{display:flex;align-items:center;gap:2px;margin-left:auto;}
+.nav-a{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;font-family:inherit;transition:background .15s,color .15s;white-space:nowrap;}
+.nav-a:hover{background:var(--surface);color:var(--text);}
+.nav-a svg{width:14px;height:14px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;}
+.nav-sep{width:1px;height:20px;background:var(--border);margin:0 6px;}
+.nav-signout{padding:7px 14px;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);cursor:pointer;transition:background .15s;}
+.nav-signout:hover{background:#3d1018;}
+
+/* Mobile hamburger */
+.ham-btn{display:none;margin-left:auto;background:none;border:none;cursor:pointer;padding:8px;flex-direction:column;gap:5px;border-radius:8px;}
+.ham-btn span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all .2s;}
+
+/* Drawer */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);}
+.overlay.open{display:block;}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:300px;background:var(--bg2);border-left:1px solid var(--border);z-index:301;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;}
+.drawer.open{transform:translateX(0);}
+.d-head{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.25rem 0;}
+.d-logo{display:flex;align-items:center;gap:8px;}
+.d-logo-icon{width:28px;height:28px;background:var(--gold-bg);border:1.5px solid var(--gold-border);border-radius:7px;display:flex;align-items:center;justify-content:center;}
+.d-logo-text{font-size:15px;font-weight:800;}.d-logo-text .r{color:var(--text);}.d-logo-text .p{color:var(--gold);}
+.d-close{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:22px;line-height:1;padding:4px;border-radius:6px;}
+.d-user{margin:12px 1.25rem 0;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;}
+.d-user-name{font-size:13px;font-weight:700;color:var(--text);}
+.d-user-email{font-size:11px;color:var(--text-dim);margin-top:2px;}
+.d-nav{flex:1;overflow-y:auto;padding:10px 1rem;}
+.d-section{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;padding:8px 14px 4px;}
+.d-link{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:var(--text-muted);text-decoration:none;font-size:14px;font-weight:500;cursor:pointer;background:none;border:none;font-family:inherit;width:100%;text-align:left;transition:background .15s,color .15s;margin-bottom:2px;}
+.d-link:hover{background:var(--surface);color:var(--text);}
+.d-link svg{width:17px;height:17px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;}
+.d-footer{padding:1rem 1.25rem;border-top:1px solid var(--border);}
+.d-signout{width:100%;padding:11px;font-size:13px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:10px;cursor:pointer;}
+
+/* Page */
+.page{padding:1.5rem;max-width:960px;margin:0 auto;}
+.greeting{margin-bottom:1.5rem;}
+.greeting h2{font-size:22px;font-weight:800;color:var(--text);}
+.greeting p{font-size:13px;color:var(--text-muted);margin-top:3px;}
+
+/* Account cards */
+.acc-row{display:flex;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;margin-bottom:1.5rem;scrollbar-width:thin;scrollbar-color:var(--border2) transparent;}
+.acc-row::-webkit-scrollbar{height:4px;}
+.acc-row::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.acc-card{flex-shrink:0;width:205px;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:.95rem 1rem;cursor:pointer;transition:border-color .15s,transform .1s,box-shadow .15s;position:relative;overflow:hidden;}
+.acc-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold);opacity:0;transition:opacity .15s;}
+.acc-card:hover{border-color:var(--gold-border);transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.3);}
+.acc-card:hover::before,.acc-card.act::before,.acc-card.act{border-color:var(--gold);}
+.acc-card.act::before{opacity:1;}
+.ac-top{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:8px;}
+.ac-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ac-bdg{font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0;}
+.ac-bdg-p{background:var(--blue-bg);color:var(--blue);border:1px solid #1a3060;}
+.ac-bdg-f{background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-border);}
+.ac-wallet{font-size:22px;font-weight:800;color:var(--green);margin-bottom:3px;}
+.ac-meta{font-size:11px;color:var(--text-dim);}
+.ac-active-row{display:flex;align-items:center;gap:5px;margin-top:8px;}
+.ac-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.ac-dot-lbl{font-size:10px;font-weight:700;color:var(--gold);}
+.more-card,.add-card{flex-shrink:0;width:140px;min-height:120px;border:1.5px dashed var(--border2);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;color:var(--text-dim);transition:all .15s;text-align:center;padding:10px;background:transparent;}
+.more-card:hover,.add-card:hover{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);}
+.ci{font-size:24px;}.ct{font-size:11px;font-weight:600;line-height:1.4;}
+
+/* Active section */
+.active-sec{display:none;}.active-sec.show{display:block;}
+.active-hdr{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.35rem;margin-bottom:1rem;}
+.ah-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px;}
+.ah-name{font-size:20px;font-weight:800;color:var(--text);}
+.ah-meta{font-size:12px;color:var(--text-muted);margin-top:3px;}
+.ah-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.btn-add{padding:10px 22px;font-size:14px;font-weight:700;font-family:inherit;background:var(--gold);color:#0d0f14;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;}
+.btn-add:hover{background:var(--gold-light);}
+.btn-dash{padding:10px 18px;font-size:14px;font-weight:600;font-family:inherit;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.btn-dash:hover{border-color:var(--gold);color:var(--gold);}
+.m-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem;}
+.p-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem;}
+.m-tile{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;}
+.m-lbl{font-size:10px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.m-val{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.m-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.m-fill{height:100%;border-radius:2px;transition:width .4s;}
+
+/* Trades */
+.trades-seg{display:inline-flex;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px;margin-bottom:1rem;}
+.trades-tab{padding:7px 16px;font-size:13px;font-weight:600;border:none;border-radius:6px;cursor:pointer;background:transparent;color:var(--text-muted);font-family:inherit;transition:all .15s;}
+.trades-tab.active{background:var(--gold);color:#0d0f14;}
+.tw{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.ts{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.tt{width:100%;border-collapse:collapse;font-size:13px;min-width:700px;}
+.tt th{text-align:left;padding:9px 13px;font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);background:var(--bg3);}
+.tt td{padding:10px 13px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+.tt tbody tr:last-child td{border-bottom:none;}
+.tt tbody tr:hover{background:var(--surface2);}
+.ec{text-align:center;padding:2.5rem!important;color:var(--text-dim);font-size:13px;font-style:italic;}
+.badge{display:inline-block;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.bg{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.br{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.ba{background:#2a1a08;color:#f0a030;border:1px solid #3d2808;}
+.bb{background:var(--blue-bg);color:var(--blue);border:1px solid #1a3060;}
+.bk{background:var(--bg3);color:var(--text-muted);border:1px solid var(--border);}
+.ja-wrap{display:flex;gap:4px;}
+.ja{padding:4px 8px;font-size:10px;font-weight:700;font-family:inherit;border-radius:4px;border:1px solid;cursor:pointer;}
+.ja-w{background:var(--green-bg);color:var(--green);border-color:var(--green-border);}
+.ja-l{background:var(--red-bg);color:var(--red);border-color:var(--red-border);}
+.ja-n{background:var(--bg3);color:var(--text-muted);border-color:var(--border);}
+
+/* Responsive */
+@media(max-width:768px){
+  .desktop-nav{display:none;}
+  .ham-btn{display:flex;}
+  .page{padding:1.1rem;}
+}
+@media(max-width:600px){
+  .m-grid{grid-template-columns:1fr 1fr;}
+  .p-grid{grid-template-columns:1fr 1fr;}
+  .ah-btns{width:100%;}
+  .btn-add,.btn-dash{flex:1;text-align:center;}
+}
+@media(max-width:380px){.m-grid,.p-grid{grid-template-columns:1fr;}}
+</style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="topbar-logo"><span class="lr">Risk</span><span class="lp">Pilot</span></div>
-  <button class="hamburger-btn" onclick="openDrawer()" aria-label="Open menu">
+<!-- TOPBAR -->
+<header class="topbar">
+  <a class="logo-link" href="accounts.html">
+    <div class="logo-icon">
+      <svg viewBox="0 0 32 32" fill="none" width="20" height="20">
+        <polygon points="16,3 29,28 3,28" fill="none" stroke="#d4a017" stroke-width="2.5" stroke-linejoin="round"/>
+        <circle cx="16" cy="13" r="2.5" fill="#d4a017"/>
+        <line x1="16" y1="16" x2="16" y2="23" stroke="#d4a017" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="logo-text"><span class="r">Risk</span><span class="p">Pilot</span></div>
+  </a>
+
+  <nav class="desktop-nav">
+    <a class="nav-a" href="accounts.html"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>My Accounts</a>
+    <a class="nav-a" href="more-accounts.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>All Accounts</a>
+    <a class="nav-a" href="overall-performance.html"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Overall Performance</a>
+    <a class="nav-a" href="profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Profile</a>
+    <a class="nav-a" href="leaderboard.html"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>Leaderboard</a>
+    <a class="nav-a" href="social.html"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Follow Us</a>
+    <div class="nav-sep"></div>
+    <button class="nav-signout" onclick="handleSignOut()">Sign Out</button>
+  </nav>
+
+  <button class="ham-btn" onclick="openDrawer()" aria-label="Menu">
     <span></span><span></span><span></span>
   </button>
-</div>
+</header>
 
-<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<!-- DRAWER -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
 <div class="drawer" id="drawer">
-  <div class="drawer-header">
-    <div class="drawer-title">Menu</div>
-    <button class="drawer-close" onclick="closeDrawer()">&#215;</button>
+  <div class="d-head">
+    <div class="d-logo">
+      <div class="d-logo-icon">
+        <svg viewBox="0 0 32 32" fill="none" width="16" height="16">
+          <polygon points="16,3 29,28 3,28" fill="none" stroke="#d4a017" stroke-width="2.5" stroke-linejoin="round"/>
+          <circle cx="16" cy="13" r="2.5" fill="#d4a017"/>
+          <line x1="16" y1="16" x2="16" y2="23" stroke="#d4a017" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="d-logo-text"><span class="r">Risk</span><span class="p">Pilot</span></div>
+    </div>
+    <button class="d-close" onclick="closeDrawer()">&#215;</button>
   </div>
-  <nav class="drawer-nav">
-    <a class="drawer-link" href="accounts.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>My Accounts
-    </a>
-    <a class="drawer-link" href="more-accounts.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>More Accounts
-    </a>
-    <a class="drawer-link" href="overall-performance.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Overall Performance
-    </a>
-    <a class="drawer-link" href="account-setup.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Create New Account
-    </a>
+  <div class="d-user">
+    <div class="d-user-name" id="d-name">—</div>
+    <div class="d-user-email" id="d-email">—</div>
+  </div>
+  <nav class="d-nav">
+    <div class="d-section">Navigation</div>
+    <a class="d-link" href="accounts.html"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>My Accounts</a>
+    <a class="d-link" href="more-accounts.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>All Accounts</a>
+    <a class="d-link" href="overall-performance.html"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Overall Performance</a>
+    <div class="d-section">Account</div>
+    <a class="d-link" href="profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>My Profile</a>
+    <a class="d-link" href="leaderboard.html"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>Leaderboard</a>
+    <a class="d-link" href="account-setup.html"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Create New Account</a>
+    <div class="d-section">Community</div>
+    <a class="d-link" href="social.html"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Follow Us</a>
   </nav>
-  <div class="drawer-footer">
-    <div class="drawer-user-email" id="drawer-email">—</div>
-    <button class="signout-btn-d" onclick="handleSignOut()">Sign Out</button>
+  <div class="d-footer">
+    <button class="d-signout" onclick="handleSignOut()">Sign Out</button>
   </div>
 </div>
 
-<div class="page-body">
+<div class="page">
   <div class="greeting">
-    <h2 id="greeting-name">My Accounts</h2>
-    <p id="greeting-sub">Select an account to manage trades</p>
+    <h2 id="g-name">My Accounts</h2>
+    <p id="g-sub">Select an account to manage your trades</p>
   </div>
 
-  <div class="accounts-row" id="accounts-row">
-    <div class="add-card" onclick="goTo('account-setup.html')">
-      <div class="card-icon">&#43;</div><div class="card-text">New Account</div>
-    </div>
+  <div class="acc-row" id="acc-row">
+    <div class="add-card" onclick="goTo('account-setup.html')"><div class="ci">&#43;</div><div class="ct">New Account</div></div>
   </div>
 
-  <div class="active-section" id="active-section">
-    <div class="active-header">
+  <div class="active-sec" id="active-sec">
+    <div class="active-hdr">
       <div class="ah-top">
         <div>
           <div class="ah-name" id="ah-name">—</div>
           <div class="ah-meta" id="ah-meta">—</div>
         </div>
-        <div class="ah-actions">
-          <button class="btn-add" onclick="goToAddTrade()">&#43; Add Trade</button>
-          <button class="btn-perf" onclick="goToPerformance()">&#128202; Performance</button>
+        <div class="ah-btns">
+          <button class="btn-add" onclick="goToAdd()">&#43; Add Trade</button>
+          <button class="btn-dash" onclick="goToDash()">&#128202; Dashboard</button>
         </div>
       </div>
-
-      <!-- Prop Firm Metrics -->
-      <div class="metrics-grid" id="prop-metrics" style="display:none">
-        <div class="m-tile"><div class="m-lbl">Profit Progress</div><div class="m-val" id="pm-profit">—</div><div class="m-bar"><div class="m-fill" id="pm-profit-f" style="background:var(--green);width:0%"></div></div></div>
-        <div class="m-tile"><div class="m-lbl">Daily Loss Used</div><div class="m-val" id="pm-daily">—</div><div class="m-bar"><div class="m-fill" id="pm-daily-f" style="background:#f0a030;width:0%"></div></div></div>
-        <div class="m-tile"><div class="m-lbl">Max Loss Used</div><div class="m-val" id="pm-max">—</div><div class="m-bar"><div class="m-fill" id="pm-max-f" style="background:var(--red);width:0%"></div></div></div>
+      <!-- Prop metrics -->
+      <div class="m-grid" id="prop-m" style="display:none">
+        <div class="m-tile"><div class="m-lbl">Profit Progress</div><div class="m-val" id="pm-p">—</div><div class="m-bar"><div class="m-fill" id="pm-pf" style="background:var(--green);width:0%"></div></div></div>
+        <div class="m-tile"><div class="m-lbl">Daily Loss Used</div><div class="m-val" id="pm-d">—</div><div class="m-bar"><div class="m-fill" id="pm-df" style="background:#f0a030;width:0%"></div></div></div>
+        <div class="m-tile"><div class="m-lbl">Max Loss Used</div><div class="m-val" id="pm-m">—</div><div class="m-bar"><div class="m-fill" id="pm-mf" style="background:var(--red);width:0%"></div></div></div>
       </div>
-
-      <!-- Personal Metrics -->
-      <div class="personal-grid" id="pers-metrics" style="display:none">
-        <div class="m-tile"><div class="m-lbl">Weekly Target</div><div class="m-val" id="pg-target" style="color:var(--gold)">—</div></div>
-        <div class="m-tile"><div class="m-lbl">Weekly Earned</div><div class="m-val" id="pg-earned" style="color:var(--green)">—</div><div class="m-bar"><div class="m-fill" id="pg-fill" style="background:var(--green);width:0%"></div></div></div>
-        <div class="m-tile"><div class="m-lbl">Daily Budget</div><div class="m-val" id="pg-daily">—</div></div>
-        <div class="m-tile"><div class="m-lbl">Used Today</div><div class="m-val" id="pg-used">—</div></div>
+      <!-- Personal metrics -->
+      <div class="p-grid" id="pers-m" style="display:none">
+        <div class="m-tile"><div class="m-lbl">Weekly Target</div><div class="m-val" id="pg-t" style="color:var(--gold)">—</div></div>
+        <div class="m-tile"><div class="m-lbl">Weekly Earned</div><div class="m-val" id="pg-e" style="color:var(--green)">—</div><div class="m-bar"><div class="m-fill" id="pg-f" style="background:var(--green);width:0%"></div></div></div>
+        <div class="m-tile"><div class="m-lbl">Daily Budget</div><div class="m-val" id="pg-d">—</div></div>
+        <div class="m-tile"><div class="m-lbl">Used Today</div><div class="m-val" id="pg-u">—</div></div>
       </div>
     </div>
 
@@ -186,192 +255,135 @@
       <button class="trades-tab" onclick="switchTab('closed')">Closed Trades</button>
     </div>
 
-    <div class="trades-wrap">
-      <div class="trades-scroll">
-        <table class="trades-table">
-          <thead><tr><th>Instrument</th><th>Date</th><th>Setup</th><th>Dir</th><th>Lots</th><th>Risk</th><th>R:R</th><th>Outcome</th><th>P&amp;L</th><th>Actions</th></tr></thead>
-          <tbody id="trades-body"><tr><td colspan="10" class="empty-cell">Select an account to view trades.</td></tr></tbody>
-        </table>
-      </div>
-    </div>
+    <div class="tw"><div class="ts">
+      <table class="tt">
+        <thead><tr><th>Instrument</th><th>Date</th><th>Setup</th><th>Dir</th><th>Lots</th><th>Risk</th><th>R:R</th><th>Outcome</th><th>P&amp;L</th><th>Actions</th></tr></thead>
+        <tbody id="tb"><tr><td colspan="10" class="ec">Select an account to view trades.</td></tr></tbody>
+      </table>
+    </div></div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
-let cu=null,accounts=[],activeId=null,tradeTab='open',allTrades=[];
+var cu=null,accs=[],actId=null,ttab='open',allT=[];
 function base(){var p=window.location.pathname;return window.location.origin+p.substring(0,p.lastIndexOf('/')+1);}
 function goTo(f){window.location.href=base()+f;}
-function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function S(id){return document.getElementById(id);}
-function sym(acc){return (acc&&acc.currency==='USD')?'$':'R';}
-function fmtNum(n,s){return (s||'R')+' '+Math.abs(n||0).toLocaleString('en-ZA',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function S(i){return document.getElementById(i);}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function sym(a){return a&&a.currency==='USD'?'$':'R';}
+function openDrawer(){S('drawer').classList.add('open');S('overlay').classList.add('open');document.body.style.overflow='hidden';}
+function closeDrawer(){S('drawer').classList.remove('open');S('overlay').classList.remove('open');document.body.style.overflow='';}
 
-function openDrawer(){S('drawer').classList.add('open');S('drawer-overlay').classList.add('open');}
-function closeDrawer(){S('drawer').classList.remove('open');S('drawer-overlay').classList.remove('open');}
-
-(async function boot(){
+(async function(){
   var d=await supabase.auth.getSession();
   if(!d.data.session){goTo('auth.html');return;}
   cu=d.data.session.user;
   var pr=await supabase.from('riskpilot_data').select('license_valid').eq('user_id',cu.id).single();
   if(!pr.data||pr.data.license_valid!==true){goTo('license.html');return;}
-  S('greeting-name').textContent='Welcome, '+(cu.user_metadata&&cu.user_metadata.name?cu.user_metadata.name:cu.email);
-  S('drawer-email').textContent=cu.email;
-  await loadAccounts();
+  var nm=(cu.user_metadata&&cu.user_metadata.name)||cu.email;
+  S('g-name').textContent='Welcome, '+nm;
+  var dn=((cu.user_metadata&&cu.user_metadata.name?cu.user_metadata.name+' '+(cu.user_metadata.surname||''):'').trim())||'Trader';
+  S('d-name').textContent=dn;S('d-email').textContent=cu.email;
+  await load();
 })();
 
-async function loadAccounts(){
+async function load(){
   var res=await supabase.from('trading_accounts').select('*').eq('user_id',cu.id).order('created_at',{ascending:false});
-  accounts=res.data||[];
+  accs=res.data||[];
   var saved=localStorage.getItem('rp_active_account_'+cu.id);
-  if(saved&&accounts.find(function(a){return a.id===saved;})) activeId=saved;
-  else if(accounts.length>0) activeId=accounts[0].id;
+  if(saved&&accs.find(function(a){return a.id===saved;}))actId=saved;
+  else if(accs.length>0)actId=accs[0].id;
   renderCards();
-  if(activeId) await showAccount(activeId);
+  if(actId)await showAcc(actId);
 }
 
 function renderCards(){
-  var row=S('accounts-row');
-  var addBtn='<div class="add-card" onclick="goTo(\'account-setup.html\')"><div class="card-icon">&#43;</div><div class="card-text">New Account</div></div>';
-  if(!accounts.length){row.innerHTML=addBtn;return;}
-  var visible=accounts.slice(0,4);
-  var html=visible.map(function(a){
-    var isProp=a.account_type==='prop';
-    var s=sym(a);
-    var isAct=a.id===activeId;
-    var wallet=parseFloat(a.weekly_wallet||0);
-    var badge=isProp?'<span class="ac-badge ac-badge-f">Prop</span>':'<span class="ac-badge ac-badge-p">Personal</span>';
-    var dot=isAct?'<div class="ac-active"><div class="ac-dot"></div><span class="ac-dot-lbl">Active</span></div>':'';
-    return '<div class="account-card '+(isAct?'active':'')+'" onclick="selectAccount(\''+a.id+'\')">'
-      +'<div class="ac-row"><span class="ac-name">'+esc(a.account_name)+'</span>'+badge+'</div>'
-      +'<div class="ac-wallet">'+s+wallet.toFixed(0)+'</div>'
-      +'<div class="ac-meta">'+a.currency+' · '+(isProp?'Prop':'Personal')+'</div>'
-      +dot+'</div>';
+  var row=S('acc-row');
+  var add='<div class="add-card" onclick="goTo(\'account-setup.html\')"><div class="ci">&#43;</div><div class="ct">New Account</div></div>';
+  if(!accs.length){row.innerHTML=add;return;}
+  var vis=accs.slice(0,4);
+  var html=vis.map(function(a){
+    var ip=a.account_type==='prop',s=sym(a),ia=a.id===actId;
+    var w=parseFloat(a.weekly_wallet||0);
+    var bdg=ip?'<span class="ac-bdg ac-bdg-f">Prop</span>':'<span class="ac-bdg ac-bdg-p">Personal</span>';
+    var dot=ia?'<div class="ac-active-row"><div class="ac-dot"></div><span class="ac-dot-lbl">Active</span></div>':'';
+    return '<div class="acc-card '+(ia?'act':'')+'" onclick="sel(\''+a.id+'\')">'
+      +'<div class="ac-top"><span class="ac-name">'+esc(a.account_name)+'</span>'+bdg+'</div>'
+      +'<div class="ac-wallet">'+s+w.toFixed(0)+'</div>'
+      +'<div class="ac-meta">'+a.currency+' · '+(ip?'Prop':'Personal')+'</div>'+dot+'</div>';
   }).join('');
-  if(accounts.length>4){
-    html+='<div class="more-card" onclick="goTo(\'more-accounts.html\')"><div class="card-icon">&#8943;</div><div class="card-text">More Accounts<br>(+'+(accounts.length-4)+')</div></div>';
-  }
-  row.innerHTML=html+addBtn;
+  if(accs.length>4)html+='<div class="more-card" onclick="goTo(\'more-accounts.html\')"><div class="ci">&#8943;</div><div class="ct">All Accounts<br/>('+(accs.length-4)+' more)</div></div>';
+  row.innerHTML=html+add;
 }
 
-async function selectAccount(id){
-  activeId=id;
-  localStorage.setItem('rp_active_account_'+cu.id,id);
-  renderCards();
-  await showAccount(id);
-}
+async function sel(id){actId=id;localStorage.setItem('rp_active_account_'+cu.id,id);renderCards();await showAcc(id);}
 
-async function showAccount(id){
-  var acc=accounts.find(function(a){return a.id===id;});
-  if(!acc) return;
-  S('active-section').classList.add('show');
-  var isProp=acc.account_type==='prop';
-  var s=sym(acc);
-  S('ah-name').textContent=acc.account_name;
-  S('ah-meta').textContent=(isProp?'Prop Firm':'Personal Funded')+' · '+acc.currency+(isProp?' · '+s+Number(acc.account_size||0).toLocaleString():' · Weekly: '+s+Number(acc.weekly_budget||0).toLocaleString());
-
-  var res=await supabase.from('trade_journal').select('*').eq('account_id',id).order('created_at',{ascending:false});
-  allTrades=res.data||[];
-
+async function showAcc(id){
+  var a=accs.find(function(x){return x.id===id;});if(!a)return;
+  S('active-sec').classList.add('show');
+  var ip=a.account_type==='prop',s=sym(a);
+  S('ah-name').textContent=a.account_name;
+  S('ah-meta').textContent=(ip?'Prop Firm':'Personal Funded')+' · '+a.currency+(ip?' · '+s+Number(a.account_size||0).toLocaleString():'· Weekly: '+s+Number(a.weekly_budget||0).toLocaleString());
+  var tr=await supabase.from('trade_journal').select('*').eq('account_id',id).order('created_at',{ascending:false});
+  allT=tr.data||[];
   var today=new Date().toISOString().slice(0,10);
-
-  if(isProp){
-    S('prop-metrics').style.display='grid';
-    S('pers-metrics').style.display='none';
-    var size=parseFloat(acc.account_size||0);
-    var pp=parseFloat(acc.profit_target_pct||0),dp=parseFloat(acc.daily_loss_pct||0),mp=parseFloat(acc.max_loss_pct||0);
-    var pt=size*pp/100,dl=size*dp/100,ml=size*mp/100;
-    var earned=allTrades.filter(function(t){return t.outcome==='win';}).reduce(function(s,t){return s+parseFloat(t.profit_zar||0);},0);
-    var todayL=allTrades.filter(function(t){return t.outcome==='loss'&&t.trade_date===today;}).reduce(function(s,t){return s+parseFloat(t.risk_amount||0);},0);
-    var totL=allTrades.filter(function(t){return t.outcome==='loss';}).reduce(function(s,t){return s+parseFloat(t.risk_amount||0);},0);
-    S('pm-profit').textContent=s+earned.toFixed(0)+' / '+s+pt.toFixed(0)+' ('+pp+'%)';
-    S('pm-daily').textContent=s+todayL.toFixed(0)+' / '+s+dl.toFixed(0)+' ('+dp+'%)';
-    S('pm-max').textContent=s+totL.toFixed(0)+' / '+s+ml.toFixed(0)+' ('+mp+'%)';
-    S('pm-profit-f').style.width=Math.min(100,pt>0?(earned/pt)*100:0)+'%';
-    S('pm-daily-f').style.width=Math.min(100,dl>0?(todayL/dl)*100:0)+'%';
-    S('pm-max-f').style.width=Math.min(100,ml>0?(totL/ml)*100:0)+'%';
-  } else {
-    S('prop-metrics').style.display='none';
-    S('pers-metrics').style.display='grid';
-    var weekly=parseFloat(acc.weekly_budget||0);
-    var daily=weekly/5;
-    var goal=parseFloat(acc.profit_goal||0);
-    var wallet=parseFloat(acc.weekly_wallet||0);
-    var usedToday=allTrades.filter(function(t){return t.trade_date===today&&t.outcome==='pending';}).reduce(function(s,t){return s+parseFloat(t.risk_amount||0);},0);
-    S('pg-target').textContent=goal>0?s+goal.toLocaleString():'—';
-    S('pg-earned').textContent=s+wallet.toFixed(0);
-    S('pg-daily').textContent=s+daily.toFixed(0);
-    S('pg-used').textContent=s+usedToday.toFixed(0);
-    if(goal>0) S('pg-fill').style.width=Math.min(100,(wallet/goal)*100)+'%';
+  if(ip){
+    S('prop-m').style.display='grid';S('pers-m').style.display='none';
+    var sz=parseFloat(a.account_size||0),pp=parseFloat(a.profit_target_pct||0),dp=parseFloat(a.daily_loss_pct||0),mp=parseFloat(a.max_loss_pct||0);
+    var pt=sz*pp/100,dl=sz*dp/100,ml=sz*mp/100;
+    var earn=allT.filter(function(t){return t.outcome==='win';}).reduce(function(x,t){return x+parseFloat(t.profit_zar||0);},0);
+    var tdL=allT.filter(function(t){return t.outcome==='loss'&&t.trade_date===today;}).reduce(function(x,t){return x+parseFloat(t.risk_amount||0);},0);
+    var ttL=allT.filter(function(t){return t.outcome==='loss';}).reduce(function(x,t){return x+parseFloat(t.risk_amount||0);},0);
+    S('pm-p').textContent=s+earn.toFixed(0)+' / '+s+pt.toFixed(0)+' ('+pp+'%)';
+    S('pm-d').textContent=s+tdL.toFixed(0)+' / '+s+dl.toFixed(0)+' ('+dp+'%)';
+    S('pm-m').textContent=s+ttL.toFixed(0)+' / '+s+ml.toFixed(0)+' ('+mp+'%)';
+    S('pm-pf').style.width=Math.min(100,pt>0?(earn/pt)*100:0)+'%';
+    S('pm-df').style.width=Math.min(100,dl>0?(tdL/dl)*100:0)+'%';
+    S('pm-mf').style.width=Math.min(100,ml>0?(ttL/ml)*100:0)+'%';
+  }else{
+    S('prop-m').style.display='none';S('pers-m').style.display='grid';
+    var wb=parseFloat(a.weekly_budget||0),db=wb/5,gl=parseFloat(a.profit_goal||0),wl=parseFloat(a.weekly_wallet||0);
+    var ut=allT.filter(function(t){return t.trade_date===today&&t.outcome==='pending';}).reduce(function(x,t){return x+parseFloat(t.risk_amount||0);},0);
+    S('pg-t').textContent=gl>0?s+gl.toLocaleString():'—';S('pg-e').textContent=s+wl.toFixed(0);
+    S('pg-d').textContent=s+db.toFixed(0);S('pg-u').textContent=s+ut.toFixed(0);
+    if(gl>0)S('pg-f').style.width=Math.min(100,(wl/gl)*100)+'%';
   }
   renderTrades();
 }
 
 function renderTrades(){
-  var acc=accounts.find(function(a){return a.id===activeId;});
-  if(!acc) return;
-  var s=sym(acc);
-  var body=S('trades-body');
-  var filtered=tradeTab==='open'
-    ? allTrades.filter(function(t){return t.outcome==='pending'||t.outcome==='not_triggered';})
-    : allTrades.filter(function(t){return t.outcome==='win'||t.outcome==='loss';});
-
-  if(!filtered.length){
-    body.innerHTML='<tr><td colspan="10" class="empty-cell">'+(tradeTab==='open'?'No open or pending trades.':'No closed trades yet.')+'</td></tr>';
-    return;
-  }
-  body.innerHTML=filtered.map(function(t){
+  var a=accs.find(function(x){return x.id===actId;});if(!a)return;
+  var s=sym(a),b=S('tb');
+  var f=ttab==='open'?allT.filter(function(t){return t.outcome==='pending'||t.outcome==='not_triggered';}):allT.filter(function(t){return t.outcome==='win'||t.outcome==='loss';});
+  if(!f.length){b.innerHTML='<tr><td colspan="10" class="ec">'+(ttab==='open'?'No open or pending trades.':'No closed trades yet.')+'</td></tr>';return;}
+  b.innerHTML=f.map(function(t){
     var ob=t.outcome==='win'?'bg':t.outcome==='loss'?'br':t.outcome==='not_triggered'?'bk':'ba';
     var ol=t.outcome==='win'?'Win':t.outcome==='loss'?'Loss':t.outcome==='not_triggered'?'N/T':'Pending';
     var pnl=t.outcome==='win'?parseFloat(t.profit_zar||0):t.outcome==='loss'?-parseFloat(t.risk_amount||0):null;
     var ps=pnl!==null?'<span style="color:'+(pnl>=0?'var(--green)':'var(--red)')+';font-weight:700">'+(pnl>=0?'+':'')+s+Math.abs(pnl).toFixed(0)+'</span>':'—';
-    var sb=t.setup_type==='A'?'bb':'ba';
-    var sl=t.setup_type==='A'?'A-Setup':'B-Setup';
-    var actions=t.outcome==='pending'?'<div class="ja-wrap"><button class="ja ja-w" data-id="'+t.id+'" data-action="win">&#10003; Win</button><button class="ja ja-l" data-id="'+t.id+'" data-action="loss">&#10007; Loss</button><button class="ja ja-n" data-id="'+t.id+'" data-action="not_triggered">N/T</button></div>':'—';
-    return '<tr><td style="font-weight:600">'+esc(t.instrument||'—')+'</td><td style="font-size:12px;color:var(--text-muted)">'+esc(t.trade_date||'—')+'</td><td><span class="badge '+sb+'">'+sl+'</span></td><td style="font-size:12px">'+(t.direction==='buy'?'&#9650; Buy':'&#9660; Sell')+'</td><td style="color:var(--gold);font-weight:600">'+parseFloat(t.lot_size||0).toFixed(2)+'</td><td>'+s+parseFloat(t.risk_amount||0).toFixed(0)+'</td><td style="font-weight:600">'+(t.rr_ratio?'1:'+parseFloat(t.rr_ratio).toFixed(2):'—')+'</td><td><span class="badge '+ob+'">'+ol+'</span></td><td>'+ps+'</td><td>'+actions+'</td></tr>';
+    var act=t.outcome==='pending'?'<div class="ja-wrap"><button class="ja ja-w" data-id="'+t.id+'" data-a="win">&#10003;</button><button class="ja ja-l" data-id="'+t.id+'" data-a="loss">&#10007;</button><button class="ja ja-n" data-id="'+t.id+'" data-a="not_triggered">N/T</button></div>':'—';
+    return '<tr><td style="font-weight:600">'+esc(t.instrument||'—')+'</td><td style="font-size:12px;color:var(--text-muted)">'+esc(t.trade_date||'—')+'</td><td><span class="badge '+(t.setup_type==='A'?'bb':'ba')+'">'+(t.setup_type==='A'?'A-Setup':'B-Setup')+'</span></td><td style="font-size:12px">'+(t.direction==='buy'?'&#9650;':'&#9660;')+'</td><td style="color:var(--gold);font-weight:600">'+parseFloat(t.lot_size||0).toFixed(2)+'</td><td>'+s+parseFloat(t.risk_amount||0).toFixed(0)+'</td><td>'+(t.rr_ratio?'1:'+parseFloat(t.rr_ratio).toFixed(2):'—')+'</td><td><span class="badge '+ob+'">'+ol+'</span></td><td>'+ps+'</td><td>'+act+'</td></tr>';
   }).join('');
-
-  body.querySelectorAll('button[data-action]').forEach(function(btn){
-    btn.addEventListener('click',function(){markTrade(this.dataset.id,this.dataset.action);});
-  });
+  b.querySelectorAll('button[data-a]').forEach(function(btn){btn.addEventListener('click',function(){markT(this.dataset.id,this.dataset.a);});});
 }
 
-async function markTrade(tradeId,outcome){
-  var trade=allTrades.find(function(t){return t.id===tradeId;});
-  if(!trade) return;
-  var res=await supabase.from('trade_journal').update({outcome:outcome}).eq('id',tradeId);
-  if(res.error){alert('Error: '+res.error.message);return;}
-  if(outcome==='win'){
-    var acc=accounts.find(function(a){return a.id===trade.account_id;});
-    if(acc){
-      var nw=parseFloat(acc.weekly_wallet||0)+parseFloat(trade.profit_zar||0)+parseFloat(trade.risk_amount||0);
-      await supabase.from('trading_accounts').update({weekly_wallet:nw}).eq('id',acc.id);
-      acc.weekly_wallet=nw;
-    }
-  }
-  await loadAccounts();
+async function markT(id,outcome){
+  var t=allT.find(function(x){return x.id===id;});if(!t)return;
+  await supabase.from('trade_journal').update({outcome:outcome}).eq('id',id);
+  if(outcome==='win'){var a=accs.find(function(x){return x.id===t.account_id;});if(a){var nw=parseFloat(a.weekly_wallet||0)+parseFloat(t.profit_zar||0)+parseFloat(t.risk_amount||0);await supabase.from('trading_accounts').update({weekly_wallet:nw}).eq('id',a.id);a.weekly_wallet=nw;}}
+  await load();
 }
 
 function switchTab(tab){
-  tradeTab=tab;
-  document.querySelectorAll('.trades-tab').forEach(function(btn,i){
-    btn.classList.toggle('active',(i===0&&tab==='open')||(i===1&&tab==='closed'));
-  });
+  ttab=tab;
+  document.querySelectorAll('.trades-tab').forEach(function(b,i){b.classList.toggle('active',(i===0&&tab==='open')||(i===1&&tab==='closed'));});
   renderTrades();
 }
 
-function goToAddTrade(){
-  if(!activeId){alert('Please select an account first.');return;}
-  localStorage.setItem('rp_active_account_'+cu.id,activeId);
-  goTo('add-trade.html');
-}
-function goToPerformance(){
-  if(!activeId){alert('Please select an account first.');return;}
-  localStorage.setItem('rp_perf_account',activeId);
-  goTo('performance.html');
-}
+function goToAdd(){if(!actId){alert('Select an account first.');return;}localStorage.setItem('rp_active_account_'+cu.id,actId);goTo('add-trade.html');}
+function goToDash(){if(!actId){alert('Select an account first.');return;}localStorage.setItem('rp_perf_account',actId);localStorage.setItem('rp_active_account_'+cu.id,actId);goTo('dashboard.html');}
 async function handleSignOut(){await supabase.auth.signOut();goTo('auth.html');}
 </script>
 </body>
