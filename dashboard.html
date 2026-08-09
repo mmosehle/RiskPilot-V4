@@ -30,25 +30,25 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 /* MOBILE */
 .topbar{display:none;position:sticky;top:0;z-index:100;width:100%;height:60px;background:var(--bg2);border-bottom:1px solid var(--border);align-items:center;padding:0 1.5rem;justify-content:space-between;flex-shrink:0;}
 .mob-logo{font-size:26px;font-weight:800;letter-spacing:-.8px;line-height:1;flex:0 0 auto;}.mob-logo .r{color:var(--text);}.mob-logo .p{color:var(--gold);}
-.ham-btn{background:none;border:none;cursor:pointer;padding:8px;display:flex;flex-direction:column;gap:5px;}
-.ham-btn span{display:block;width:21px;height:2px;background:var(--text-muted);border-radius:2px;}
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;backdrop-filter:blur(2px);}
-.overlay.open{display:block;}
-.drawer{position:fixed;top:0;right:0;bottom:0;width:290px;background:var(--bg2);border-left:1px solid var(--border);z-index:301;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;}
-.drawer.open{transform:translateX(0);}
-.d-head{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.25rem 0;}
-.d-title{font-size:15px;font-weight:800;}.d-title .r{color:var(--text);}.d-title .p{color:var(--gold);}
-.d-close{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:22px;line-height:1;padding:4px;border-radius:6px;}
-.d-user{margin:10px 1.25rem 0;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;}
-.d-user-name{font-size:13px;font-weight:700;color:var(--text);}
-.d-user-email{font-size:11px;color:var(--text-dim);margin-top:2px;}
-.d-nav{flex:1;overflow-y:auto;padding:8px 1rem;}
-.d-section{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;padding:8px 12px 4px;}
-.d-link{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;color:var(--text-muted);text-decoration:none;font-size:14px;font-weight:500;cursor:pointer;background:none;border:none;font-family:inherit;width:100%;text-align:left;transition:background .15s,color .15s;margin-bottom:2px;}
-.d-link:hover{background:var(--surface);color:var(--text);}
-.d-link svg{width:17px;height:17px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;}
-.d-footer{padding:1rem 1.25rem;border-top:1px solid var(--border);}
-.d-signout{width:100%;padding:11px;font-size:13px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:10px;cursor:pointer;}
+
+
+
+
+
+
+
+.d-title .r{color:var(--text);}.d-title .p{color:var(--gold);}
+
+
+
+
+
+
+
+
+
+
+
 /* MAIN */
 .main{flex:1;min-width:0;display:flex;flex-direction:column;}
 .tab-nav{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0;}
@@ -126,6 +126,91 @@ input::placeholder{color:var(--text-dim);}
   .fr{grid-template-columns:1fr;}
 }
 @media(max-width:400px){.sg{grid-template-columns:1fr;}}
+/* ═══════════════════════════════════════
+   MOBILE BOTTOM NAV
+═══════════════════════════════════════ */
+.bnav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  z-index:200;
+  height:64px;
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  align-items:center;justify-content:space-around;
+  padding:0 4px;
+  padding-bottom:env(safe-area-inset-bottom);
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
+}
+.bn-item{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;flex:1;
+  color:var(--text-dim);text-decoration:none;
+  font-size:10px;font-weight:600;letter-spacing:.3px;
+  background:none;border:none;cursor:pointer;font-family:inherit;
+  padding:6px 4px;border-radius:10px;
+  transition:color .15s;
+  min-width:0;
+}
+.bn-item svg{width:22px;height:22px;flex-shrink:0;}
+.bn-item.active{color:var(--gold);}
+.bn-item:hover{color:var(--text);}
+.bn-add{
+  width:52px;height:52px;border-radius:16px;
+  background:var(--gold);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px rgba(212,160,23,.4);
+  flex-shrink:0;
+  transition:background .15s,transform .1s;
+}
+.bn-add:active{transform:scale(.93);}
+.bn-add svg{width:24px;height:24px;stroke:white;flex-shrink:0;}
+
+/* More sheet */
+.more-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;backdrop-filter:blur(3px);}
+.more-overlay.open{display:block;}
+.more-sheet{
+  position:fixed;bottom:0;left:0;right:0;z-index:401;
+  background:var(--bg2);border-radius:22px 22px 0 0;
+  border-top:1px solid var(--border);
+  transform:translateY(100%);
+  transition:transform .3s cubic-bezier(.4,0,.2,1);
+  padding-bottom:calc(24px + env(safe-area-inset-bottom));
+}
+.more-sheet.open{transform:translateY(0);}
+.ms-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0;}
+.ms-title{font-size:16px;font-weight:800;color:var(--text);padding:16px 20px 8px;}
+.ms-nav{display:flex;flex-direction:column;padding:0 12px;gap:2px;}
+.ms-link{
+  display:flex;align-items:center;gap:14px;
+  padding:13px 14px;border-radius:12px;
+  text-decoration:none;cursor:pointer;
+  transition:background .15s;
+}
+.ms-link:hover,.ms-link:active{background:var(--surface);}
+.ms-icon{
+  width:40px;height:40px;border-radius:11px;
+  background:var(--surface);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.ms-icon svg{width:18px;height:18px;stroke:var(--text-muted);}
+.ms-info{flex:1;min-width:0;}
+.ms-lbl{font-size:14px;font-weight:600;color:var(--text);}
+.ms-sub{font-size:11px;color:var(--text-dim);margin-top:1px;}
+.ms-chevron{width:16px;height:16px;stroke:var(--text-dim);flex-shrink:0;}
+.ms-signout{
+  width:calc(100% - 24px);margin:10px 12px 0;
+  padding:13px;font-size:14px;font-weight:700;font-family:inherit;
+  background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);
+  border-radius:12px;cursor:pointer;
+}
+
+/* Show on mobile, add body padding */
+@media(max-width:768px){
+  .bnav{display:flex;}
+  .main,.page{padding-bottom:80px!important;}
+  body{padding-bottom:0;}
+}
+
 </style>
 </head>
 <body>
@@ -160,25 +245,7 @@ input::placeholder{color:var(--text-dim);}
 <!-- MOBILE TOPBAR -->
 <div class="topbar">
   <div class="mob-logo"><span class="r">Risk</span><span class="p">Pilot</span></div>
-  <button class="ham-btn" onclick="openDrawer()"><span></span><span></span><span></span></button>
-</div>
-
-<!-- MOBILE DRAWER -->
-<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
-<div class="drawer" id="drawer">
-  <div class="d-head"><div class="d-title"><span class="r">Risk</span><span class="p">Pilot</span></div><button class="d-close" onclick="closeDrawer()">&#215;</button></div>
-  <div class="d-user"><div class="d-user-name" id="d-name">—</div><div class="d-user-email" id="d-email">—</div></div>
-  <nav class="d-nav">
-    <div class="d-section">Navigation</div>
-    <a class="d-link" href="accounts.html"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>My Accounts</a>
-    <a class="d-link" href="overall-performance.html"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Overall Performance</a>
-    <div class="d-section">Account</div>
-    <a class="d-link" href="profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>My Profile</a>
-    <a class="d-link" href="leaderboard.html"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>Leaderboard</a>
-    <div class="d-section">Community</div>
-    <a class="d-link" href="social.html"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Follow Us</a>
-  </nav>
-  <div class="d-footer"><button class="d-signout" onclick="handleSignOut()">Sign Out</button></div>
+  
 </div>
 
 <!-- MAIN -->
@@ -269,8 +336,8 @@ function goTo(f){window.location.href=base()+f;}
 function S(i){return document.getElementById(i);}
 function sym(){return acc&&acc.currency==='USD'?'$':'R';}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function openDrawer(){S('drawer').classList.add('open');S('overlay').classList.add('open');document.body.style.overflow='hidden';}
-function closeDrawer(){S('drawer').classList.remove('open');S('overlay').classList.remove('open');document.body.style.overflow='';}
+
+
 function sw(t){
   document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',['journal','calendar','stats'][i]===t);});
   document.querySelectorAll('.tab-s').forEach(function(s){s.classList.remove('active');});
@@ -386,7 +453,61 @@ function renderStats(){
   var ml=Object.keys(mo).sort();
   if(ml.length)ocC=new Chart(S('oc'),{type:'bar',data:{labels:ml,datasets:[{label:'Wins',data:ml.map(function(k){return mo[k].w;}),backgroundColor:'rgba(34,201,132,0.75)',borderRadius:4},{label:'Losses',data:ml.map(function(k){return mo[k].l;}),backgroundColor:'rgba(240,80,96,0.75)',borderRadius:4},{label:'N/T',data:ml.map(function(k){return mo[k].n;}),backgroundColor:'rgba(74,82,112,0.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7a84a0',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(42,48,72,0.5)'}},y:{ticks:{color:'#4a5270',font:{size:10},stepSize:1},grid:{color:'rgba(42,48,72,0.5)'}}}}});
 }
+
+function goToAdd(){var id=localStorage.getItem('rp_perf_account')||localStorage.getItem(acc?'rp_active_account_'+cu.id:'');if(acc)localStorage.setItem('rp_active_account_'+cu.id,acc.id);goTo('add-trade.html');}
+function openMore(){document.getElementById('more-sheet').classList.add('open');document.getElementById('more-overlay').classList.add('open');document.body.style.overflow='hidden';}
+function closeMore(){document.getElementById('more-sheet').classList.remove('open');document.getElementById('more-overlay').classList.remove('open');document.body.style.overflow='';}
 async function handleSignOut(){await supabase.auth.signOut();goTo('auth.html');}
 </script>
+<!-- ═══ MOBILE BOTTOM NAV ═══ -->
+<nav class="bnav">
+  <a class="bn-item" href="accounts.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+    <span>Accounts</span>
+  </a>
+  <a class="bn-item active" href="dashboard.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Dashboard</span>
+  </a>
+  <button class="bn-add" onclick="goToAdd()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <a class="bn-item" href="overall-performance.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span>Performance</span>
+  </a>
+  <button class="bn-item" onclick="openMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+    <span>More</span>
+  </button>
+</nav>
+<div class="more-overlay" id="more-overlay" onclick="closeMore()"></div>
+<div class="more-sheet" id="more-sheet">
+  <div class="ms-handle"></div>
+  <div class="ms-title">More</div>
+  <nav class="ms-nav">
+    <a class="ms-link" href="profile.html">
+      <div class="ms-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+      <div class="ms-info"><div class="ms-lbl">My Profile</div><div class="ms-sub">Edit your personal details</div></div>
+      <svg class="ms-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <a class="ms-link" href="leaderboard.html">
+      <div class="ms-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg></div>
+      <div class="ms-info"><div class="ms-lbl">Leaderboard</div><div class="ms-sub">Top traders — coming soon</div></div>
+      <svg class="ms-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <a class="ms-link" href="more-accounts.html">
+      <div class="ms-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+      <div class="ms-info"><div class="ms-lbl">All Accounts</div><div class="ms-sub">View and manage all accounts</div></div>
+      <svg class="ms-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <a class="ms-link" href="social.html">
+      <div class="ms-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
+      <div class="ms-info"><div class="ms-lbl">Follow Us</div><div class="ms-sub">Instagram &amp; Discord</div></div>
+      <svg class="ms-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+  </nav>
+  <button class="ms-signout" onclick="handleSignOut()">Sign Out</button>
+</div>
 </body>
 </html>
