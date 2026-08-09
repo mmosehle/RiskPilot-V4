@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <meta name="theme-color" content="#0d0f14"/>
+  <title>RiskPilot — Create Account</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    body { min-height:100vh; background:var(--bg); display:flex; align-items:center; justify-content:center; padding:1.5rem;
+      background-image: radial-gradient(ellipse at 15% 50%, rgba(212,160,23,0.06) 0%, transparent 55%),
+                        radial-gradient(ellipse at 85% 20%, rgba(77,142,245,0.04) 0%, transparent 50%); }
+
+    .wizard { width:100%; max-width:620px; }
+
+    /* ── PROGRESS ── */
+    .wizard-progress { display:flex; align-items:center; gap:0; margin-bottom:2rem; }
+    .wp-step {
+      display:flex; flex-direction:column; align-items:center; gap:6px; flex:1;
+    }
+    .wp-circle {
+      width:36px; height:36px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:13px; font-weight:700; border:2px solid var(--border);
+      background:var(--bg2); color:var(--text-dim); transition:all 0.2s;
+    }
+    .wp-circle.done   { background:var(--gold-bg); border-color:var(--gold); color:var(--gold); }
+    .wp-circle.active { background:var(--gold); border-color:var(--gold); color:#0d0f14; }
+    .wp-label { font-size:11px; font-weight:600; color:var(--text-dim); text-align:center; }
+    .wp-label.active { color:var(--gold); }
+    .wp-line { flex:1; height:2px; background:var(--border); margin-bottom:20px; transition:background 0.2s; }
+    .wp-line.done { background:var(--gold); }
+
+    /* ── CARD ── */
+    .wizard-card {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:16px; padding:2rem 2rem;
+      box-shadow:0 20px 60px rgba(0,0,0,0.4);
+    }
+    .wc-title { font-size:22px; font-weight:700; color:var(--text); margin-bottom:6px; }
+    .wc-sub   { font-size:14px; color:var(--text-muted); margin-bottom:1.75rem; line-height:1.5; }
+
+    /* ── TYPE SELECTOR ── */
+    .type-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:1.5rem; }
+    .type-option {
+      background:var(--bg3); border:2px solid var(--border);
+      border-radius:14px; padding:1.25rem 1rem; cursor:pointer;
+      transition:border-color 0.15s, background 0.15s; text-align:center;
+    }
+    .type-option:hover   { border-color:var(--gold); background:var(--gold-bg); }
+    .type-option.selected{ border-color:var(--gold); background:var(--gold-bg); }
+    .type-icon  { font-size:36px; margin-bottom:10px; }
+    .type-name  { font-size:16px; font-weight:700; color:var(--text); margin-bottom:4px; }
+    .type-desc  { font-size:12px; color:var(--text-muted); line-height:1.4; }
+
+    /* ── CURRENCY TOGGLE ── */
+    .cur-toggle { display:flex; background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:3px; margin-bottom:1rem; }
+    .cur-opt    { flex:1; padding:9px; font-size:14px; font-weight:700; border:none; border-radius:6px; cursor:pointer; background:transparent; color:var(--text-muted); font-family:inherit; transition:all 0.15s; }
+    .cur-opt.active { background:var(--gold); color:#0d0f14; }
+
+    /* ── CHECKLIST BUILDER ── */
+    .checklist-items { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; min-height:40px; }
+    .cl-item {
+      display:flex; align-items:center; gap:10px;
+      background:var(--bg3); border:1px solid var(--border);
+      border-radius:8px; padding:10px 14px;
+    }
+    .cl-item-text { font-size:14px; color:var(--text); flex:1; }
+    .cl-remove {
+      background:none; border:none; color:var(--text-dim); cursor:pointer;
+      font-size:16px; padding:2px 6px; border-radius:4px; transition:color 0.15s;
+    }
+    .cl-remove:hover { color:var(--red); }
+    .cl-add-row { display:flex; gap:8px; }
+    .cl-add-row input { flex:1; }
+    .cl-hint { font-size:12px; color:var(--text-dim); margin-top:6px; line-height:1.4; }
+
+    /* ── FORM ── */
+    .form-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+    /* ── NAV BUTTONS ── */
+    .wizard-nav { display:flex; justify-content:space-between; align-items:center; margin-top:1.75rem; gap:10px; }
+    .btn-back { background:var(--surface2); color:var(--text-muted); border:1px solid var(--border); border-radius:8px; padding:11px 24px; font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; transition:color 0.15s; }
+    .btn-back:hover { color:var(--text); }
+    .btn-next { flex:1; padding:12px; font-size:15px; font-weight:700; font-family:inherit; background:var(--gold); color:#0d0f14; border:none; border-radius:8px; cursor:pointer; transition:background 0.15s; }
+    .btn-next:hover { background:var(--gold-light); }
+    .btn-next:disabled { opacity:0.5; cursor:not-allowed; }
+
+    .alert-error { background:var(--red-bg); color:var(--red); border:1px solid var(--red-border); border-radius:8px; padding:10px 14px; font-size:13px; margin-bottom:12px; display:none; }
+    .alert-error.show { display:block; }
+
+    .spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(13,15,20,0.3); border-top-color:#0d0f14; border-radius:50%; animation:sp 0.7s linear infinite; margin-right:6px; vertical-align:middle; }
+    @keyframes sp{to{transform:rotate(360deg)}}
+
+    @media(max-width:480px){
+      .wizard-card { padding:1.5rem 1.25rem; }
+      .type-grid   { grid-template-columns:1fr; }
+      .form-row-2  { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="wizard">
+  <!-- Progress bar -->
+  <div class="wizard-progress" id="wizard-progress">
+    <div class="wp-step">
+      <div class="wp-circle active" id="wc1">1</div>
+      <div class="wp-label active" id="wl1">Type</div>
+    </div>
+    <div class="wp-line" id="wline1"></div>
+    <div class="wp-step">
+      <div class="wp-circle" id="wc2">2</div>
+      <div class="wp-label" id="wl2">Details</div>
+    </div>
+    <div class="wp-line" id="wline2"></div>
+    <div class="wp-step">
+      <div class="wp-circle" id="wc3">3</div>
+      <div class="wp-label" id="wl3">Checklist</div>
+    </div>
+    <div class="wp-line" id="wline3"></div>
+    <div class="wp-step">
+      <div class="wp-circle" id="wc4">4</div>
+      <div class="wp-label" id="wl4">Review</div>
+    </div>
+  </div>
+
+  <div class="wizard-card">
+    <div class="alert-error" id="wizard-error"></div>
+
+    <!-- ════ STEP 1: TYPE ════ -->
+    <div id="step1">
+      <div class="wc-title">Create a Trading Account</div>
+      <div class="wc-sub">Choose the type of account you want to set up. Each account has its own journal, calendar, and risk rules.</div>
+      <div class="type-grid">
+        <div class="type-option" id="type-personal" onclick="selectType('personal')">
+          <div class="type-icon">💼</div>
+          <div class="type-name">Personal Funded</div>
+          <div class="type-desc">Your own capital. Set a weekly budget and manage risk your way.</div>
+        </div>
+        <div class="type-option" id="type-prop" onclick="selectType('prop')">
+          <div class="type-icon">🏢</div>
+          <div class="type-name">Prop Firm</div>
+          <div class="type-desc">Funded account with profit targets, daily loss limits, and max drawdown rules.</div>
+        </div>
+      </div>
+      <div class="wizard-nav">
+        <button class="btn-back" onclick="goBack()">← Accounts</button>
+        <button class="btn-next" id="btn-step1" onclick="goToStep(2)" disabled>Next →</button>
+      </div>
+    </div>
+
+    <!-- ════ STEP 2A: PERSONAL DETAILS ════ -->
+    <div id="step2-personal" style="display:none">
+      <div class="wc-title">Personal Account Details</div>
+      <div class="wc-sub">Name your account and set your currency and weekly budget.</div>
+      <div class="form-group">
+        <label for="p-name">Account Name</label>
+        <input type="text" id="p-name" placeholder="e.g. My Exness Live Account"/>
+      </div>
+      <div class="form-group">
+        <label>Account Currency</label>
+        <div class="cur-toggle">
+          <button class="cur-opt active" id="p-cur-zar" onclick="setCur('personal','ZAR')">ZAR (South African Rand)</button>
+          <button class="cur-opt"        id="p-cur-usd" onclick="setCur('personal','USD')">USD (US Dollar)</button>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label for="p-weekly-budget">Weekly Budget (<span id="p-sym">R</span>)</label>
+          <input type="number" id="p-weekly-budget" placeholder="e.g. 5000" min="0"/>
+        </div>
+        <div class="form-group">
+          <label for="p-profit-goal">Weekly Profit Target (<span id="p-sym2">R</span>)</label>
+          <input type="number" id="p-profit-goal" placeholder="e.g. 10000" min="0"/>
+        </div>
+      </div>
+      <div class="wizard-nav">
+        <button class="btn-back" onclick="goToStep(1)">← Back</button>
+        <button class="btn-next" onclick="validateStep2('personal')">Next →</button>
+      </div>
+    </div>
+
+    <!-- ════ STEP 2B: PROP DETAILS ════ -->
+    <div id="step2-prop" style="display:none">
+      <div class="wc-title">Prop Firm Account Details</div>
+      <div class="wc-sub">Enter your prop firm challenge or funded account parameters.</div>
+      <div class="form-group">
+        <label for="pr-name">Account Name</label>
+        <input type="text" id="pr-name" placeholder="e.g. FTMO $10k Challenge"/>
+      </div>
+      <div class="form-group">
+        <label>Account Currency</label>
+        <div class="cur-toggle">
+          <button class="cur-opt active" id="pr-cur-usd" onclick="setCur('prop','USD')">USD (US Dollar)</button>
+          <button class="cur-opt"        id="pr-cur-zar" onclick="setCur('prop','ZAR')">ZAR (South African Rand)</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="pr-size">Account Balance (<span id="pr-sym">$</span>)</label>
+        <input type="number" id="pr-size" placeholder="e.g. 10000" min="0"/>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label for="pr-profit">Profit Target (%)</label>
+          <input type="number" id="pr-profit" placeholder="e.g. 10" min="0" max="100" step="0.1"/>
+        </div>
+        <div class="form-group">
+          <label for="pr-daily">Daily Loss Limit (%)</label>
+          <input type="number" id="pr-daily" placeholder="e.g. 5" min="0" max="100" step="0.1"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="pr-max">Maximum Loss Limit (%)</label>
+        <input type="number" id="pr-max" placeholder="e.g. 10" min="0" max="100" step="0.1"/>
+      </div>
+      <div class="wizard-nav">
+        <button class="btn-back" onclick="goToStep(1)">← Back</button>
+        <button class="btn-next" onclick="validateStep2('prop')">Next →</button>
+      </div>
+    </div>
+
+    <!-- ════ STEP 3: CHECKLIST ════ -->
+    <div id="step3" style="display:none">
+      <div class="wc-title">Setup Quality Checklist</div>
+      <div class="wc-sub">Define what you look for in a trade setup. All items ticked = <strong style="color:var(--gold)">A-Setup (High Precision)</strong>. Any item unticked = <strong style="color:var(--blue)">B-Setup (Standard)</strong> automatically.</div>
+      <div class="form-group">
+        <label>Your Checklist Items</label>
+        <div class="checklist-items" id="checklist-items"></div>
+        <div class="cl-add-row">
+          <input type="text" id="cl-new-item" placeholder="e.g. Structure break confirmed" maxlength="80"/>
+          <button class="btn btn-primary" onclick="addChecklistItem()" style="white-space:nowrap;padding:10px 16px;">+ Add</button>
+        </div>
+        <div class="cl-hint">Add between 3 and 10 criteria. These will appear as a checklist every time you log a trade.</div>
+      </div>
+      <div class="wizard-nav">
+        <button class="btn-back" onclick="goToStep(2)">← Back</button>
+        <button class="btn-next" onclick="validateStep3()">Next →</button>
+      </div>
+    </div>
+
+    <!-- ════ STEP 4: REVIEW ════ -->
+    <div id="step4" style="display:none">
+      <div class="wc-title">Review &amp; Create</div>
+      <div class="wc-sub">Confirm your account details before creating.</div>
+      <div id="review-content" style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem;"></div>
+      <div class="wizard-nav">
+        <button class="btn-back" onclick="goToStep(3)">← Back</button>
+        <button class="btn-next" id="btn-create" onclick="createAccount()">Create Account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+/* ── STATE ── */
+let currentUser = null;
+let wizard = {
+  step:       1,
+  type:       null,   // 'personal' | 'prop'
+  currency:   { personal:'ZAR', prop:'USD' },
+  checklist:  [],
+  // personal
+  p_name:     '', p_weekly_budget:0, p_profit_goal:0,
+  // prop
+  pr_name:'', pr_size:0, pr_profit:0, pr_daily:0, pr_max:0,
+};
+
+function base(){ const p=window.location.pathname; return window.location.origin+p.substring(0,p.lastIndexOf('/')+1); }
+function goTo(f){ window.location.href=base()+f; }
+function goBack(){ goTo('accounts.html'); }
+function showError(msg){ const e=document.getElementById('wizard-error'); e.textContent=msg; e.classList.add('show'); }
+function clearError(){ const e=document.getElementById('wizard-error'); e.textContent=''; e.classList.remove('show'); }
+
+/* ── AUTH ── */
+(async function(){
+  const {data}=await supabase.auth.getSession();
+  if(!data.session){ goTo('auth.html'); return; }
+  currentUser = data.session.user;
+})();
+
+/* ── STEP NAVIGATION ── */
+function goToStep(n){
+  clearError();
+  wizard.step = n;
+  // Hide all steps
+  [1,2,3,4].forEach(i=>{
+    document.getElementById('step'+i)?.style && (document.getElementById('step'+i).style.display='none');
+  });
+  document.getElementById('step2-personal').style.display='none';
+  document.getElementById('step2-prop').style.display='none';
+
+  // Show correct step
+  if(n===1) document.getElementById('step1').style.display='block';
+  if(n===2 && wizard.type==='personal') document.getElementById('step2-personal').style.display='block';
+  if(n===2 && wizard.type==='prop')     document.getElementById('step2-prop').style.display='block';
+  if(n===3) { document.getElementById('step3').style.display='block'; renderChecklist(); }
+  if(n===4) { document.getElementById('step4').style.display='block'; renderReview(); }
+
+  updateProgress(n);
+}
+
+function updateProgress(n){
+  [1,2,3,4].forEach(i=>{
+    const c=document.getElementById('wc'+i), l=document.getElementById('wl'+i);
+    if(i<n){  c.className='wp-circle done';   l.className='wp-label'; c.textContent='✓'; }
+    if(i===n){ c.className='wp-circle active'; l.className='wp-label active'; c.textContent=i; }
+    if(i>n){  c.className='wp-circle';         l.className='wp-label'; c.textContent=i; }
+    if(i<4){ const line=document.getElementById('wline'+i); if(line) line.className='wp-line'+(i<n?' done':''); }
+  });
+}
+
+/* ── TYPE SELECT ── */
+function selectType(t){
+  wizard.type = t;
+  document.getElementById('type-personal').classList.toggle('selected',t==='personal');
+  document.getElementById('type-prop').classList.toggle('selected',t==='prop');
+  document.getElementById('btn-step1').disabled=false;
+}
+
+/* ── CURRENCY ── */
+function setCur(scope, cur){
+  wizard.currency[scope]=cur;
+  const sym = cur==='ZAR'?'R':'$';
+  if(scope==='personal'){
+    document.getElementById('p-cur-zar').classList.toggle('active',cur==='ZAR');
+    document.getElementById('p-cur-usd').classList.toggle('active',cur==='USD');
+    document.querySelectorAll('#p-sym,#p-sym2').forEach(e=>e.textContent=sym);
+  } else {
+    document.getElementById('pr-cur-usd').classList.toggle('active',cur==='USD');
+    document.getElementById('pr-cur-zar').classList.toggle('active',cur==='ZAR');
+    document.getElementById('pr-sym').textContent=sym;
+  }
+}
+
+/* ── VALIDATE STEP 2 ── */
+function validateStep2(type){
+  clearError();
+  if(type==='personal'){
+    const name=document.getElementById('p-name').value.trim();
+    const wb  =parseFloat(document.getElementById('p-weekly-budget').value)||0;
+    if(!name){ showError('Please enter an account name.'); return; }
+    if(wb<=0){ showError('Please enter a weekly budget greater than 0.'); return; }
+    wizard.p_name=name;
+    wizard.p_weekly_budget=wb;
+    wizard.p_profit_goal=parseFloat(document.getElementById('p-profit-goal').value)||0;
+  } else {
+    const name=document.getElementById('pr-name').value.trim();
+    const size=parseFloat(document.getElementById('pr-size').value)||0;
+    const prof=parseFloat(document.getElementById('pr-profit').value)||0;
+    const dail=parseFloat(document.getElementById('pr-daily').value)||0;
+    const maxl=parseFloat(document.getElementById('pr-max').value)||0;
+    if(!name){ showError('Please enter an account name.'); return; }
+    if(size<=0){ showError('Please enter the account balance.'); return; }
+    if(prof<=0||dail<=0||maxl<=0){ showError('Please enter all percentage limits.'); return; }
+    wizard.pr_name=name; wizard.pr_size=size;
+    wizard.pr_profit=prof; wizard.pr_daily=dail; wizard.pr_max=maxl;
+  }
+  goToStep(3);
+}
+
+/* ── CHECKLIST BUILDER ── */
+function renderChecklist(){
+  const container=document.getElementById('checklist-items');
+  if(!wizard.checklist.length){ container.innerHTML='<div style="color:var(--text-dim);font-size:13px;font-style:italic;">No items yet. Add your setup criteria below.</div>'; return; }
+  container.innerHTML=wizard.checklist.map((item,i)=>`
+    <div class="cl-item">
+      <span style="color:var(--gold);font-weight:700;font-size:13px;">${i+1}</span>
+      <span class="cl-item-text">${escHtml(item)}</span>
+      <button class="cl-remove" onclick="removeChecklistItem(${i})" title="Remove">×</button>
+    </div>`).join('');
+}
+
+function addChecklistItem(){
+  const inp=document.getElementById('cl-new-item');
+  const val=inp.value.trim();
+  if(!val){ inp.focus(); return; }
+  if(wizard.checklist.length>=10){ showError('Maximum 10 checklist items allowed.'); return; }
+  if(wizard.checklist.includes(val)){ showError('This item already exists.'); return; }
+  wizard.checklist.push(val);
+  inp.value='';
+  renderChecklist();
+}
+
+function removeChecklistItem(i){
+  wizard.checklist.splice(i,1);
+  renderChecklist();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('cl-new-item')?.addEventListener('keydown',e=>{if(e.key==='Enter')addChecklistItem();});
+});
+
+function validateStep3(){
+  clearError();
+  if(wizard.checklist.length<3){ showError('Please add at least 3 checklist items.'); return; }
+  goToStep(4);
+}
+
+/* ── REVIEW ── */
+function renderReview(){
+  const isProp = wizard.type==='prop';
+  const cur    = wizard.currency[wizard.type];
+  const sym    = cur==='ZAR'?'R':'$';
+  const name   = isProp?wizard.pr_name:wizard.p_name;
+  let html = `<div style="margin-bottom:12px">
+    <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">Account Name</div>
+    <div style="font-size:17px;font-weight:700;color:var(--text)">${escHtml(name)}</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+      <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:3px">Type</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text)">${isProp?'Prop Firm':'Personal Funded'}</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+      <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:3px">Currency</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text)">${cur}</div>
+    </div>`;
+
+  if(isProp){
+    html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+      <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:3px">Account Size</div>
+      <div style="font-size:14px;font-weight:600;color:var(--gold)">${sym}${Number(wizard.pr_size).toLocaleString()}</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+      <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:3px">Profit Target</div>
+      <div style="font-size:14px;font-weight:600;color:var(--green)">${wizard.pr_profit}%</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+      <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:3px">Daily Loss Limit</div>
+      <div style="font-size:14px;font-weight:600;color:var(--amber)">${wizard.pr_daily}%</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+      <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:3px">Max Loss Limit</div>
+      <div style="font-size:14px;font-weight:600;color:var(--red)">${wizard.pr_max}%</div>
+    </div>`;
+    html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+      <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:3px">A-Setup Risk</div>
+      <div style="font-size:14px;font-weight:600;color:var(--gold)">0.50% = ${sym}${(wizard.pr_size*0.005).toFixed(0)}</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+      <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:3px">B-Setup Risk</div>
+      <div style="font-size:14px;font-weight:600;color:var(--blue)">0.25% = ${sym}${(wizard.pr_size*0.0025).toFixed(0)}</div>
+    </div>`;
+  } else {
+    const daily=(wizard.p_weekly_budget/5).toFixed(0);
+    html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+      <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:3px">Weekly Budget</div>
+      <div style="font-size:14px;font-weight:600;color:var(--gold)">${sym}${Number(wizard.p_weekly_budget).toLocaleString()}</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+      <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:3px">Daily Budget</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text)">${sym}${daily}</div>
+    </div>`;
+    if(wizard.p_profit_goal>0) html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+      <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:3px">Weekly Profit Target</div>
+      <div style="font-size:14px;font-weight:600;color:var(--green)">${sym}${Number(wizard.p_profit_goal).toLocaleString()}</div>
+    </div>`;
+  }
+  html+='</div>';
+
+  html+=`<div style="margin-top:12px">
+    <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Setup Checklist (${wizard.checklist.length} items)</div>
+    ${wizard.checklist.map((item,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="color:var(--gold);font-weight:700;font-size:12px;min-width:18px">${i+1}</span>
+      <span style="font-size:13px;color:var(--text)">${escHtml(item)}</span>
+    </div>`).join('')}
+  </div>`;
+
+  document.getElementById('review-content').innerHTML=html;
+}
+
+/* ── CREATE ── */
+async function createAccount(){
+  clearError();
+  const btn=document.getElementById('btn-create');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>Creating…';
+
+  try{
+    const isProp = wizard.type==='prop';
+    const cur    = wizard.currency[wizard.type];
+    const payload = {
+      user_id:          currentUser.id,
+      account_type:     wizard.type,
+      account_name:     isProp ? wizard.pr_name : wizard.p_name,
+      currency:         cur,
+      weekly_wallet:    0,
+      checklist:        JSON.stringify(wizard.checklist),
+      // personal
+      weekly_budget:    isProp ? null : wizard.p_weekly_budget,
+      profit_goal:      isProp ? null : wizard.p_profit_goal,
+      // prop
+      account_size:     isProp ? wizard.pr_size  : null,
+      profit_target_pct:isProp ? wizard.pr_profit: null,
+      daily_loss_pct:   isProp ? wizard.pr_daily : null,
+      max_loss_pct:     isProp ? wizard.pr_max   : null,
+    };
+
+    const {data,error}=await supabase.from('trading_accounts').insert(payload).select().single();
+    if(error) throw error;
+
+    // Save as active account
+    localStorage.setItem('rp_active_account_'+currentUser.id, data.id);
+    goTo('accounts.html');
+  }catch(e){
+    showError('Failed to create account: '+e.message);
+    btn.disabled=false;
+    btn.innerHTML='Create Account';
+  }
+}
+
+function escHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+</body>
+</html>

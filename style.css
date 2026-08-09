@@ -832,3 +832,25 @@ select optgroup { color: var(--text-muted); font-size: 11px; }
   color: var(--text-muted);
   border: 1px solid var(--border);
 }
+
+/* ══════════════════════════════════════════
+   V5 — ACCOUNTS & CHECKLIST
+══════════════════════════════════════════ */
+
+/* Switch Account nav link styling */
+.nav-btn[href] { text-decoration: none !important; }
+
+/* Amber badge (missing from some contexts) */
+.badge-amber {
+  background: var(--amber-bg);
+  color: var(--amber);
+  border: 1px solid #3d2808;
+}
+
+/* Sidebar account info */
+#sidebar-account-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}

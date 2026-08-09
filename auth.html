@@ -474,7 +474,7 @@
       .eq('user_id', data.session.user.id)
       .single();
     if (profile?.license_valid === true) {
-      goTo('dashboard.html');
+      goTo('accounts.html');
     } else {
       goTo('license.html');
     }

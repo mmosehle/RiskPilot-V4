@@ -44,6 +44,11 @@ let state = {
   calYear:       new Date().getFullYear(),
   calMonth:      new Date().getMonth(),
   user:          null,
+  // v5: account context
+  activeAccount: null,   // full account row from trading_accounts
+  checklist:     [],     // array of checklist item strings
+  checklistState:{},     // {item: true/false} for current trade
+  checklistComplete: false, // all items ticked = A-setup unlocked
 };
 
 const MONTHS = ["January","February","March","April","May","June",
@@ -69,7 +74,7 @@ async function boot(session) {
   if (!session) { goTo('auth.html'); return; }
   state.user = session.user;
 
-  // ── LICENSE CHECK ── every page load verifies the user has a valid license
+  // ── LICENSE CHECK ──
   const { data: profile } = await supabase
     .from('riskpilot_data')
     .select('license_valid')
@@ -81,11 +86,126 @@ async function boot(session) {
     return;
   }
 
+  // ── ACCOUNT CHECK ── load active account from localStorage
+  const savedAccId = localStorage.getItem('rp_active_account_' + session.user.id);
+  if (!savedAccId) {
+    // No account selected — send back to accounts page
+    goTo('accounts.html');
+    return;
+  }
+
+  const { data: account } = await supabase
+    .from('trading_accounts')
+    .select('*')
+    .eq('id', savedAccId)
+    .eq('user_id', session.user.id)
+    .single();
+
+  if (!account) {
+    goTo('accounts.html');
+    return;
+  }
+
+  // Apply account context to state
+  state.activeAccount = account;
+  state.currency      = account.currency;
+  state.checklist     = JSON.parse(account.checklist || '[]');
+
+  // For personal accounts restore budget from account row
+  if (account.account_type === 'personal') {
+    state.weeklyBudget = parseFloat(account.weekly_budget || 0);
+    state.dailyBudget  = state.weeklyBudget / 5;
+    state.weeklyWallet = parseFloat(account.weekly_wallet || 0);
+  } else {
+    // Prop firm — budget is based on % of account size
+    state.weeklyBudget = 0;
+    state.dailyBudget  = 0;
+    state.weeklyWallet = parseFloat(account.weekly_wallet || 0);
+  }
+
   updateSidebarUser();
-  await loadUserData();
+  updateSidebarAccountInfo();
+  await loadJournalFromDB();
   renderCalendar();
+  renderBudgetUI();
   fetchLivePrices();
   setInterval(fetchLivePrices, 60_000);
+}
+
+/* ── ACCOUNT INFO IN SIDEBAR ── */
+function updateSidebarAccountInfo() {
+  const acc = state.activeAccount;
+  if (!acc) return;
+  const el = document.getElementById('sidebar-account-name');
+  if (el) {
+    el.textContent = acc.account_name;
+    el.title = acc.account_type === 'prop' ? 'Prop Firm Account' : 'Personal Funded Account';
+  }
+  const typEl = document.getElementById('sidebar-account-type');
+  if (typEl) typEl.textContent = acc.account_type === 'prop' ? 'Prop Firm' : 'Personal';
+}
+
+/* ── RENDER BUDGET UI based on account type ── */
+function renderBudgetUI() {
+  const acc = state.activeAccount;
+  if (!acc) return;
+  const isProp = acc.account_type === 'prop';
+  const sym    = acc.currency === 'USD' ? '$' : 'R';
+
+  const bdEl = document.getElementById('daily-budget-display');
+  if (bdEl) bdEl.textContent = isProp ? 'Prop — % based' : fmt(state.dailyBudget);
+
+  const hpEl = document.getElementById('hp-risk-display');
+  if (hpEl) {
+    if (isProp) {
+      const riskA = parseFloat(acc.account_size||0) * 0.005;
+      hpEl.textContent = sym + riskA.toFixed(0) + ' (0.50%)';
+    } else {
+      hpEl.textContent = fmt(state.dailyBudget);
+    }
+  }
+  const stdEl = document.getElementById('std-risk-display');
+  if (stdEl) {
+    if (isProp) {
+      const riskB = parseFloat(acc.account_size||0) * 0.0025;
+      stdEl.textContent = sym + riskB.toFixed(0) + ' (0.25%)';
+    } else {
+      stdEl.textContent = fmt(state.dailyBudget * 0.5);
+    }
+  }
+
+  const bkEl = document.getElementById('budget-breakdown');
+  if (bkEl) bkEl.style.display = 'block';
+}
+
+/* ── LOAD JOURNAL FROM SUPABASE (account-scoped) ── */
+async function loadJournalFromDB() {
+  if (!state.activeAccount) return;
+  const { data } = await supabase
+    .from('trade_journal')
+    .select('*')
+    .eq('account_id', state.activeAccount.id)
+    .order('trade_date', { ascending: false });
+  state.journal = (data || []).map(t => ({
+    id:          t.id,
+    inst:        t.instrument,
+    dir:         t.direction,
+    setup:       t.setup_type === 'A' ? 'high' : 'standard',
+    entry:       t.entry_price,
+    sl:          t.sl_price,
+    tp:          t.tp_price,
+    lotSize:     t.lot_size,
+    riskZAR:     parseFloat(t.risk_amount || 0),
+    profitZAR:   parseFloat(t.profit_zar || 0),
+    rr:          t.rr_ratio,
+    outcome:     t.outcome,
+    date:        t.trade_date,
+    beforeUrl:   t.before_url || '',
+    afterUrl:    t.after_url || '',
+    notes:       t.notes || '',
+    supabaseId:  t.id,
+  }));
+  refreshBudgetStatus();
 }
 
 function updateSidebarUser() {
@@ -310,9 +430,10 @@ function switchTab(tabName) {
     sec.classList.toggle('active', sec.id === 'tab-' + tabName));
   const pt = document.getElementById('page-title');
   if (pt) pt.textContent = PAGE_TITLES[tabName];
-  if (tabName === 'calendar') renderCalendar();
-  if (tabName === 'journal')  renderJournal();
-  if (tabName === 'profile')  renderProfile();
+  if (tabName === 'calendar')    renderCalendar();
+  if (tabName === 'journal')     renderJournal();
+  if (tabName === 'profile')     renderProfile();
+  if (tabName === 'calculator')  renderChecklist();
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebar-overlay').classList.remove('open');
 }
@@ -376,8 +497,84 @@ function selectSetup(type) {
 }
 
 function getRiskZAR() {
+  const acc = state.activeAccount;
+  if (acc && acc.account_type === 'prop') {
+    // Prop firm: fixed % of initial account balance
+    const size = parseFloat(acc.account_size || 0);
+    return state.selectedSetup === 'high'
+      ? size * 0.005   // 0.50% for A-Setup
+      : size * 0.0025; // 0.25% for B-Setup
+  }
+  // Personal: daily budget based
   return state.selectedSetup === 'high' ? state.dailyBudget : state.dailyBudget * 0.5;
 }
+
+/* ── GET SETUP TYPE — auto-downgrade to B if checklist incomplete ── */
+function resolveSetupType() {
+  // If checklist exists and not all items ticked → force B-Setup (Standard)
+  if (state.checklist.length > 0) {
+    const allTicked = state.checklist.every(item => state.checklistState[item] === true);
+    state.checklistComplete = allTicked;
+    if (!allTicked) {
+      state.selectedSetup = 'standard';
+      // Update UI to reflect forced downgrade
+      document.getElementById('opt-hp')?.classList.remove('selected');
+      document.getElementById('opt-std')?.classList.add('selected');
+      const notice = document.getElementById('setup-downgrade-notice');
+      if (notice) notice.style.display = 'block';
+    } else {
+      const notice = document.getElementById('setup-downgrade-notice');
+      if (notice) notice.style.display = 'none';
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   CHECKLIST
+═══════════════════════════════════════════════ */
+function renderChecklist() {
+  const panel = document.getElementById('checklist-panel');
+  const items = document.getElementById('checklist-items-display');
+  const badge = document.getElementById('checklist-status-badge');
+  const notice= document.getElementById('checklist-notice-downgrade');
+  if (!panel) return;
+
+  if (!state.checklist || state.checklist.length === 0) {
+    panel.style.display = 'none';
+    return;
+  }
+  panel.style.display = 'block';
+
+  const allTicked = state.checklist.every(item => state.checklistState[item] === true);
+  state.checklistComplete = allTicked;
+
+  if (badge) {
+    badge.textContent = allTicked ? 'A-Setup Unlocked ✓' : 'Incomplete — B-Setup';
+    badge.className   = 'badge ' + (allTicked ? 'badge-green' : 'badge-amber');
+  }
+  if (notice) notice.style.display = allTicked ? 'none' : 'block';
+
+  items.innerHTML = state.checklist.map(item => {
+    const ticked = state.checklistState[item] === true;
+    return `<div style="display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;" onclick="toggleChecklistItem('${escJs(item)}')">
+      <div style="width:20px;height:20px;border-radius:5px;border:2px solid ${ticked?'var(--green)':'var(--border2)'};background:${ticked?'var(--green-bg)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;">
+        ${ticked?'<span style="color:var(--green);font-size:12px;font-weight:700;">✓</span>':''}
+      </div>
+      <span style="font-size:13px;color:${ticked?'var(--text)':'var(--text-muted)'};">${escJs(item)}</span>
+    </div>`;
+  }).join('');
+
+  // Auto-resolve setup type whenever checklist changes
+  resolveSetupType();
+  calculate();
+}
+
+function toggleChecklistItem(item) {
+  state.checklistState[item] = !state.checklistState[item];
+  renderChecklist();
+}
+
+function escJs(s) { return (s||'').replace(/'/g,"\'").replace(/"/g,'&quot;'); }
 
 /* ═══════════════════════════════════════════════
    CALCULATION ENGINE
@@ -438,56 +635,98 @@ function calculate() {
 /* ═══════════════════════════════════════════════
    TRADE LOGGING
 ═══════════════════════════════════════════════ */
-function logTrade() {
+async function logTrade() {
   if (!state.currentTrade) { alert('Please fill in all trade details first.'); return; }
-  if (state.dailyBudget > 0 && state.usedToday >= state.dailyBudget) {
+  if (!state.activeAccount) { alert('No active account. Please select an account first.'); return; }
+  if (state.activeAccount.account_type === 'personal' && state.dailyBudget > 0 && state.usedToday >= state.dailyBudget) {
     alert('❌ Daily budget exceeded. Trading is locked for today!'); return;
   }
-  const trade = { ...state.currentTrade, id: Date.now(), outcome: 'pending', beforeUrl:'', afterUrl:'', notes:'' };
+
+  // Resolve setup type based on checklist
+  resolveSetupType();
+
+  const t = state.currentTrade;
+  const payload = {
+    account_id:      state.activeAccount.id,
+    user_id:         state.user.id,
+    instrument:      t.inst,
+    direction:       t.dir,
+    setup_type:      state.selectedSetup === 'high' ? 'A' : 'B',
+    entry_price:     t.entry,
+    sl_price:        t.sl,
+    tp_price:        t.tp,
+    lot_size:        parseFloat(t.lotSize),
+    risk_amount:     t.riskZAR,
+    profit_zar:      t.profitZAR,
+    rr_ratio:        parseFloat(t.rr),
+    outcome:         'pending',
+    trade_date:      todayStr(),
+    checklist_state: JSON.stringify(state.checklistState),
+  };
+
+  const { data, error } = await supabase.from('trade_journal').insert(payload).select().single();
+  if (error) { alert('Failed to log trade: ' + error.message); return; }
+
+  const trade = {
+    id: data.id, supabaseId: data.id,
+    inst: t.inst, dir: t.dir, setup: state.selectedSetup,
+    riskZAR: t.riskZAR, profitZAR: t.profitZAR,
+    lotSize: t.lotSize, rr: t.rr, date: todayStr(),
+    outcome: 'pending', beforeUrl: '', afterUrl: '', notes: '',
+  };
   state.journal.unshift(trade);
-  state.usedToday = Math.min(state.dailyBudget, state.usedToday + trade.riskZAR);
+  if (state.activeAccount.account_type === 'personal') {
+    state.usedToday = Math.min(state.dailyBudget, state.usedToday + trade.riskZAR);
+  }
+  // Reset checklist state for next trade
+  state.checklistState = {};
+  renderChecklist();
   refreshBudgetStatus();
   renderJournal();
-  saveUserData();
-  alert('✅ Trade logged! Click "Mark Win" or "Mark Loss" to record the outcome.');
+  alert('✅ Trade logged! Mark it Win, Loss, or N/T when it closes.');
 }
 
-// markTradeResult — works from both calculator buttons and inline journal buttons
-// tradeId is optional; if omitted it finds the first pending trade
-function markTradeResult(result, tradeId) {
+async function markTradeResult(result, tradeId) {
   let trade;
   if (tradeId) {
-    trade = state.journal.find(t => t.id === tradeId);
+    trade = state.journal.find(t => t.id === tradeId || t.supabaseId === tradeId);
   } else {
-    // legacy: find first pending
     trade = state.journal.find(t => t.outcome === 'pending');
-    if (!trade && !state.currentTrade) {
-      alert('No pending trade found. Log a trade first.'); return;
-    }
+    if (!trade) { alert('No pending trade found. Log a trade first.'); return; }
   }
   if (!trade) { alert('Trade not found.'); return; }
 
+  // Update in Supabase
+  const { error } = await supabase
+    .from('trade_journal')
+    .update({ outcome: result })
+    .eq('id', trade.supabaseId || trade.id);
+  if (error) { alert('Failed to update trade: ' + error.message); return; }
+
   if (result === 'not_triggered') {
-    // Refund the risk amount back to today's budget
-    state.usedToday = Math.max(0, state.usedToday - trade.riskZAR);
+    if (state.activeAccount?.account_type === 'personal') {
+      state.usedToday = Math.max(0, state.usedToday - trade.riskZAR);
+    }
     trade.outcome = 'not_triggered';
-    refreshBudgetStatus();
-    renderJournal();
-    renderCalendar();
-    saveUserData();
-    alert('⏭️ Trade marked as Not Triggered. Daily budget has been restored.');
+    refreshBudgetStatus(); renderJournal(); renderCalendar();
+    alert('⏭️ Trade marked as Not Triggered. Daily budget restored.');
     return;
   }
 
   trade.outcome = result;
-  if (result === 'win') state.weeklyWallet += trade.riskZAR + trade.profitZAR;
-  refreshBudgetStatus();
-  renderJournal();
-  renderCalendar();
-  saveUserData();
+  if (result === 'win') {
+    state.weeklyWallet += trade.riskZAR + trade.profitZAR;
+    // Persist wallet to trading_accounts table
+    if (state.activeAccount) {
+      await supabase.from('trading_accounts')
+        .update({ weekly_wallet: state.weeklyWallet })
+        .eq('id', state.activeAccount.id);
+    }
+  }
+  refreshBudgetStatus(); renderJournal(); renderCalendar();
   alert(result === 'win'
-    ? '🏆 Win recorded! +' + fmt(trade.riskZAR + trade.profitZAR) + ' added to your Weekly Wallet.'
-    : '📉 Loss recorded. ' + fmt(trade.riskZAR) + ' deducted.');
+    ? '🏆 Win! +' + fmt(trade.riskZAR + trade.profitZAR) + ' added to wallet.'
+    : '📉 Loss recorded.');
 }
 
 function attachUrls() {

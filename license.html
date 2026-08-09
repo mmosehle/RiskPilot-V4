@@ -350,7 +350,7 @@
       }, { onConflict: 'user_id' });
 
     showAlert('key-success', '✅ License activated! Welcome to RiskPilot. Redirecting…');
-    setTimeout(() => goTo('dashboard.html'), 1500);
+    setTimeout(() => goTo('accounts.html'), 1500);
   }
 
   /* ── SIGN OUT ── */
@@ -368,7 +368,7 @@
       .select('license_valid')
       .eq('user_id', data.session.user.id)
       .single();
-    if (profile?.license_valid === true) { goTo('dashboard.html'); }
+    if (profile?.license_valid === true) { goTo('accounts.html'); }
   })();
 
   // Allow Enter key

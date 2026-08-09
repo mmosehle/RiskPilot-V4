@@ -75,7 +75,7 @@
             .single()
             .then(function (res) {
               var licensed = res.data && res.data.license_valid === true;
-              go(licensed ? 'dashboard.html' : 'license.html');
+              go(licensed ? 'accounts.html' : 'license.html');
             });
         })
         .catch(function (err) {
