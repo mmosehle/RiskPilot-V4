@@ -301,6 +301,15 @@ function goTo(f){window.location.href=base()+f;}
 function S(i){return document.getElementById(i);}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function sym(a){return a&&a.currency==='USD'?'$':'R';}
+var usdZar=18.52; // fallback rate, updated when possible
+function fromZAR(zarAmt, acc){
+  // Convert internally-stored ZAR amount to display currency
+  if(acc&&acc.currency==='USD') return zarAmt/usdZar;
+  return zarAmt;
+}
+function fmtAmt(zarAmt, acc){
+  return sym(acc)+Math.abs(fromZAR(zarAmt,acc)).toFixed(2);
+}
 function openMore(){S('mo-sh').classList.add('open');S('mo-ov').classList.add('open');document.body.style.overflow='hidden';}
 function closeMore(){S('mo-sh').classList.remove('open');S('mo-ov').classList.remove('open');document.body.style.overflow='';}
 
@@ -400,10 +409,11 @@ function renderTrades(){
   b.innerHTML=f.map(function(t){
     var ob=t.outcome==='win'?'bg':t.outcome==='loss'?'br':t.outcome==='not_triggered'?'bk':'ba';
     var ol=t.outcome==='win'?'Win':t.outcome==='loss'?'Loss':t.outcome==='not_triggered'?'N/T':'Pending';
-    var pnl=t.outcome==='win'?parseFloat(t.profit_zar||0):t.outcome==='loss'?-parseFloat(t.risk_amount||0):null;
-    var ps=pnl!==null?'<span style="color:'+(pnl>=0?'var(--green)':'var(--red)')+';font-weight:700">'+(pnl>=0?'+':'')+s+Math.abs(pnl).toFixed(0)+'</span>':'—';
+    var pnlZAR=t.outcome==='win'?parseFloat(t.profit_zar||0):t.outcome==='loss'?-parseFloat(t.risk_amount||0):null;
+    var pnlDisp=pnlZAR!==null?fromZAR(pnlZAR,a):null;
+    var ps=pnlDisp!==null?'<span style="color:'+(pnlDisp>=0?'var(--green)':'var(--red)')+';font-weight:700">'+(pnlDisp>=0?'+':'')+s+Math.abs(pnlDisp).toFixed(2)+'</span>':'—';
     var act=t.outcome==='pending'?'<div class="ja-wrap"><button class="ja ja-w" data-id="'+t.id+'" data-a="win">&#10003;</button><button class="ja ja-l" data-id="'+t.id+'" data-a="loss">&#10007;</button><button class="ja ja-n" data-id="'+t.id+'" data-a="not_triggered">N/T</button></div>':'—';
-    return '<tr><td style="font-weight:600">'+esc(t.instrument||'—')+'</td><td style="font-size:12px;color:var(--text-muted)">'+esc(t.trade_date||'—')+'</td><td><span class="badge '+(t.setup_type==='A'?'bb':'ba')+'">'+(t.setup_type==='A'?'A-Setup':'B-Setup')+'</span></td><td>'+(t.direction==='buy'?'▲':'▼')+'</td><td style="color:var(--gold);font-weight:600">'+parseFloat(t.lot_size||0).toFixed(2)+'</td><td>'+s+parseFloat(t.risk_amount||0).toFixed(0)+'</td><td>'+(t.rr_ratio?'1:'+parseFloat(t.rr_ratio).toFixed(2):'—')+'</td><td><span class="badge '+ob+'">'+ol+'</span></td><td>'+ps+'</td><td>'+act+'</td></tr>';
+    return '<tr><td style="font-weight:600">'+esc(t.instrument||'—')+'</td><td style="font-size:12px;color:var(--text-muted)">'+esc(t.trade_date||'—')+'</td><td><span class="badge '+(t.setup_type==='A'?'bb':'ba')+'">'+(t.setup_type==='A'?'A-Setup':'B-Setup')+'</span></td><td>'+(t.direction==='buy'?'▲':'▼')+'</td><td style="color:var(--gold);font-weight:600">'+parseFloat(t.lot_size||0).toFixed(2)+'</td><td>'+fmtAmt(parseFloat(t.risk_amount||0),a)+'</td><td>'+(t.rr_ratio?'1:'+parseFloat(t.rr_ratio).toFixed(2):'—')+'</td><td><span class="badge '+ob+'">'+ol+'</span></td><td>'+ps+'</td><td>'+act+'</td></tr>';
   }).join('');
   b.querySelectorAll('button[data-a]').forEach(function(btn){btn.addEventListener('click',function(){markT(this.dataset.id,this.dataset.a);});});
 }
