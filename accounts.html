@@ -395,8 +395,8 @@ async function showAcc(id){
 function renderTrades(){
   var a=accs.find(function(x){return x.id===actId;});if(!a)return;
   var s=sym(a),b=S('tb');
-  var f=ttab==='open'?allT.filter(function(t){return t.outcome==='pending'||t.outcome==='not_triggered';}):allT.filter(function(t){return t.outcome==='win'||t.outcome==='loss';});
-  if(!f.length){b.innerHTML='<tr><td colspan="10" class="ec">'+(ttab==='open'?'No open or pending trades.':'No closed trades yet.')+'</td></tr>';return;}
+  var f=ttab==='open'?allT.filter(function(t){return t.outcome==='pending';}):allT.filter(function(t){return t.outcome==='win'||t.outcome==='loss'||t.outcome==='not_triggered';});
+  if(!f.length){b.innerHTML='<tr><td colspan="10" class="ec">'+(ttab==='open'?'No pending trades.':'No closed trades yet.')+'</td></tr>';return;}
   b.innerHTML=f.map(function(t){
     var ob=t.outcome==='win'?'bg':t.outcome==='loss'?'br':t.outcome==='not_triggered'?'bk':'ba';
     var ol=t.outcome==='win'?'Win':t.outcome==='loss'?'Loss':t.outcome==='not_triggered'?'N/T':'Pending';
@@ -413,26 +413,27 @@ async function markT(id,outcome){
   await supabase.from('trade_journal').update({outcome:outcome}).eq('id',id);
   var a=accs.find(function(x){return x.id===t.account_id;});
   if(a){
-    var risk=parseFloat(t.risk_amount||0);
-    var profit=parseFloat(t.profit_zar||0);
+    // risk_amount and profit_zar are ALWAYS stored in ZAR internally
+    // For USD prop accounts we must convert back to USD before updating current_balance
+    var riskZAR=parseFloat(t.risk_amount||0);
+    var profitZAR=parseFloat(t.profit_zar||0);
+    var usdZar=18.52; // fallback rate
     if(a.account_type==='prop'){
-      // Prop: track current_balance changes
       var cur=parseFloat(a.current_balance||a.account_size||0);
-      if(outcome==='win') cur=cur+profit;
-      else if(outcome==='loss') cur=cur-risk;
+      var delta=0;
+      if(outcome==='win') delta=a.currency==='USD'?profitZAR/usdZar:profitZAR;
+      else if(outcome==='loss') delta=a.currency==='USD'?-(riskZAR/usdZar):-riskZAR;
+      cur=cur+delta;
+      cur=Math.round(cur*100)/100;
       await supabase.from('trading_accounts').update({current_balance:cur}).eq('id',a.id);
       a.current_balance=cur;
     } else {
-      // Personal: wallet = sum of (risk+profit) on wins only; used_today tracked live
+      // Personal: wallet increases on win by (risk + profit) in ZAR
       if(outcome==='win'){
-        var nw=parseFloat(a.weekly_wallet||0)+risk+profit;
+        var nw=parseFloat(a.weekly_wallet||0)+riskZAR+profitZAR;
         await supabase.from('trading_accounts').update({weekly_wallet:nw}).eq('id',a.id);
         a.weekly_wallet=nw;
       }
-      // on loss/NT: wallet stays same, used_today is recalculated from DB on next load
-    }
-    if(outcome==='not_triggered'){
-      // refund — no balance change needed, recalculate on load
     }
   }
   await load();

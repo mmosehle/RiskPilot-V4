@@ -335,16 +335,19 @@ function renderJournal(){
 async function markT(id,outcome){
   var t=trades.find(function(x){return x.id===id;});if(!t)return;
   await supabase.from('trade_journal').update({outcome:outcome}).eq('id',id);
-  var risk=parseFloat(t.risk_amount||0),profit=parseFloat(t.profit_zar||0);
+  var riskZAR=parseFloat(t.risk_amount||0),profitZAR=parseFloat(t.profit_zar||0);
+  var usdZar=18.52;
   if(acc.account_type==='prop'){
     var cur=parseFloat(acc.current_balance||acc.account_size||0);
-    if(outcome==='win') cur+=profit;
-    else if(outcome==='loss') cur-=risk;
+    var delta=0;
+    if(outcome==='win') delta=acc.currency==='USD'?profitZAR/usdZar:profitZAR;
+    else if(outcome==='loss') delta=acc.currency==='USD'?-(riskZAR/usdZar):-riskZAR;
+    cur=Math.round((cur+delta)*100)/100;
     await supabase.from('trading_accounts').update({current_balance:cur}).eq('id',acc.id);
     acc.current_balance=cur;
   } else {
     if(outcome==='win'){
-      var nw=parseFloat(acc.weekly_wallet||0)+risk+profit;
+      var nw=parseFloat(acc.weekly_wallet||0)+riskZAR+profitZAR;
       await supabase.from('trading_accounts').update({weekly_wallet:nw}).eq('id',acc.id);
       acc.weekly_wallet=nw;
     }
