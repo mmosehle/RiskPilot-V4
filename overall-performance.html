@@ -121,8 +121,19 @@ function fmtR(n){return 'R '+Math.abs(n||0).toLocaleString('en-ZA',{minimumFract
 })();
 
 var displayCur='ZAR',usdZar=18.52;
-function toZAR(v,cur){return cur==='USD'?v*usdZar:v;}
-function fmtCur(v){return displayCur==='USD'?'$'+(v/usdZar).toFixed(0):'R '+Math.abs(v).toFixed(0);}
+var eqChart=null,ordChart=null;
+
+// All amounts in DB are stored in ZAR (risk_amount, profit_zar).
+// For USD accounts the ZAR values were computed using usdZar at time of logging.
+// Display conversion: ZAR → chosen display currency.
+function toDisplay(zarAmt){
+  if(displayCur==='USD') return zarAmt/usdZar;
+  return zarAmt;
+}
+function fmtCur(zarAmt){
+  var v=toDisplay(Math.abs(zarAmt||0));
+  return displayCur==='USD'?'$'+v.toFixed(2):'R '+v.toFixed(2);
+}
 function toggleCurrency(){
   displayCur=displayCur==='ZAR'?'USD':'ZAR';
   S('cur-toggle-btn').textContent='Show in '+(displayCur==='ZAR'?'USD':'ZAR');
@@ -135,65 +146,85 @@ function renderAll(){
   var wins=settled.filter(function(t){return t.outcome==='win';});
   var wr=settled.length>0?((wins.length/settled.length)*100).toFixed(1)+'%':'—';
 
-  var totPzar=0,totLzar=0;
-  wins.forEach(function(t){var acc=accounts.find(function(a){return a.id===t.account_id;});totPzar+=toZAR(parseFloat(t.profit_zar||0),acc?acc.currency:'ZAR');});
-  settled.filter(function(t){return t.outcome==='loss';}).forEach(function(t){var acc=accounts.find(function(a){return a.id===t.account_id;});totLzar+=toZAR(parseFloat(t.risk_amount||0),acc?acc.currency:'ZAR');});
+  // Totals — everything is already in ZAR in the DB
+  var totPzar=wins.reduce(function(s,t){return s+parseFloat(t.profit_zar||0);},0);
+  var totLzar=settled.filter(function(t){return t.outcome==='loss';}).reduce(function(s,t){return s+parseFloat(t.risk_amount||0);},0);
+  var netZar=totPzar-totLzar;
 
   S('h-total').textContent=settled.length;
   S('h-wr').textContent=wr;
   S('h-profit').textContent=fmtCur(totPzar);
   S('h-loss').textContent=fmtCur(totLzar);
 
-  // Equity curve
+  // Equity curve — rebuild on every renderAll so toggle re-draws in correct currency
+  if(eqChart){eqChart.destroy();eqChart=null;}
   var eq=0,labels=[],data=[];
   settled.forEach(function(t,i){
-    eq+=t.outcome==='win'?parseFloat(t.profit_zar||0):-parseFloat(t.risk_amount||0);
-    labels.push(t.trade_date||('#'+i));
-    data.push(parseFloat(eq.toFixed(2)));
+    var delta=t.outcome==='win'?parseFloat(t.profit_zar||0):-parseFloat(t.risk_amount||0);
+    eq+=delta;
+    labels.push(t.trade_date||('#'+(i+1)));
+    data.push(parseFloat(toDisplay(eq).toFixed(2)));
   });
-  if(data.length){
-    new Chart(document.getElementById('equity-chart'),{
+  var eqCanvas=document.getElementById('equity-chart');
+  if(data.length&&eqCanvas){
+    eqChart=new Chart(eqCanvas,{
       type:'line',
       data:{labels:labels,datasets:[{label:'Equity',data:data,borderColor:'#d4a017',backgroundColor:'rgba(212,160,23,0.08)',fill:true,tension:0.3,pointRadius:2,borderWidth:2}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#4a5270',maxTicksLimit:8,font:{size:10}},grid:{color:'rgba(42,48,72,0.5)'}},y:{ticks:{color:'#4a5270',font:{size:10},callback:function(v){return fmtCur(v);}},grid:{color:'rgba(42,48,72,0.5)'}}}}
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
+        x:{ticks:{color:'#4a5270',maxTicksLimit:8,font:{size:10}},grid:{color:'rgba(42,48,72,0.5)'}},
+        y:{ticks:{color:'#4a5270',font:{size:10},callback:function(v){return fmtCur(v);}},grid:{color:'rgba(42,48,72,0.5)'}}
+      }}
     });
   }
 
-  // Monthly bar
+  // Monthly orders bar — count only, no currency needed
+  if(ordChart){ordChart.destroy();ordChart=null;}
   var monthly={};
   allTrades.forEach(function(t){
-    var m=(t.trade_date||'').slice(0,7);
-    if(!m)return;
+    var m=(t.trade_date||'').slice(0,7);if(!m)return;
     if(!monthly[m])monthly[m]={w:0,l:0};
     if(t.outcome==='win')monthly[m].w++;
     else if(t.outcome==='loss')monthly[m].l++;
   });
   var ml=Object.keys(monthly).sort();
-  if(ml.length){
-    new Chart(document.getElementById('orders-chart'),{
+  var ordCanvas=document.getElementById('orders-chart');
+  if(ml.length&&ordCanvas){
+    ordChart=new Chart(ordCanvas,{
       type:'bar',
       data:{labels:ml,datasets:[
-        {label:'Wins',data:ml.map(function(l){return monthly[l].w;}),backgroundColor:'rgba(34,201,132,0.7)',borderRadius:4},
-        {label:'Losses',data:ml.map(function(l){return monthly[l].l;}),backgroundColor:'rgba(240,80,96,0.7)',borderRadius:4}
+        {label:'Wins',data:ml.map(function(k){return monthly[k].w;}),backgroundColor:'rgba(34,201,132,0.7)',borderRadius:4},
+        {label:'Losses',data:ml.map(function(k){return monthly[k].l;}),backgroundColor:'rgba(240,80,96,0.7)',borderRadius:4}
       ]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7a84a0',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(42,48,72,0.5)'}},y:{ticks:{color:'#4a5270',font:{size:10},stepSize:1},grid:{color:'rgba(42,48,72,0.5)'}}}}
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7a84a0',font:{size:11}}}},scales:{
+        x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(42,48,72,0.5)'}},
+        y:{ticks:{color:'#4a5270',font:{size:10},stepSize:1},grid:{color:'rgba(42,48,72,0.5)'}}
+      }}
     });
   }
 
-  // Per account breakdown
+  // Per account breakdown — re-rendered on every toggle so currency updates
   var ab=S('acc-breakdown');
   if(!accounts.length){ab.innerHTML='<div style="color:var(--text-dim);font-size:13px;text-align:center;padding:2rem">No accounts.</div>';return;}
   ab.innerHTML=accounts.map(function(acc){
     var accTrades=allTrades.filter(function(t){return t.account_id===acc.id;});
     var s2=accTrades.filter(function(t){return t.outcome==='win'||t.outcome==='loss';});
     var w2=s2.filter(function(t){return t.outcome==='win';});
+    var l2=s2.filter(function(t){return t.outcome==='loss';});
     var wr2=s2.length>0?((w2.length/s2.length)*100).toFixed(0)+'%':'—';
-    var p2zarRaw=w2.reduce(function(s,t){return s+toZAR(parseFloat(t.profit_zar||0),acc.currency);},0);
+    // profit_zar and risk_amount are in ZAR regardless of account currency
+    var profZar=w2.reduce(function(sum,t){return sum+parseFloat(t.profit_zar||0);},0);
+    var lossZar=l2.reduce(function(sum,t){return sum+parseFloat(t.risk_amount||0);},0);
+    var netZar2=profZar-lossZar;
     return '<div class="acc-row">'
-      +'<div class="ar-info"><div class="ar-name">'+esc(acc.account_name)+'</div><div class="ar-meta">'+(acc.account_type==='prop'?'Prop Firm':'Personal')+' · '+acc.currency+' · '+s2.length+' trades</div></div>'
+      +'<div class="ar-info">'
+        +'<div class="ar-name">'+esc(acc.account_name)+'</div>'
+        +'<div class="ar-meta">'+(acc.account_type==='prop'?'Prop Firm':'Personal')+' · '+acc.currency+' · '+s2.length+' trade'+(s2.length!==1?'s':'')+'</div>'
+      +'</div>'
       +'<div class="ar-stats">'
-      +'<div class="ar-stat"><div class="ar-stat-lbl">Win Rate</div><div class="ar-stat-val gold">'+wr2+'</div></div>'
-      +'<div class="ar-stat"><div class="ar-stat-lbl">Total Profit</div><div class="ar-stat-val green">'+fmtCur(p2zarRaw)+'</div></div>'
+        +'<div class="ar-stat"><div class="ar-stat-lbl">Win Rate</div><div class="ar-stat-val gold">'+wr2+'</div></div>'
+        +'<div class="ar-stat"><div class="ar-stat-lbl">Profit</div><div class="ar-stat-val green">'+fmtCur(profZar)+'</div></div>'
+        +'<div class="ar-stat"><div class="ar-stat-lbl">Loss</div><div class="ar-stat-val red">'+fmtCur(lossZar)+'</div></div>'
+        +'<div class="ar-stat"><div class="ar-stat-lbl">Net P&L</div><div class="ar-stat-val '+(netZar2>=0?'green':'red')+'">'+fmtCur(netZar2)+'</div></div>'
       +'</div></div>';
   }).join('');
 }
