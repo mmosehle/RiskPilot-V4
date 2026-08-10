@@ -169,6 +169,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <a class="sb-a" href="leaderboard.html"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>Leaderboard</a>
     <a class="sb-a" href="account-setup.html"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Create New Account</a>
     <div class="sb-sec">Community</div>
+    <a class="sb-a" href="trading-news.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg>Trading News</a>
     <a class="sb-a" href="social.html"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Follow Us</a>
   </nav>
   <div class="sb-foot">
@@ -336,13 +337,14 @@ function renderCards(){
   var vis=accs.slice(0,4);
   var html=vis.map(function(a){
     var ip=a.account_type==='prop',s=sym(a),ia=a.id===actId;
-    var w=parseFloat(a.weekly_wallet||0);
+    var dispVal=ip?parseFloat(a.current_balance||a.account_size||0):parseFloat(a.weekly_wallet||0);
+    var subLbl=ip?'Current Balance':'Weekly Wallet';
     var bdg=ip?'<span class="ac-bdg ac-bdg-f">Prop</span>':'<span class="ac-bdg ac-bdg-p">Personal</span>';
     var dot=ia?'<div class="ac-arow"><div class="ac-dot"></div><span class="ac-dlbl">Active</span></div>':'';
     return '<div class="acc-card '+(ia?'on':'')+'" onclick="sel(\''+a.id+'\')">'
       +'<div class="ac-top"><span class="ac-name">'+esc(a.account_name)+'</span>'+bdg+'</div>'
-      +'<div class="ac-wallet">'+s+w.toFixed(0)+'</div>'
-      +'<div class="ac-meta">'+a.currency+' · '+(ip?'Prop':'Personal')+'</div>'+dot+'</div>';
+      +'<div class="ac-wallet">'+s+dispVal.toFixed(0)+'</div>'
+      +'<div class="ac-meta">'+a.currency+' · '+subLbl+'</div>'+dot+'</div>';
   }).join('');
   if(accs.length>4)html+='<div class="more-card" onclick="goTo(\'more-accounts.html\')"><div class="ci">···</div><div class="ct">All Accounts<br/>('+(accs.length-4)+' more)</div></div>';
   row.innerHTML=html+add;
