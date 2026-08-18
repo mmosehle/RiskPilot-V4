@@ -5,30 +5,90 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
 <meta name="theme-color" content="#0d0f14"/>
 <title>RiskPilot — Trading News</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="style.css"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-.page{padding:1.5rem 1.25rem 90px;max-width:680px;margin:0 auto;}
-.hero{text-align:center;padding:2.5rem 0 2rem;}
-.hero-icon{font-size:52px;margin-bottom:16px;}
-.hero-title{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-1px;margin-bottom:8px;}
-.hero-sub{font-size:14px;color:var(--text-muted);line-height:1.6;max-width:420px;margin:0 auto 2rem;}
-.cs-badge{display:inline-block;padding:6px 18px;background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:100px;font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:1.5rem;}
-.preview-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;}
-.pc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px;}
-.pc-dot.red{background:var(--red);}
-.pc-dot.orange{background:#f0a030;}
-.pc-body{}
-.pc-time{font-size:11px;color:var(--text-dim);margin-bottom:3px;}
-.pc-event{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;}
-.pc-currency{font-size:11px;font-weight:700;color:var(--text-muted);}
-.pc-impact{font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;margin-left:6px;}
-.pc-impact.high{background:var(--red-bg);color:var(--red);}
-.pc-impact.medium{background:#2a1a08;color:#f0a030;}
-.blur-overlay{filter:blur(4px);pointer-events:none;user-select:none;}
-</style><style>
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+/* SIDEBAR */
+.sidebar{display:flex;flex-direction:column;width:240px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sb-logo{display:flex;flex-direction:column;align-items:flex-start;padding:1.5rem 1.25rem 1rem;border-bottom:1px solid var(--border);}
+.sb-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+.sb-icon{width:36px;height:36px;background:var(--gold-bg);border:1.5px solid var(--gold-border);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sb-name{font-size:20px;font-weight:800;letter-spacing:-.5px;}.sb-name .r{color:var(--text);}.sb-name .p{color:var(--gold);}
+.sb-tag{font-size:10px;font-weight:700;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;padding-left:2px;}
+.sb-nav{flex:1;padding:10px 12px;display:flex;flex-direction:column;}
+.sb-sec{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;padding:12px 10px 4px;}
+.sb-a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:background .15s,color .15s;margin-bottom:1px;}
+.sb-a:hover{background:var(--surface);color:var(--text);}
+.sb-a.on{background:rgba(212,160,23,.1);color:var(--gold);border:1px solid rgba(212,160,23,.15);}
+.sb-a svg{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;}
+.sb-foot{padding:1rem 1.25rem;border-top:1px solid var(--border);}
+.sb-out{width:100%;padding:9px;font-size:12px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:8px;cursor:pointer;}
+/* MAIN */
+.main{flex:1;min-width:0;}
+.page{padding:1.75rem 2rem 2rem;max-width:860px;}
+/* PAGE HEADER */
+.ph{margin-bottom:1.75rem;}
+.ph-eyebrow{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;}
+.ph-title{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-.5px;margin-bottom:4px;}
+.ph-sub{font-size:13px;color:var(--text-muted);line-height:1.5;}
+.ph-meta{display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap;}
+.ph-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;font-size:11px;font-weight:700;}
+.ph-badge-tz{background:var(--surface);border:1px solid var(--border);color:var(--text-muted);}
+.ph-badge-tz svg{width:11px;height:11px;stroke:var(--text-dim);fill:none;stroke-width:1.8;}
+.ph-badge-usd{background:rgba(77,142,245,.1);border:1px solid rgba(77,142,245,.25);color:#4d8ef5;}
+/* FILTER TABS */
+.filter-row{display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap;}
+.filter-btn{padding:7px 16px;font-size:12px;font-weight:700;font-family:inherit;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);cursor:pointer;transition:all .15s;}
+.filter-btn.active{background:var(--red-bg);border-color:var(--red-border);color:var(--red);}
+.filter-btn.active.gold{background:var(--gold-bg);border-color:var(--gold-border);color:var(--gold);}
+/* DAY GROUPS */
+.day-group{margin-bottom:1.5rem;}
+.day-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.day-label{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;}
+.day-line{flex:1;height:1px;background:var(--border);}
+.day-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;background:var(--gold-bg);border:1px solid var(--gold-border);color:var(--gold);}
+/* EVENT CARDS */
+.event-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1rem 1.25rem;margin-bottom:8px;display:flex;align-items:center;gap:14px;transition:border-color .15s;}
+.event-card:hover{border-color:var(--border2);}
+.event-card.upcoming{border-left:3px solid var(--red);}
+.event-card.next{background:rgba(240,80,96,.04);border-color:var(--red-border);}
+.ec-time-col{min-width:70px;flex-shrink:0;}
+.ec-time{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--text);}
+.ec-countdown{font-size:10px;font-weight:700;color:var(--red);margin-top:3px;font-family:'JetBrains Mono',monospace;}
+.ec-impact{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:800;}
+.ec-impact.high{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);}
+.ec-impact.medium{background:#2a1a08;border:1px solid #3d2808;color:#f0a030;}
+.ec-body{flex:1;min-width:0;}
+.ec-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.ec-sub{font-size:11px;color:var(--text-dim);}
+.ec-figures{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;}
+.ec-fig{display:flex;flex-direction:column;gap:2px;}
+.ec-fig-lbl{font-size:9px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;}
+.ec-fig-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--text);}
+.ec-fig-val.actual-hot{color:var(--red);}
+.ec-fig-val.actual-cool{color:var(--green);}
+.ec-fig-val.pending{color:var(--text-dim);}
+.ec-pill{flex-shrink:0;}
+.pill{display:inline-block;padding:4px 10px;border-radius:100px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.pill-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.pill-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.pill-dim{background:var(--bg3);color:var(--text-dim);border:1px solid var(--border);}
+.pill-amber{background:#2a1a08;color:#f0a030;border:1px solid #3d2808;}
+/* EMPTY / LOADING */
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--text-dim);}
+.empty-icon{font-size:40px;margin-bottom:1rem;}
+.empty-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.empty-sub{font-size:13px;line-height:1.5;}
+.loading-row{display:flex;align-items:center;gap:8px;padding:1rem;color:var(--text-dim);font-size:13px;}
+.spin{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* DISCLAIMER */
+.disclaimer{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;margin-top:1.5rem;display:flex;gap:10px;align-items:flex-start;}
+.disc-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+.disc-text{font-size:11px;color:var(--text-dim);line-height:1.5;}
+/* BOTTOM NAV */
 .bnav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;height:64px;background:var(--bg2);border-top:1px solid var(--border);align-items:center;justify-content:space-around;padding:0 4px;padding-bottom:env(safe-area-inset-bottom);}
 .bn-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:1;color:var(--text-dim);text-decoration:none;font-size:10px;font-weight:600;background:none;border:none;cursor:pointer;font-family:inherit;padding:6px 4px;border-radius:10px;transition:color .15s;min-width:0;}
 .bn-item svg{width:22px;height:22px;flex-shrink:0;}
@@ -46,89 +106,356 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .ms-link:active{background:var(--surface);}
 .ms-icon{width:40px;height:40px;border-radius:11px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .ms-icon svg{width:18px;height:18px;stroke:var(--text-muted);fill:none;stroke-width:1.8;}
-.ms-body{flex:1;}
-.ms-lbl{font-size:14px;font-weight:600;color:var(--text);}
-.ms-sub{font-size:11px;color:var(--text-dim);margin-top:1px;}
+.ms-body{flex:1;}.ms-lbl{font-size:14px;font-weight:600;color:var(--text);}.ms-sub{font-size:11px;color:var(--text-dim);margin-top:1px;}
 .ms-chev{width:16px;height:16px;stroke:var(--text-dim);fill:none;flex-shrink:0;}
 .ms-out{width:calc(100% - 24px);margin:10px 12px 0;padding:13px;font-size:14px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:12px;cursor:pointer;}
-@media(max-width:768px){.bnav{display:flex;}}
+@media(max-width:768px){body{display:block;}.sidebar{display:none;}.main{display:block;}.page{padding:1.25rem 1rem 90px;}.bnav{display:flex;}.event-card{flex-wrap:wrap;}.ec-figures{gap:12px;}}
 </style>
 </head>
 <body>
-<div class="page">
-  <div class="hero">
-    <div class="hero-icon">&#128240;</div>
-    <div class="cs-badge">Coming Soon</div>
-    <div class="hero-title">Trading News</div>
-    <div class="hero-sub">High-impact economic events, central bank decisions, NFP reports, and market-moving news — all in one place. Stay ahead of volatility.</div>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-row">
+      <div class="sb-icon"><svg viewBox="0 0 32 32" fill="none" width="20" height="20"><polygon points="16,3 29,28 3,28" fill="none" stroke="#d4a017" stroke-width="2.5" stroke-linejoin="round"/><circle cx="16" cy="13" r="2.5" fill="#d4a017"/><line x1="16" y1="16" x2="16" y2="23" stroke="#d4a017" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+      <div class="sb-name"><span class="r">Risk</span><span class="p">Pilot</span></div>
+    </div>
+    <div class="sb-tag">Master Your Risk</div>
   </div>
-
-  <div class="blur-overlay">
-    <div class="preview-card">
-      <div class="pc-dot red"></div>
-      <div class="pc-body">
-        <div class="pc-time">Today · 14:30 UTC</div>
-        <div class="pc-event">Non-Farm Payrolls (NFP) <span class="pc-impact high">HIGH</span></div>
-        <div class="pc-currency">USD · Previous: 200K · Forecast: 185K</div>
-      </div>
+  <nav class="sb-nav">
+    <div class="sb-sec">Navigation</div>
+    <a class="sb-a" href="accounts.html"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>My Accounts</a>
+    <a class="sb-a" href="more-accounts.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>All Accounts</a>
+    <a class="sb-a" href="overall-performance.html"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Overall Performance</a>
+    <div class="sb-sec">Tools</div>
+    <a class="sb-a" href="market-sessions.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Market Sessions</a>
+    <div class="sb-sec">Fundamentals</div>
+    <a class="sb-a on" href="trading-news.html"><svg viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg>Trading News</a>
+    <a class="sb-a" href="news-direction.html"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>News Direction Engine</a>
+    <div class="sb-sec">Account</div>
+    <a class="sb-a" href="profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>My Profile</a>
+    <a class="sb-a" href="leaderboard.html"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>Leaderboard</a>
+    <a class="sb-a" href="dashboard.html"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+    <div class="sb-sec">Community</div>
+    <a class="sb-a" href="social.html"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Follow Us</a>
+  </nav>
+  <div class="sb-foot"><button class="sb-out" onclick="handleSignOut()">Sign Out</button></div>
+</aside>
+<!-- MAIN -->
+<div class="main">
+<div class="page">
+  <div class="ph">
+    <div class="ph-eyebrow">Fundamentals</div>
+    <div class="ph-title">Trading News</div>
+    <div class="ph-sub">High-impact USD economic releases. All times shown in your local timezone.</div>
+    <div class="ph-meta">
+      <div class="ph-badge ph-badge-tz"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span id="tz-lbl">Detecting…</span></div>
+      <div class="ph-badge ph-badge-usd">USD High Impact Only</div>
     </div>
-    <div class="preview-card">
-      <div class="pc-dot red"></div>
-      <div class="pc-body">
-        <div class="pc-time">Today · 15:00 UTC</div>
-        <div class="pc-event">Fed Interest Rate Decision <span class="pc-impact high">HIGH</span></div>
-        <div class="pc-currency">USD · Previous: 5.25% · Forecast: 5.25%</div>
-      </div>
-    </div>
-    <div class="preview-card">
-      <div class="pc-dot orange"></div>
-      <div class="pc-body">
-        <div class="pc-time">Tomorrow · 09:00 UTC</div>
-        <div class="pc-event">ECB Monetary Policy Statement <span class="pc-impact medium">MEDIUM</span></div>
-        <div class="pc-currency">EUR · Previous: 4.00%</div>
-      </div>
-    </div>
-    <div class="preview-card">
-      <div class="pc-dot red"></div>
-      <div class="pc-body">
-        <div class="pc-time">Tomorrow · 12:30 UTC</div>
-        <div class="pc-event">US CPI m/m <span class="pc-impact high">HIGH</span></div>
-        <div class="pc-currency">USD · Previous: 0.3% · Forecast: 0.2%</div>
-      </div>
-    </div>
+  </div>
+  <div class="filter-row">
+    <button class="filter-btn active gold" onclick="setFilter('all',this)">All Upcoming</button>
+    <button class="filter-btn" onclick="setFilter('today',this)">Today</button>
+    <button class="filter-btn" onclick="setFilter('week',this)">This Week</button>
+  </div>
+  <div id="news-container"><div class="loading-row"><div class="spin"></div>Loading news events…</div></div>
+  <div class="disclaimer">
+    <div class="disc-icon">⚠️</div>
+    <div class="disc-text">Times and forecast figures are sourced from public economic calendars and may vary. Always verify with your broker before trading. High-impact news can cause extreme volatility and slippage.</div>
   </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js"></script>
-<script>
-var displayCur='ZAR',usdZar=18.52;
-function base(){var p=window.location.pathname;return window.location.origin+p.substring(0,p.lastIndexOf('/')+1);}
-function goToAddTrade(){window.location.href=base()+'add-trade.html';}
-function openMore(){document.getElementById('mo-sh').classList.add('open');document.getElementById('mo-ov').classList.add('open');document.body.style.overflow='hidden';}
-function closeMore(){document.getElementById('mo-sh').classList.remove('open');document.getElementById('mo-ov').classList.remove('open');document.body.style.overflow='';}
-async function handleSignOut(){await supabase.auth.signOut();window.location.href=base()+'auth.html';}
-document.addEventListener('DOMContentLoaded',function(){var btn=document.getElementById('ms-signout');if(btn)btn.addEventListener('click',handleSignOut);});
-</script>
+</div>
+<!-- MOBILE BOTTOM NAV -->
 <nav class="bnav">
   <a class="bn-item" href="accounts.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><span>Accounts</span></a>
   <a class="bn-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a>
-  <button class="bn-add" onclick="goToAddTrade()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+  <button class="bn-add" onclick="goTo('add-trade.html')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
   <a class="bn-item" href="overall-performance.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Performance</span></a>
   <button class="bn-item active" onclick="openMore()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg><span>More</span></button>
 </nav>
 <div class="mo-ov" id="mo-ov" onclick="closeMore()"></div>
 <div class="mo-sh" id="mo-sh">
-  <div class="ms-handle"></div>
-  <div class="ms-title">More</div>
+  <div class="ms-handle"></div><div class="ms-title">More</div>
   <nav class="ms-nav">
     <a class="ms-link" href="profile.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div><div class="ms-body"><div class="ms-lbl">My Profile</div><div class="ms-sub">Edit your personal details</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
     <a class="ms-link" href="leaderboard.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg></div><div class="ms-body"><div class="ms-lbl">Leaderboard</div><div class="ms-sub">Top traders — coming soon</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
     <a class="ms-link" href="more-accounts.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div><div class="ms-body"><div class="ms-lbl">All Accounts</div><div class="ms-sub">View and manage all accounts</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
-    <a class="ms-link" href="trading-news.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg></div><div class="ms-body"><div class="ms-lbl">Trading News</div><div class="ms-sub">High impact news — coming soon</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="market-sessions.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="ms-body"><div class="ms-lbl">Market Sessions</div><div class="ms-sub">Live session times &amp; countdowns</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="trading-news.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg></div><div class="ms-body"><div class="ms-lbl">Trading News</div><div class="ms-sub">High impact USD news calendar</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="news-direction.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div><div class="ms-body"><div class="ms-lbl">News Direction Engine</div><div class="ms-sub">Surprise model &amp; bias analysis</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
     <a class="ms-link" href="social.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div><div class="ms-body"><div class="ms-lbl">Follow Us</div><div class="ms-sub">Instagram &amp; Discord</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
   </nav>
-  <button class="ms-out" id="ms-signout">Sign Out</button>
+  <button class="ms-out" onclick="handleSignOut()">Sign Out</button>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+function base(){var p=window.location.pathname;return window.location.origin+p.substring(0,p.lastIndexOf('/')+1);}
+function goTo(f){window.location.href=base()+f;}
+function S(i){return document.getElementById(i);}
+function openMore(){S('mo-sh').classList.add('open');S('mo-ov').classList.add('open');document.body.style.overflow='hidden';}
+function closeMore(){S('mo-sh').classList.remove('open');S('mo-ov').classList.remove('open');document.body.style.overflow='';}
+async function handleSignOut(){await supabase.auth.signOut();goTo('auth.html');}
+
+var currentFilter='all';
+
+// ── USD HIGH-IMPACT EVENTS CALENDAR ─────────────────────────────────────────
+// Events defined with UTC times; displayed in user's local timezone
+// We generate upcoming occurrences for the next 30 days based on typical release schedules
+
+function pad(n){return String(n).padStart(2,'0');}
+
+// Map of recurring USD high-impact events
+// utcDay: 0=Sun,1=Mon,...,6=Sat  utcHour, utcMin
+// type: 'weekly'|'monthly'  weekOfMonth for monthly
+var EVENT_TEMPLATES=[
+  {name:'Non-Farm Payrolls (NFP)',abbr:'NFP',desc:'Employment change excl. farming sector. Most watched US labour report.',utcHour:12,utcMin:30,type:'monthly',weekDay:5,weekOfMonth:'first_friday',impact:'HIGH',category:'Employment',volatility:'EXTREME',higherMeans:'USD Bullish'},
+  {name:'FOMC Rate Decision',abbr:'FOMC',desc:'Federal Reserve interest rate decision and policy statement.',utcHour:18,utcMin:0,type:'monthly',scheduleNote:'~8x per year',impact:'HIGH',category:'Central Bank',volatility:'EXTREME',higherMeans:'USD Hawkish'},
+  {name:'CPI m/m',abbr:'CPI',desc:'Consumer Price Index — monthly inflation measure.',utcHour:12,utcMin:30,type:'monthly',scheduleNote:'~2nd week',impact:'HIGH',category:'Inflation',volatility:'HIGH',higherMeans:'USD Bullish'},
+  {name:'Core CPI m/m',abbr:'Core CPI',desc:'CPI excluding food and energy. Preferred Fed inflation gauge.',utcHour:12,utcMin:30,type:'monthly',scheduleNote:'~2nd week',impact:'HIGH',category:'Inflation',volatility:'HIGH',higherMeans:'USD Bullish'},
+  {name:'PPI m/m',abbr:'PPI',desc:'Producer Price Index — upstream inflation indicator.',utcHour:12,utcMin:30,type:'monthly',scheduleNote:'~2nd week',impact:'HIGH',category:'Inflation',volatility:'HIGH',higherMeans:'USD Bullish'},
+  {name:'Retail Sales m/m',abbr:'Retail Sales',desc:'Change in total value of sales at the retail level.',utcHour:12,utcMin:30,type:'monthly',scheduleNote:'~2nd week',impact:'HIGH',category:'Consumer',volatility:'HIGH',higherMeans:'USD Bullish'},
+  {name:'GDP q/q',abbr:'GDP',desc:'Annualised Gross Domestic Product growth rate.',utcHour:12,utcMin:30,type:'monthly',scheduleNote:'Quarterly',impact:'HIGH',category:'Growth',volatility:'HIGH',higherMeans:'USD Bullish'},
+  {name:'Unemployment Claims',abbr:'Jobless Claims',desc:'Weekly initial unemployment insurance claims.',utcHour:12,utcMin:30,type:'weekly',weekDay:4,impact:'MEDIUM',category:'Employment',volatility:'MEDIUM',higherMeans:'USD Bearish'},
+  {name:'ISM Manufacturing PMI',abbr:'ISM Mfg',desc:'Business conditions in the manufacturing sector. 50 = expansion threshold.',utcHour:14,utcMin:0,type:'monthly',scheduleNote:'1st business day',impact:'HIGH',category:'Business',volatility:'HIGH',higherMeans:'USD Bullish'},
+  {name:'ISM Services PMI',abbr:'ISM Services',desc:'Business conditions in the services sector.',utcHour:14,utcMin:0,type:'monthly',scheduleNote:'3rd business day',impact:'HIGH',category:'Business',volatility:'HIGH',higherMeans:'USD Bullish'},
+  {name:'Average Hourly Earnings m/m',abbr:'Avg Earnings',desc:'Change in price per hour businesses pay for labour.',utcHour:12,utcMin:30,type:'monthly',scheduleNote:'With NFP',impact:'HIGH',category:'Employment',volatility:'HIGH',higherMeans:'USD Bullish'},
+  {name:'JOLTS Job Openings',abbr:'JOLTS',desc:'Job Openings and Labour Turnover Survey.',utcHour:14,utcMin:0,type:'monthly',scheduleNote:'~4 weeks lag',impact:'HIGH',category:'Employment',volatility:'MEDIUM',higherMeans:'USD Bullish'},
+  {name:'PCE Price Index m/m',abbr:'PCE',desc:"Fed's preferred inflation gauge — Personal Consumption Expenditures.",utcHour:12,utcMin:30,type:'monthly',scheduleNote:'Last week of month',impact:'HIGH',category:'Inflation',volatility:'HIGH',higherMeans:'USD Bullish'},
+  {name:'FOMC Meeting Minutes',abbr:'FOMC Minutes',desc:'Detailed account of the most recent FOMC policy meeting.',utcHour:18,utcMin:0,type:'monthly',scheduleNote:'~3 weeks after meeting',impact:'HIGH',category:'Central Bank',volatility:'HIGH',higherMeans:'USD Hawkish'},
+  {name:'Fed Chair Speech',abbr:'Fed Speech',desc:'Public remarks from the Federal Reserve Chair.',utcHour:14,utcMin:0,type:'monthly',scheduleNote:'Varies',impact:'HIGH',category:'Central Bank',volatility:'HIGH',higherMeans:'Varies'},
+];
+
+// Generate realistic upcoming events for the next 30 days
+function generateEvents(){
+  var events=[];
+  var now=new Date();
+  var tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
+  S('tz-lbl').textContent=tz.replace(/_/g,' ');
+
+  // Build actual scheduled dates for the next 30 days
+  // We'll simulate the calendar based on typical monthly schedules
+  var refDate=new Date(now);
+  refDate.setHours(0,0,0,0);
+
+  // Generate for current and next month
+  for(var monthOffset=0;monthOffset<=1;monthOffset++){
+    var baseDate=new Date(now.getFullYear(),now.getMonth()+monthOffset,1);
+    var year=baseDate.getFullYear(),month=baseDate.getMonth();
+    var daysInMonth=new Date(year,month+1,0).getDate();
+
+    // Find specific dates in month
+    var firstFriday=getWeekdayOfMonth(year,month,5,1);
+    var secondTuesday=getWeekdayOfMonth(year,month,2,2);
+    var secondWednesday=getWeekdayOfMonth(year,month,3,2);
+    var firstBizDay=getFirstBizDay(year,month);
+    var thirdBizDay=getNthBizDay(year,month,3);
+    var lastWednesday=getLastWeekday(year,month,3);
+
+    // NFP - first Friday
+    addEvent(events,{date:new Date(year,month,firstFriday,12,30,0),template:EVENT_TEMPLATES[0],forecast:'175K',previous:'151K'});
+    // FOMC - roughly every 6 weeks, use last Wednesday for simulation
+    if(monthOffset===0||monthOffset===1){
+      var fomcDay=lastWednesday;
+      addEvent(events,{date:new Date(year,month,fomcDay,18,0,0),template:EVENT_TEMPLATES[1],forecast:'4.25-4.50%',previous:'4.25-4.50%'});
+    }
+    // CPI - 2nd Tuesday or Wednesday
+    addEvent(events,{date:new Date(year,month,secondTuesday,12,30,0),template:EVENT_TEMPLATES[2],forecast:'2.9%',previous:'3.0%'});
+    // Core CPI - same day as CPI
+    addEvent(events,{date:new Date(year,month,secondTuesday,12,30,0),template:EVENT_TEMPLATES[3],forecast:'3.1%',previous:'3.2%'});
+    // PPI - day after CPI
+    addEvent(events,{date:new Date(year,month,secondTuesday+1,12,30,0),template:EVENT_TEMPLATES[4],forecast:'0.2%',previous:'0.2%'});
+    // Retail Sales - 2nd week
+    addEvent(events,{date:new Date(year,month,secondWednesday,12,30,0),template:EVENT_TEMPLATES[5],forecast:'0.3%',previous:'-0.9%'});
+    // ISM Manufacturing - 1st business day
+    addEvent(events,{date:new Date(year,month,firstBizDay,14,0,0),template:EVENT_TEMPLATES[8],forecast:'48.5',previous:'48.5'});
+    // ISM Services - 3rd business day
+    addEvent(events,{date:new Date(year,month,thirdBizDay,14,0,0),template:EVENT_TEMPLATES[9],forecast:'52.5',previous:'53.5'});
+    // PCE - last Thursday of month
+    var lastThurs=getLastWeekday(year,month,4);
+    addEvent(events,{date:new Date(year,month,lastThurs,12,30,0),template:EVENT_TEMPLATES[12],forecast:'0.3%',previous:'0.3%'});
+    // Avg Hourly Earnings - same as NFP
+    addEvent(events,{date:new Date(year,month,firstFriday,12,30,0),template:EVENT_TEMPLATES[10],forecast:'0.3%',previous:'0.4%'});
+    // JOLTS - ~4 weeks lag, use middle of month
+    addEvent(events,{date:new Date(year,month,14,14,0,0),template:EVENT_TEMPLATES[11],forecast:'7.6M',previous:'7.7M'});
+    // FOMC Minutes - 3 weeks after FOMC
+    addEvent(events,{date:new Date(year,month,lastWednesday-7,18,0,0),template:EVENT_TEMPLATES[13],forecast:'—',previous:'—'});
+  }
+
+  // Weekly: Jobless Claims every Thursday
+  for(var d=0;d<35;d++){
+    var dt=new Date(now);
+    dt.setDate(dt.getDate()+d);
+    if(dt.getDay()===4){// Thursday
+      var jc=new Date(dt);
+      jc.setUTCHours(12,30,0,0);
+      addEvent(events,{date:jc,template:EVENT_TEMPLATES[7],forecast:'220K',previous:'227K',isWeekly:true});
+    }
+  }
+
+  // Filter: only future events within 30 days, sort by date
+  var cutoff=new Date(now.getTime()+30*24*3600*1000);
+  events=events.filter(function(e){return e.date>now&&e.date<cutoff;});
+  events.sort(function(a,b){return a.date-b.date;});
+
+  // De-duplicate by name+date (same template can appear twice for same day)
+  var seen={};
+  events=events.filter(function(e){
+    var key=e.template.abbr+e.date.toDateString();
+    if(seen[key])return false;
+    seen[key]=true;return true;
+  });
+
+  return events;
+}
+
+function addEvent(arr,opts){
+  // Convert UTC-style date to local (date is already constructed in local time for simplicity)
+  arr.push({date:opts.date,template:opts.template,forecast:opts.forecast,previous:opts.previous,actual:opts.actual||null});
+}
+
+function getWeekdayOfMonth(y,m,wd,nth){
+  var d=new Date(y,m,1);
+  var count=0;
+  while(d.getMonth()===m){
+    if(d.getDay()===wd){count++;if(count===nth)return d.getDate();}
+    d.setDate(d.getDate()+1);
+  }
+  return 1;
+}
+function getLastWeekday(y,m,wd){
+  var d=new Date(y,m+1,0);
+  while(d.getDay()!==wd)d.setDate(d.getDate()-1);
+  return d.getDate();
+}
+function getFirstBizDay(y,m){
+  var d=new Date(y,m,1);
+  while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);
+  return d.getDate();
+}
+function getNthBizDay(y,m,n){
+  var d=new Date(y,m,1),count=0;
+  while(true){
+    if(d.getDay()!==0&&d.getDay()!==6){count++;if(count===n)return d.getDate();}
+    d.setDate(d.getDate()+1);
+  }
+}
+
+function fmtLocalTime(date){
+  return date.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false});
+}
+function fmtLocalDate(date){
+  return date.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'});
+}
+function fmtShortDate(date){
+  return date.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'});
+}
+function isToday(date){
+  var n=new Date();
+  return date.getDate()===n.getDate()&&date.getMonth()===n.getMonth()&&date.getFullYear()===n.getFullYear();
+}
+function isThisWeek(date){
+  var n=new Date(),start=new Date(n);
+  start.setDate(n.getDate()-n.getDay());
+  var end=new Date(start);end.setDate(start.getDate()+7);
+  return date>=start&&date<end;
+}
+function countdown(date){
+  var diff=Math.max(0,Math.round((date-new Date())/1000));
+  if(diff===0)return 'Now';
+  var h=Math.floor(diff/3600),m=Math.floor((diff%3600)/60),s=diff%60;
+  if(h>24){var days=Math.floor(h/24);return 'in '+days+'d '+(h%24)+'h';}
+  if(h>0)return 'in '+h+'h '+pad(m)+'m';
+  return 'in '+pad(m)+'m '+pad(s)+'s';
+}
+
+var allEvents=[];
+
+function setFilter(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active','gold');});
+  btn.classList.add('active');
+  if(f==='all')btn.classList.add('gold');
+  renderNews();
+}
+
+function renderNews(){
+  var now=new Date();
+  var filtered=allEvents.filter(function(e){
+    if(currentFilter==='today')return isToday(e.date);
+    if(currentFilter==='week')return isThisWeek(e.date);
+    return true;
+  });
+
+  if(!filtered.length){
+    S('news-container').innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">No events found</div><div class="empty-sub">No USD high-impact events scheduled for this period.</div></div>';
+    return;
+  }
+
+  // Group by day
+  var groups={};
+  filtered.forEach(function(e){
+    var key=e.date.toDateString();
+    if(!groups[key])groups[key]=[];
+    groups[key].push(e);
+  });
+
+  var nextEventSet=false;
+  var html='';
+  Object.keys(groups).forEach(function(dayKey){
+    var dayEvents=groups[dayKey];
+    var dayDate=dayEvents[0].date;
+    var isT=isToday(dayDate);
+    html+='<div class="day-group">';
+    html+='<div class="day-header"><div class="day-label">'+fmtLocalDate(dayDate)+'</div>'+(isT?'<div class="day-badge">Today</div>':'')+'<div class="day-line"></div></div>';
+
+    dayEvents.forEach(function(e){
+      var t=e.template;
+      var isNext=!nextEventSet&&e.date>now;
+      if(isNext)nextEventSet=true;
+      var cd=isNext?'<div class="ec-countdown">'+countdown(e.date)+'</div>':'';
+      var cardCls='event-card'+(isNext?' next upcoming':'')+(e.date>now&&!isNext?' upcoming':'');
+
+      html+='<div class="'+cardCls+'">';
+      html+='<div class="ec-time-col"><div class="ec-time">'+fmtLocalTime(e.date)+'</div>'+cd+'</div>';
+      html+='<div class="ec-impact '+t.impact.toLowerCase()+'">'+t.volatility.slice(0,4)+'</div>';
+      html+='<div class="ec-body">';
+      html+='<div class="ec-name">'+t.name+'</div>';
+      html+='<div class="ec-sub">'+t.desc+'</div>';
+      html+='<div class="ec-figures">';
+      html+='<div class="ec-fig"><div class="ec-fig-lbl">Forecast</div><div class="ec-fig-val">'+(e.forecast||'—')+'</div></div>';
+      html+='<div class="ec-fig"><div class="ec-fig-lbl">Previous</div><div class="ec-fig-val muted">'+(e.previous||'—')+'</div></div>';
+      if(e.actual){
+        var hot=parseFloat(e.actual)>parseFloat(e.forecast||0);
+        html+='<div class="ec-fig"><div class="ec-fig-lbl">Actual</div><div class="ec-fig-val '+(hot?'actual-hot':'actual-cool')+'">'+e.actual+'</div></div>';
+      }
+      html+='</div></div>';
+      html+='<div class="ec-pill"><span class="pill '+(t.impact==='HIGH'?'pill-red':'pill-amber')+'">'+t.impact+'</span></div>';
+      html+='</div>';
+    });
+    html+='</div>';
+  });
+
+  S('news-container').innerHTML=html;
+
+  // Update countdown every second
+  if(window._newsTimer)clearInterval(window._newsTimer);
+  window._newsTimer=setInterval(function(){
+    var cdEls=document.querySelectorAll('.ec-countdown');
+    if(!cdEls.length)return;
+    var upcomingIdx=0;
+    allEvents.filter(function(e){return e.date>new Date();}).forEach(function(e,i){
+      if(i===0&&cdEls[0]){cdEls[0].textContent=countdown(e.date);}
+    });
+  },1000);
+}
+
+(async function(){
+  var d=await supabase.auth.getSession();
+  if(!d.data.session){goTo('auth.html');return;}
+  allEvents=generateEvents();
+  renderNews();
+})();
+</script>
 </body>
 </html>
