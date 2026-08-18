@@ -228,14 +228,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       </div>
       <div class="cfg-group">
         <div class="cfg-label">Consistency Rule (%)</div>
-        <select class="cfg-select" id="cfg-rule">
-          <option value="30">30% — FTMO standard</option>
-          <option value="40">40% — some firms</option>
-          <option value="45">45% — stricter firms</option>
-          <option value="25">25% — lenient</option>
-          <option value="33">33% — custom</option>
-          <option value="50">50% — strict</option>
-        </select>
+        <input class="cfg-input" id="cfg-rule" type="number" min="1" max="99" step="1" placeholder="e.g. 30" value="30"/>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:3px;">FTMO=30 · FundedNext=30 · The5ers=varies</div>
       </div>
     </div>
   </div>
