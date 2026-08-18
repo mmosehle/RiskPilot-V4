@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<meta name="theme-color" content="#0d0f14"/>
+<title>RiskPilot — Consistency Checker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+
+/* SIDEBAR */
+.sidebar{display:flex;flex-direction:column;width:240px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sb-logo{display:flex;flex-direction:column;align-items:flex-start;padding:1.5rem 1.25rem 1rem;border-bottom:1px solid var(--border);}
+.sb-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+.sb-icon{width:36px;height:36px;background:var(--gold-bg);border:1.5px solid var(--gold-border);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sb-name{font-size:20px;font-weight:800;letter-spacing:-.5px;}.sb-name .r{color:var(--text);}.sb-name .p{color:var(--gold);}
+.sb-tag{font-size:10px;font-weight:700;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;padding-left:2px;}
+.sb-nav{flex:1;padding:10px 12px;display:flex;flex-direction:column;}
+.sb-sec{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;padding:12px 10px 4px;}
+.sb-a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:background .15s,color .15s;margin-bottom:1px;}
+.sb-a:hover{background:var(--surface);color:var(--text);}
+.sb-a.on{background:rgba(212,160,23,.1);color:var(--gold);border:1px solid rgba(212,160,23,.15);}
+.sb-a svg{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;}
+.sb-foot{padding:1rem 1.25rem;border-top:1px solid var(--border);}
+.sb-out{width:100%;padding:9px;font-size:12px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:8px;cursor:pointer;}
+
+/* MAIN */
+.main{flex:1;min-width:0;}
+.page{padding:1.75rem 2rem 2rem;max-width:820px;}
+
+/* HEADER */
+.ph-eyebrow{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;}
+.ph-title{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-.5px;margin-bottom:6px;}
+.ph-sub{font-size:13px;color:var(--text-muted);line-height:1.6;max-width:600px;margin-bottom:1.75rem;}
+
+/* CONFIG CARD */
+.config-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;}
+.cc-title{font-size:12px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem;}
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.cfg-group{display:flex;flex-direction:column;gap:5px;}
+.cfg-label{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;}
+.cfg-input{background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text);outline:none;transition:border-color .15s;width:100%;}
+.cfg-input:focus{border-color:var(--gold);}
+.cfg-select{background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;font-weight:600;color:var(--text);outline:none;width:100%;cursor:pointer;font-family:'Inter',sans-serif;}
+.cfg-select:focus{border-color:var(--gold);}
+
+/* TRADE ENTRY */
+.trades-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;}
+.tc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.tc-title{font-size:12px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;}
+.tc-count{font-size:12px;font-weight:700;color:var(--text-muted);}
+
+/* Day rows */
+.day-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem;}
+.day-row{display:grid;grid-template-columns:140px 1fr auto auto;gap:10px;align-items:center;}
+.day-label-input{background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;padding:8px 11px;font-size:12px;font-weight:600;color:var(--text-muted);outline:none;width:100%;font-family:'Inter',sans-serif;transition:border-color .15s;}
+.day-label-input:focus{border-color:var(--gold);color:var(--text);}
+.pnl-input{background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;padding:8px 11px;font-size:14px;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text);outline:none;width:100%;transition:border-color .15s;}
+.pnl-input:focus{border-color:var(--gold);}
+.pnl-input.positive{border-color:var(--green-border);color:var(--green);}
+.pnl-input.negative{border-color:var(--red-border);color:var(--red);}
+.pnl-input.zero{color:var(--text-dim);}
+.row-pct{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;min-width:52px;text-align:right;}
+.row-pct.pass{color:var(--green);}
+.row-pct.fail{color:var(--red);}
+.row-pct.warn{color:#f0a030;}
+.row-pct.dim{color:var(--text-dim);}
+.row-del{background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:16px;padding:4px 6px;border-radius:6px;line-height:1;transition:color .15s;}
+.row-del:hover{color:var(--red);}
+
+.add-day-btn{width:100%;padding:10px;font-size:13px;font-weight:700;font-family:inherit;background:var(--surface);color:var(--text-muted);border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;transition:all .15s;margin-bottom:1rem;}
+.add-day-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+.calc-btn{width:100%;padding:13px;font-size:15px;font-weight:700;font-family:inherit;background:var(--gold);color:#0d0f14;border:none;border-radius:8px;cursor:pointer;transition:background .15s;}
+.calc-btn:hover{background:var(--gold-light);}
+
+/* RESULT PANEL */
+.result{display:none;margin-bottom:1.5rem;}
+
+/* Status hero */
+.status-hero{border-radius:16px;padding:2rem;text-align:center;margin-bottom:1rem;}
+.status-hero.pass{background:rgba(34,201,132,.07);border:1.5px solid var(--green-border);}
+.status-hero.fail{background:rgba(240,80,96,.07);border:1.5px solid var(--red-border);}
+.sh-icon{font-size:44px;margin-bottom:10px;}
+.sh-status{font-size:28px;font-weight:800;letter-spacing:-.5px;margin-bottom:6px;}
+.sh-status.pass{color:var(--green);}
+.sh-status.fail{color:var(--red);}
+.sh-sub{font-size:13px;color:var(--text-muted);line-height:1.5;max-width:480px;margin:0 auto;}
+
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1rem;}
+.stat-tile{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;}
+.st-lbl{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.st-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--text);}
+.st-val.green{color:var(--green);}
+.st-val.red{color:var(--red);}
+.st-val.gold{color:var(--gold);}
+.st-val.amber{color:#f0a030;}
+.st-sub{font-size:11px;color:var(--text-dim);margin-top:4px;}
+
+/* Day breakdown table */
+.breakdown-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1rem;}
+.bc-title-row{padding:.85rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.bc-title{font-size:12px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;}
+.bc-rule-badge{font-size:11px;font-weight:700;color:var(--text-muted);}
+.bk-table{width:100%;border-collapse:collapse;}
+.bk-table th{text-align:left;padding:8px 14px;font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);background:var(--bg3);}
+.bk-table td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+.bk-table tbody tr:last-child td{border-bottom:none;}
+.bk-table tbody tr:hover{background:var(--surface2);}
+.bk-table tbody tr.highest-row{background:rgba(212,160,23,.05);}
+.bar-cell{width:120px;}
+.mini-bar-wrap{height:5px;background:var(--border);border-radius:3px;overflow:hidden;width:100px;}
+.mini-bar{height:100%;border-radius:3px;}
+.pct-cell{font-family:'JetBrains Mono',monospace;font-weight:700;}
+.pct-cell.pass{color:var(--green);}
+.pct-cell.fail{color:var(--red);}
+.pct-cell.warn{color:#f0a030;}
+.status-pill{display:inline-block;padding:2px 10px;border-radius:100px;font-size:10px;font-weight:700;}
+.sp-pass{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.sp-fail{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.sp-warn{background:#2a1a08;color:#f0a030;border:1px solid #3d2808;}
+.sp-loss{background:var(--bg3);color:var(--text-dim);border:1px solid var(--border);}
+.crown{font-size:13px;margin-left:4px;}
+
+/* ADVICE CARD */
+.advice-card{border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1rem;}
+.advice-card.fail{background:rgba(240,80,96,.05);border:1.5px solid var(--red-border);}
+.advice-card.pass{background:rgba(34,201,132,.05);border:1.5px solid var(--green-border);}
+.adv-title{font-size:14px;font-weight:700;margin-bottom:.85rem;}
+.adv-title.fail{color:var(--red);}
+.adv-title.pass{color:var(--green);}
+.adv-items{display:flex;flex-direction:column;gap:10px;}
+.adv-item{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;}
+.adv-bullet{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.adv-text{font-size:13px;color:var(--text-muted);line-height:1.5;}
+.adv-text strong{color:var(--text);}
+.adv-text .highlight{color:var(--gold);font-weight:700;}
+
+/* BOTTOM NAV */
+.bnav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;height:64px;background:var(--bg2);border-top:1px solid var(--border);align-items:center;justify-content:space-around;padding:0 4px;padding-bottom:env(safe-area-inset-bottom);}
+.bn-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:1;color:var(--text-dim);text-decoration:none;font-size:10px;font-weight:600;background:none;border:none;cursor:pointer;font-family:inherit;padding:6px 4px;border-radius:10px;transition:color .15s;min-width:0;}
+.bn-item svg{width:22px;height:22px;flex-shrink:0;}
+.bn-item.active{color:var(--gold);}
+.bn-add{width:52px;height:52px;border-radius:16px;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(212,160,23,.4);flex-shrink:0;}
+.bn-add svg{width:24px;height:24px;stroke:#0d0f14;fill:none;stroke-width:2.5;}
+.mo-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;backdrop-filter:blur(3px);}
+.mo-ov.open{display:block;}
+.mo-sh{position:fixed;bottom:0;left:0;right:0;z-index:401;background:var(--bg2);border-radius:22px 22px 0 0;border-top:1px solid var(--border);transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);padding-bottom:calc(24px + env(safe-area-inset-bottom));}
+.mo-sh.open{transform:translateY(0);}
+.ms-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0;}
+.ms-title{font-size:16px;font-weight:800;color:var(--text);padding:16px 20px 8px;}
+.ms-nav{display:flex;flex-direction:column;padding:0 12px;gap:2px;}
+.ms-link{display:flex;align-items:center;gap:14px;padding:13px 14px;border-radius:12px;text-decoration:none;transition:background .15s;}
+.ms-link:active{background:var(--surface);}
+.ms-icon{width:40px;height:40px;border-radius:11px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ms-icon svg{width:18px;height:18px;stroke:var(--text-muted);fill:none;stroke-width:1.8;}
+.ms-body{flex:1;}.ms-lbl{font-size:14px;font-weight:600;color:var(--text);}.ms-sub{font-size:11px;color:var(--text-dim);margin-top:1px;}
+.ms-chev{width:16px;height:16px;stroke:var(--text-dim);fill:none;flex-shrink:0;}
+.ms-out{width:calc(100% - 24px);margin:10px 12px 0;padding:13px;font-size:14px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:12px;cursor:pointer;}
+
+@media(max-width:768px){
+  body{display:block;}.sidebar{display:none;}.main{display:block;}.page{padding:1.25rem 1rem 90px;}.bnav{display:flex;}
+  .cfg-grid{grid-template-columns:1fr 1fr;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .day-row{grid-template-columns:100px 1fr auto auto;}
+}
+@media(max-width:480px){
+  .cfg-grid{grid-template-columns:1fr;}
+  .day-row{grid-template-columns:1fr 1fr auto auto;}.day-label-input{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-row">
+      <div class="sb-icon"><svg viewBox="0 0 32 32" fill="none" width="20" height="20"><polygon points="16,3 29,28 3,28" fill="none" stroke="#d4a017" stroke-width="2.5" stroke-linejoin="round"/><circle cx="16" cy="13" r="2.5" fill="#d4a017"/><line x1="16" y1="16" x2="16" y2="23" stroke="#d4a017" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+      <div class="sb-name"><span class="r">Risk</span><span class="p">Pilot</span></div>
+    </div>
+    <div class="sb-tag">Master Your Risk</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sec">Navigation</div>
+    <a class="sb-a" href="accounts.html"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>My Accounts</a>
+    <a class="sb-a" href="more-accounts.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>All Accounts</a>
+    <a class="sb-a" href="overall-performance.html"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Overall Performance</a>
+    <div class="sb-sec">Tools</div>
+    <a class="sb-a" href="market-sessions.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Market Sessions</a>
+    <a class="sb-a on" href="consistency-checker.html"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Consistency Checker</a>
+    <div class="sb-sec">Fundamentals</div>
+    <a class="sb-a" href="trading-news.html"><svg viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg>Trading News</a>
+    <a class="sb-a" href="news-direction.html"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>News Direction Engine</a>
+    <a class="sb-a" href="news-release-engine.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>News Release Engine</a>
+    <div class="sb-sec">Account</div>
+    <a class="sb-a" href="profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>My Profile</a>
+    <a class="sb-a" href="leaderboard.html"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>Leaderboard</a>
+    <a class="sb-a" href="dashboard.html"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+    <div class="sb-sec">Community</div>
+    <a class="sb-a" href="social.html"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Follow Us</a>
+  </nav>
+  <div class="sb-foot"><button class="sb-out" onclick="handleSignOut()">Sign Out</button></div>
+</aside>
+
+<!-- MAIN -->
+<div class="main"><div class="page">
+
+  <div class="ph-eyebrow">Tools</div>
+  <div class="ph-title">Consistency Checker</div>
+  <div class="ph-sub">Enter your prop firm settings and daily P&L figures. The checker calculates whether you meet the consistency rule — and if not, tells you exactly how much more you need to earn (and on which days) to pass before requesting a payout.</div>
+
+  <!-- CONFIG -->
+  <div class="config-card">
+    <div class="cc-title">Account Settings</div>
+    <div class="cfg-grid">
+      <div class="cfg-group">
+        <div class="cfg-label">Account Size</div>
+        <input class="cfg-input" id="cfg-size" type="number" placeholder="e.g. 10000" value="10000"/>
+      </div>
+      <div class="cfg-group">
+        <div class="cfg-label">Profit Target (%)</div>
+        <input class="cfg-input" id="cfg-target" type="number" placeholder="e.g. 10" value="10"/>
+      </div>
+      <div class="cfg-group">
+        <div class="cfg-label">Consistency Rule (%)</div>
+        <select class="cfg-select" id="cfg-rule">
+          <option value="30">30% — FTMO standard</option>
+          <option value="40">40% — some firms</option>
+          <option value="45">45% — stricter firms</option>
+          <option value="25">25% — lenient</option>
+          <option value="33">33% — custom</option>
+          <option value="50">50% — strict</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRADE ENTRY -->
+  <div class="trades-card">
+    <div class="tc-header">
+      <div class="tc-title">Daily P&amp;L</div>
+      <div class="tc-count" id="tc-count">0 days entered</div>
+    </div>
+    <div class="day-rows" id="day-rows"></div>
+    <button class="add-day-btn" onclick="addDay()">+ Add Trading Day</button>
+    <button class="calc-btn" onclick="calculate()">Check Consistency</button>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result" id="result">
+
+    <div class="status-hero" id="status-hero">
+      <div class="sh-icon" id="sh-icon"></div>
+      <div class="sh-status" id="sh-status"></div>
+      <div class="sh-sub" id="sh-sub"></div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-tile"><div class="st-lbl">Total Profit</div><div class="st-val green" id="st-profit">—</div><div class="st-sub" id="st-profit-sub">—</div></div>
+      <div class="stat-tile"><div class="st-lbl">Best Day</div><div class="st-val gold" id="st-best">—</div><div class="st-sub" id="st-best-sub">—</div></div>
+      <div class="stat-tile"><div class="st-lbl">Best Day % of Total</div><div class="st-val" id="st-bestpct">—</div><div class="st-sub">Rule limit: <span id="st-rule-lbl">—</span></div></div>
+      <div class="stat-tile"><div class="st-lbl">Days Trading</div><div class="st-val" id="st-days">—</div><div class="st-sub" id="st-days-sub">—</div></div>
+    </div>
+
+    <div class="breakdown-card">
+      <div class="bc-title-row">
+        <div class="bc-title">Day-by-Day Breakdown</div>
+        <div class="bc-rule-badge" id="bc-rule-badge">—</div>
+      </div>
+      <table class="bk-table">
+        <thead><tr><th>Day</th><th>P&amp;L</th><th>Distribution</th><th>% of Total</th><th>Status</th></tr></thead>
+        <tbody id="bk-body"></tbody>
+      </table>
+    </div>
+
+    <div class="advice-card" id="advice-card">
+      <div class="adv-title" id="adv-title">—</div>
+      <div class="adv-items" id="adv-items"></div>
+    </div>
+
+  </div>
+
+</div></div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="bnav">
+  <a class="bn-item" href="accounts.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><span>Accounts</span></a>
+  <a class="bn-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a>
+  <button class="bn-add" onclick="goTo('add-trade.html')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+  <a class="bn-item" href="overall-performance.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Performance</span></a>
+  <button class="bn-item active" onclick="openMore()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg><span>More</span></button>
+</nav>
+<div class="mo-ov" id="mo-ov" onclick="closeMore()"></div>
+<div class="mo-sh" id="mo-sh">
+  <div class="ms-handle"></div><div class="ms-title">More</div>
+  <nav class="ms-nav">
+    <a class="ms-link" href="profile.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div><div class="ms-body"><div class="ms-lbl">My Profile</div><div class="ms-sub">Edit your personal details</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="leaderboard.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg></div><div class="ms-body"><div class="ms-lbl">Leaderboard</div><div class="ms-sub">Top traders — coming soon</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="more-accounts.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div><div class="ms-body"><div class="ms-lbl">All Accounts</div><div class="ms-sub">View and manage all accounts</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="market-sessions.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="ms-body"><div class="ms-lbl">Market Sessions</div><div class="ms-sub">Live session times &amp; countdowns</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="consistency-checker.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div class="ms-body"><div class="ms-lbl">Consistency Checker</div><div class="ms-sub">Prop firm consistency rule</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="trading-news.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg></div><div class="ms-body"><div class="ms-lbl">Trading News</div><div class="ms-sub">High impact USD news calendar</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="news-direction.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div><div class="ms-body"><div class="ms-lbl">News Direction Engine</div><div class="ms-sub">Surprise model &amp; bias analysis</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="news-release-engine.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="ms-body"><div class="ms-lbl">News Release Engine</div><div class="ms-sub">Pre-release directional bias</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="social.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div><div class="ms-body"><div class="ms-lbl">Follow Us</div><div class="ms-sub">Instagram &amp; Discord</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+  </nav>
+  <button class="ms-out" onclick="handleSignOut()">Sign Out</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+function base(){var p=window.location.pathname;return window.location.origin+p.substring(0,p.lastIndexOf('/')+1);}
+function goTo(f){window.location.href=base()+f;}
+function S(i){return document.getElementById(i);}
+function openMore(){S('mo-sh').classList.add('open');S('mo-ov').classList.add('open');document.body.style.overflow='hidden';}
+function closeMore(){S('mo-sh').classList.remove('open');S('mo-ov').classList.remove('open');document.body.style.overflow='';}
+async function handleSignOut(){await supabase.auth.signOut();goTo('auth.html');}
+
+var dayCount=0;
+
+function addDay(){
+  dayCount++;
+  var rows=S('day-rows');
+  var id='day-'+dayCount;
+  var div=document.createElement('div');
+  div.className='day-row';
+  div.id='row-'+id;
+  div.innerHTML=
+    '<input class="day-label-input" type="text" value="Day '+dayCount+'" placeholder="Label"/>'
+    +'<input class="pnl-input" type="number" id="'+id+'" step="0.01" placeholder="P&L e.g. 250 or -50" oninput="onPnlChange(this)"/>'
+    +'<span class="row-pct dim" id="pct-'+id+'">—</span>'
+    +'<button class="row-del" onclick="removeDay(\''+id+'\')" title="Remove">&#215;</button>';
+  rows.appendChild(div);
+  updateCount();
+  document.getElementById(id).focus();
+}
+
+function removeDay(id){
+  var row=S('row-'+id);
+  if(row)row.remove();
+  updateCount();
+  // Recalculate live percentages if we have data
+  liveUpdate();
+}
+
+function onPnlChange(inp){
+  var v=parseFloat(inp.value);
+  inp.className='pnl-input'+(isNaN(v)?'':v>0?' positive':v<0?' negative':' zero');
+  liveUpdate();
+}
+
+function liveUpdate(){
+  // Show live % of total for each row while typing
+  var inputs=S('day-rows').querySelectorAll('.pnl-input');
+  var vals=[];
+  inputs.forEach(function(i){var v=parseFloat(i.value);if(!isNaN(v))vals.push(v);});
+  var total=vals.filter(function(v){return v>0;}).reduce(function(a,b){return a+b;},0);
+  var rule=parseFloat(S('cfg-rule').value)||30;
+  inputs.forEach(function(inp){
+    var id=inp.id;
+    var pctEl=S('pct-'+id);
+    if(!pctEl)return;
+    var v=parseFloat(inp.value);
+    if(isNaN(v)||total<=0||v<=0){pctEl.textContent='—';pctEl.className='row-pct dim';return;}
+    var pct=(v/total)*100;
+    pctEl.textContent=pct.toFixed(1)+'%';
+    pctEl.className='row-pct '+(pct>rule?'fail':pct>rule*0.8?'warn':'pass');
+  });
+}
+
+function updateCount(){
+  var n=S('day-rows').querySelectorAll('.day-row').length;
+  S('tc-count').textContent=n+' day'+(n!==1?'s':'')+' entered';
+}
+
+function fmt(v,sym){return (sym||'')+(v>=0?'':'-')+(sym?'':'')+Math.abs(v).toFixed(2);}
+function fmtN(v){return (v>=0?'+':'')+v.toFixed(2);}
+
+function calculate(){
+  var accountSize=parseFloat(S('cfg-size').value)||10000;
+  var targetPct=parseFloat(S('cfg-target').value)||10;
+  var rule=parseFloat(S('cfg-rule').value)||30;
+  var profitTarget=accountSize*(targetPct/100);
+
+  // Collect days
+  var inputs=S('day-rows').querySelectorAll('.day-row');
+  var days=[];
+  inputs.forEach(function(row){
+    var labelEl=row.querySelector('.day-label-input');
+    var pnlEl=row.querySelector('.pnl-input');
+    var label=labelEl?labelEl.value.trim()||'Day':'Day';
+    var pnl=parseFloat(pnlEl?pnlEl.value:'');
+    days.push({label:label,pnl:isNaN(pnl)?0:pnl});
+  });
+
+  if(!days.length){alert('Add at least one trading day first.');return;}
+
+  var totalProfit=days.filter(function(d){return d.pnl>0;}).reduce(function(a,d){return a+d.pnl;},0);
+  var totalLoss=days.filter(function(d){return d.pnl<0;}).reduce(function(a,d){return a+d.pnl;},0);
+  var netPnL=totalProfit+totalLoss;
+
+  // Best (highest) profitable day
+  var profitDays=days.filter(function(d){return d.pnl>0;});
+  var bestDay=profitDays.length?profitDays.reduce(function(a,b){return b.pnl>a.pnl?b:a;}):null;
+  var bestDayPnl=bestDay?bestDay.pnl:0;
+  var bestDayPct=totalProfit>0?(bestDayPnl/totalProfit)*100:0;
+
+  // Max allowed single day = rule% of total profit
+  var maxAllowed=totalProfit*(rule/100);
+  var passes=bestDayPct<=rule;
+
+  // Show result
+  S('result').style.display='block';
+
+  var hero=S('status-hero');
+  hero.className='status-hero '+(passes?'pass':'fail');
+  S('sh-icon').textContent=passes?'✅':'❌';
+  S('sh-status').textContent=passes?'Consistency Rule PASSED':'Consistency Rule FAILED';
+  S('sh-status').className='sh-status '+(passes?'pass':'fail');
+
+  if(passes){
+    S('sh-sub').textContent='Your profit distribution is within the '+rule+'% consistency rule. Your best day ('+bestDayPct.toFixed(1)+'%) is below the '+rule+'% limit. You are on track — keep maintaining this balance.';
+  } else {
+    S('sh-sub').textContent='Your best day represents '+bestDayPct.toFixed(1)+'% of your total profit, which exceeds the '+rule+'% rule. You need to either reduce reliance on that day or grow profit on other days before requesting a payout.';
+  }
+
+  // Stats
+  S('st-profit').textContent=(netPnL>=0?'+$':'-$')+Math.abs(netPnL).toFixed(2);
+  S('st-profit').className='st-val '+(netPnL>=0?'green':'red');
+  S('st-profit-sub').textContent='Target: $'+profitTarget.toFixed(2)+' ('+(netPnL>=profitTarget?'✓ Reached':'$'+(profitTarget-netPnL).toFixed(2)+' remaining')+')';
+  S('st-best').textContent=bestDay?('$'+bestDayPnl.toFixed(2)):'—';
+  S('st-best-sub').textContent=bestDay?bestDay.label:'No profitable days';
+  S('st-bestpct').textContent=bestDayPct.toFixed(1)+'%';
+  S('st-bestpct').className='st-val '+(passes?'green':'red');
+  S('st-rule-lbl').textContent=rule+'%';
+  S('st-days').textContent=days.length;
+  S('st-days-sub').textContent=profitDays.length+' profitable, '+(days.length-profitDays.length)+' loss/flat';
+
+  // Breakdown table
+  S('bc-rule-badge').textContent='Max per day: '+rule+'% of total profit';
+  var tbody='';
+  days.forEach(function(d){
+    var isProfit=d.pnl>0;
+    var pct=isProfit&&totalProfit>0?(d.pnl/totalProfit)*100:0;
+    var isBest=bestDay&&d===bestDay;
+    var barPct=isProfit?Math.min(100,pct):0;
+    var barColor=pct>rule?'var(--red)':pct>rule*0.8?'#f0a030':'var(--green)';
+    var pctCls=!isProfit?'dim':pct>rule?'fail':pct>rule*0.8?'warn':'pass';
+    var statusPill=!isProfit?'<span class="status-pill sp-loss">'+(d.pnl===0?'Flat':'Loss')+'</span>'
+      :pct>rule?'<span class="status-pill sp-fail">Fails Rule</span>'
+      :pct>rule*0.8?'<span class="status-pill sp-warn">Borderline</span>'
+      :'<span class="status-pill sp-pass">Passes</span>';
+    tbody+='<tr'+(isBest?' class="highest-row"':'')+'>'
+      +'<td style="font-weight:600">'+d.label+(isBest?'<span class="crown">👑</span>':'')+'</td>'
+      +'<td style="font-family:\'JetBrains Mono\',monospace;font-weight:600;color:'+(d.pnl>0?'var(--green)':d.pnl<0?'var(--red)':'var(--text-dim)')+'">'+fmtN(d.pnl)+'</td>'
+      +'<td class="bar-cell"><div class="mini-bar-wrap"><div class="mini-bar" style="width:'+barPct+'%;background:'+barColor+'"></div></div></td>'
+      +'<td class="pct-cell '+pctCls+'">'+(isProfit?pct.toFixed(1)+'%':'—')+'</td>'
+      +'<td>'+statusPill+'</td></tr>';
+  });
+  S('bk-body').innerHTML=tbody;
+
+  // Advice
+  var advCard=S('advice-card');
+  advCard.className='advice-card '+(passes?'pass':'fail');
+  S('adv-title').textContent=passes?'You are on track — here is what to maintain:':'Here is what you need to do to pass:';
+  S('adv-title').className='adv-title '+(passes?'pass':'fail');
+
+  var advItems=[];
+
+  if(!passes){
+    // How much extra profit needed on OTHER days
+    // Rule: bestDay / newTotal <= rule/100
+    // newTotal >= bestDayPnl / (rule/100)
+    var minTotalNeeded=bestDayPnl/(rule/100);
+    var extraNeeded=minTotalNeeded-totalProfit;
+    var distributableDays=days.length-1; // all days except the best one
+
+    if(extraNeeded>0){
+      advItems.push({
+        color:'var(--red)',
+        text:'Your best day earned <strong>$'+bestDayPnl.toFixed(2)+'</strong>. To bring it below the '+rule+'% threshold, your <strong>total profit must reach at least $'+minTotalNeeded.toFixed(2)+'</strong>. You need to earn an additional <span class="highlight">$'+extraNeeded.toFixed(2)+'</span> on other trading days.'
+      });
+      if(distributableDays>0){
+        var perDay=extraNeeded/distributableDays;
+        advItems.push({
+          color:'#f0a030',
+          text:'If you spread this evenly, aim for <span class="highlight">$'+perDay.toFixed(2)+'</span> profit per remaining trading session. You can also achieve this in fewer sessions with higher daily profits — as long as no single new day becomes the new largest day.'
+        });
+      }
+      advItems.push({
+        color:'var(--gold)',
+        text:'Important: as you add more profit, re-check that no <em>other</em> day also violates the '+rule+'% rule. The threshold is recalculated each time your total profit changes.'
+      });
+    }
+
+    // Warn about the specific failing day
+    if(bestDay){
+      advItems.push({
+        color:'var(--text-dim)',
+        text:'The day currently breaking the rule is <strong>'+bestDay.label+'</strong> (+$'+bestDayPnl.toFixed(2)+'). Do not try to reduce this day\'s profit — it is already locked. The only way forward is to increase profit on <em>other days</em>.'
+      });
+    }
+  } else {
+    // Passing — give warnings about what could break it
+    var safeMargin=maxAllowed-bestDayPnl;
+    advItems.push({
+      color:'var(--green)',
+      text:'Your best day ($'+bestDayPnl.toFixed(2)+') is currently <strong>$'+safeMargin.toFixed(2)+'</strong> below the rule limit. You have a '+((rule-bestDayPct).toFixed(1))+'% margin of safety.'
+    });
+    advItems.push({
+      color:'var(--gold)',
+      text:'If your total profit increases (e.g. you hit the profit target), the maximum allowed per day will also increase proportionally — so your current distribution will stay compliant as long as future days do not exceed '+rule+'% of the new total.'
+    });
+    advItems.push({
+      color:'var(--text-dim)',
+      text:'Avoid taking oversized risk on any single remaining day. One blowout session can push that day above '+rule+'% of total and fail the consistency rule at the finish line.'
+    });
+    if(netPnL<profitTarget){
+      var remaining=profitTarget-netPnL;
+      var safePerDay=maxAllowed*0.9; // 90% of what's allowed to stay safe
+      advItems.push({
+        color:'var(--blue)',
+        text:'You still need <span class="highlight">$'+remaining.toFixed(2)+'</span> to reach your profit target. To stay consistent, aim for no more than <strong>$'+(totalProfit*rule/100*0.9).toFixed(2)+'</strong> per remaining session (90% of current max allowable).'
+      });
+    }
+  }
+
+  S('adv-items').innerHTML=advItems.map(function(a){
+    return '<div class="adv-item"><div class="adv-bullet" style="background:'+a.color+'"></div><div class="adv-text">'+a.text+'</div></div>';
+  }).join('');
+
+  S('result').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+(async function(){
+  var d=await supabase.auth.getSession();
+  if(!d.data.session){goTo('auth.html');return;}
+  // Start with 5 days as a helpful default
+  for(var i=0;i<5;i++)addDay();
+})();
+</script>
+</body>
+</html>
