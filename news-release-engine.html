@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<meta name="theme-color" content="#0d0f14"/>
+<title>RiskPilot — News Release Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+/* SIDEBAR */
+.sidebar{display:flex;flex-direction:column;width:240px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sb-logo{display:flex;flex-direction:column;align-items:flex-start;padding:1.5rem 1.25rem 1rem;border-bottom:1px solid var(--border);}
+.sb-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+.sb-icon{width:36px;height:36px;background:var(--gold-bg);border:1.5px solid var(--gold-border);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sb-name{font-size:20px;font-weight:800;letter-spacing:-.5px;}.sb-name .r{color:var(--text);}.sb-name .p{color:var(--gold);}
+.sb-tag{font-size:10px;font-weight:700;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;padding-left:2px;}
+.sb-nav{flex:1;padding:10px 12px;display:flex;flex-direction:column;}
+.sb-sec{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;padding:12px 10px 4px;}
+.sb-a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:background .15s,color .15s;margin-bottom:1px;}
+.sb-a:hover{background:var(--surface);color:var(--text);}
+.sb-a.on{background:rgba(212,160,23,.1);color:var(--gold);border:1px solid rgba(212,160,23,.15);}
+.sb-a svg{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;}
+.sb-foot{padding:1rem 1.25rem;border-top:1px solid var(--border);}
+.sb-out{width:100%;padding:9px;font-size:12px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:8px;cursor:pointer;}
+/* MAIN */
+.main{flex:1;min-width:0;}
+.page{padding:1.75rem 2rem 2rem;max-width:860px;}
+/* PAGE HEADER */
+.ph-eyebrow{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;}
+.ph-title{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-.5px;margin-bottom:6px;}
+.ph-sub{font-size:13px;color:var(--text-muted);line-height:1.6;max-width:620px;margin-bottom:1.75rem;}
+/* NOTICE BANNER */
+.notice{background:rgba(212,160,23,.07);border:1px solid var(--gold-border);border-radius:12px;padding:.85rem 1.1rem;margin-bottom:1.75rem;display:flex;gap:10px;}
+.notice-icon{font-size:15px;flex-shrink:0;}
+.notice-text{font-size:12px;color:var(--text-muted);line-height:1.5;}
+.notice-text strong{color:var(--gold);}
+/* EVENT PICKER */
+.event-picker{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;}
+.ep-label{font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.ep-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.ep-btn{padding:10px 8px;font-size:12px;font-weight:700;font-family:inherit;background:var(--surface);color:var(--text-muted);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;text-align:center;}
+.ep-btn:hover{border-color:var(--gold-border);color:var(--gold);}
+.ep-btn.active{background:var(--gold-bg);border-color:var(--gold);color:var(--gold);}
+.ep-btn .en{font-size:11px;display:block;}
+.ep-btn .ec{font-size:9px;color:var(--text-dim);display:block;margin-top:2px;font-weight:500;text-transform:uppercase;letter-spacing:.4px;}
+.ep-btn.active .ec{color:var(--gold);opacity:.7;}
+/* CONTEXT FORM */
+.context-form{background:var(--bg2);border:1px solid var(--border);border-radius:14px;margin-bottom:1.5rem;overflow:hidden;display:none;}
+.cf-header{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.cf-title{font-size:15px;font-weight:800;color:var(--text);}
+.cf-vol{padding:4px 12px;border-radius:100px;font-size:10px;font-weight:700;}
+.cf-vol-ext{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);}
+.cf-vol-high{background:#2a1a08;border:1px solid #3d2808;color:#f0a030;}
+.cf-body{padding:1.25rem 1.5rem;}
+/* Section blocks */
+.cf-section{margin-bottom:1.25rem;}
+.cf-sec-title{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.q-row{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.q-label{font-size:13px;font-weight:600;color:var(--text);}
+.q-sub{font-size:11px;color:var(--text-dim);margin-top:-2px;margin-bottom:4px;}
+.q-options{display:flex;gap:8px;flex-wrap:wrap;}
+.q-opt{padding:8px 16px;font-size:12px;font-weight:700;font-family:inherit;background:var(--surface);color:var(--text-muted);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;}
+.q-opt:hover{border-color:var(--border2);color:var(--text);}
+.q-opt.sel-bull{background:rgba(34,201,132,.1);border-color:var(--green-border);color:var(--green);}
+.q-opt.sel-bear{background:rgba(240,80,96,.1);border-color:var(--red-border);color:var(--red);}
+.q-opt.sel-neu{background:var(--surface2);border-color:var(--border2);color:var(--text-muted);}
+.num-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.num-group{display:flex;flex-direction:column;gap:5px;}
+.num-label{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;}
+.num-input{background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text);outline:none;transition:border-color .15s;width:100%;}
+.num-input:focus{border-color:var(--gold);}
+.analyse-btn{width:100%;padding:13px;font-size:15px;font-weight:700;font-family:inherit;background:var(--gold);color:#0d0f14;border:none;border-radius:8px;cursor:pointer;margin-top:8px;transition:background .15s;}
+.analyse-btn:hover{background:var(--gold-light);}
+/* RESULT */
+.result-panel{background:var(--bg2);border:1px solid var(--border);border-radius:16px;margin-bottom:1.5rem;overflow:hidden;display:none;}
+/* Verdict hero */
+.verdict-hero{padding:2rem 1.75rem;text-align:center;border-bottom:1px solid var(--border);}
+.vh-event{font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;}
+.vh-label{font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:6px;}
+.vh-bias{font-size:48px;font-weight:800;letter-spacing:-2px;line-height:1;}
+.vh-bias.bull{color:var(--green);}
+.vh-bias.bear{color:var(--red);}
+.vh-bias.neu{color:var(--text-muted);}
+.vh-confidence{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:7px 18px;border-radius:100px;font-size:12px;font-weight:700;}
+.vh-confidence.high{background:rgba(34,201,132,.1);border:1px solid var(--green-border);color:var(--green);}
+.vh-confidence.med{background:#2a1a08;border:1px solid #3d2808;color:#f0a030;}
+.vh-confidence.low{background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);}
+.conf-dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+/* Score breakdown */
+.score-section{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);}
+.score-title{font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.score-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.score-row:last-child{margin-bottom:0;}
+.sr-label{font-size:12px;font-weight:600;color:var(--text-muted);min-width:160px;flex-shrink:0;}
+.sr-bar-wrap{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.sr-bar{height:100%;border-radius:3px;transition:width .5s ease;}
+.sr-bar.bull{background:var(--green);}
+.sr-bar.bear{background:var(--red);}
+.sr-bar.neu{background:var(--text-dim);}
+.sr-val{font-size:11px;font-weight:700;min-width:60px;text-align:right;flex-shrink:0;}
+.sr-val.bull{color:var(--green);}
+.sr-val.bear{color:var(--red);}
+.sr-val.neu{color:var(--text-muted);}
+/* Instrument cards */
+.instruments-section{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);}
+.inst-title{font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.inst-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.inst-card{background:var(--bg3);border:1.5px solid var(--border);border-radius:12px;padding:1rem 1.1rem;}
+.inst-card.bull-card{border-color:var(--green-border);background:rgba(34,201,132,.05);}
+.inst-card.bear-card{border-color:var(--red-border);background:rgba(240,80,96,.05);}
+.ic-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.ic-name{font-size:13px;font-weight:800;color:var(--text);}
+.ic-bias{font-size:18px;font-weight:800;}
+.ic-bias.bull{color:var(--green);}
+.ic-bias.bear{color:var(--red);}
+.ic-bias.neu{color:var(--text-muted);}
+.ic-logic{font-size:11px;color:var(--text-muted);line-height:1.5;}
+/* Key levels */
+.watchlist{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);}
+.wl-title{font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.wl-items{display:flex;flex-direction:column;gap:8px;}
+.wl-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:12px;}
+.wl-bullet{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.wl-item-text{color:var(--text-muted);line-height:1.4;}
+.wl-item-text strong{color:var(--text);}
+/* Warning */
+.result-warning{padding:1.25rem 1.5rem;}
+.rw-box{background:rgba(212,160,23,.07);border:1px solid var(--gold-border);border-radius:10px;padding:1rem 1.1rem;display:flex;gap:10px;}
+.rw-icon{font-size:16px;flex-shrink:0;}
+.rw-title{font-size:12px;font-weight:700;color:var(--gold);margin-bottom:3px;}
+.rw-text{font-size:11px;color:var(--text-muted);line-height:1.6;}
+/* BOTTOM NAV */
+.bnav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;height:64px;background:var(--bg2);border-top:1px solid var(--border);align-items:center;justify-content:space-around;padding:0 4px;padding-bottom:env(safe-area-inset-bottom);}
+.bn-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:1;color:var(--text-dim);text-decoration:none;font-size:10px;font-weight:600;background:none;border:none;cursor:pointer;font-family:inherit;padding:6px 4px;border-radius:10px;transition:color .15s;min-width:0;}
+.bn-item svg{width:22px;height:22px;flex-shrink:0;}
+.bn-item.active{color:var(--gold);}
+.bn-add{width:52px;height:52px;border-radius:16px;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(212,160,23,.4);flex-shrink:0;}
+.bn-add svg{width:24px;height:24px;stroke:#0d0f14;fill:none;stroke-width:2.5;}
+.mo-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;backdrop-filter:blur(3px);}
+.mo-ov.open{display:block;}
+.mo-sh{position:fixed;bottom:0;left:0;right:0;z-index:401;background:var(--bg2);border-radius:22px 22px 0 0;border-top:1px solid var(--border);transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);padding-bottom:calc(24px + env(safe-area-inset-bottom));}
+.mo-sh.open{transform:translateY(0);}
+.ms-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0;}
+.ms-title{font-size:16px;font-weight:800;color:var(--text);padding:16px 20px 8px;}
+.ms-nav{display:flex;flex-direction:column;padding:0 12px;gap:2px;}
+.ms-link{display:flex;align-items:center;gap:14px;padding:13px 14px;border-radius:12px;text-decoration:none;transition:background .15s;}
+.ms-link:active{background:var(--surface);}
+.ms-icon{width:40px;height:40px;border-radius:11px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ms-icon svg{width:18px;height:18px;stroke:var(--text-muted);fill:none;stroke-width:1.8;}
+.ms-body{flex:1;}.ms-lbl{font-size:14px;font-weight:600;color:var(--text);}.ms-sub{font-size:11px;color:var(--text-dim);margin-top:1px;}
+.ms-chev{width:16px;height:16px;stroke:var(--text-dim);fill:none;flex-shrink:0;}
+.ms-out{width:calc(100% - 24px);margin:10px 12px 0;padding:13px;font-size:14px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:12px;cursor:pointer;}
+@media(max-width:900px){.ep-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:768px){body{display:block;}.sidebar{display:none;}.main{display:block;}.page{padding:1.25rem 1rem 90px;}.bnav{display:flex;}.ep-grid{grid-template-columns:1fr 1fr;}.num-row{grid-template-columns:1fr;}.inst-grid{grid-template-columns:1fr;}.sr-label{min-width:120px;}}
+</style>
+</head>
+<body>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-row">
+      <div class="sb-icon"><svg viewBox="0 0 32 32" fill="none" width="20" height="20"><polygon points="16,3 29,28 3,28" fill="none" stroke="#d4a017" stroke-width="2.5" stroke-linejoin="round"/><circle cx="16" cy="13" r="2.5" fill="#d4a017"/><line x1="16" y1="16" x2="16" y2="23" stroke="#d4a017" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+      <div class="sb-name"><span class="r">Risk</span><span class="p">Pilot</span></div>
+    </div>
+    <div class="sb-tag">Master Your Risk</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sec">Navigation</div>
+    <a class="sb-a" href="accounts.html"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>My Accounts</a>
+    <a class="sb-a" href="more-accounts.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>All Accounts</a>
+    <a class="sb-a" href="overall-performance.html"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Overall Performance</a>
+    <div class="sb-sec">Tools</div>
+    <a class="sb-a" href="market-sessions.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Market Sessions</a>
+    <div class="sb-sec">Fundamentals</div>
+    <a class="sb-a" href="trading-news.html"><svg viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg>Trading News</a>
+    <a class="sb-a" href="news-direction.html"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>News Direction Engine</a>
+    <a class="sb-a on" href="news-release-engine.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>News Release Engine</a>
+    <div class="sb-sec">Account</div>
+    <a class="sb-a" href="profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>My Profile</a>
+    <a class="sb-a" href="leaderboard.html"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>Leaderboard</a>
+    <a class="sb-a" href="dashboard.html"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+    <div class="sb-sec">Community</div>
+    <a class="sb-a" href="social.html"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Follow Us</a>
+  </nav>
+  <div class="sb-foot"><button class="sb-out" onclick="handleSignOut()">Sign Out</button></div>
+</aside>
+
+<!-- MAIN -->
+<div class="main"><div class="page">
+  <div class="ph-eyebrow">Fundamentals</div>
+  <div class="ph-title">News Release Engine</div>
+  <div class="ph-sub">Anticipate the likely directional bias of an upcoming USD news release — before it prints. Answer a few context questions and the engine scores the probability of a bullish or bearish USD reaction based on current Fed expectations, recent data trend, and market positioning signals.</div>
+
+  <div class="notice">
+    <div class="notice-icon">💡</div>
+    <div class="notice-text"><strong>How this differs from the Direction Engine:</strong> The Direction Engine analyses a release <em>after</em> the actual figure is known. This engine anticipates the likely bias <em>before</em> the release — based on the conditions that historically shape the market's reaction. Use both together for a complete fundamental picture.</div>
+  </div>
+
+  <!-- EVENT PICKER -->
+  <div class="event-picker">
+    <div class="ep-label">Select Upcoming Event</div>
+    <div class="ep-grid" id="ep-grid"></div>
+  </div>
+
+  <!-- CONTEXT FORM -->
+  <div class="context-form" id="context-form">
+    <div class="cf-header">
+      <div class="cf-title" id="cf-title">—</div>
+      <div class="cf-vol" id="cf-vol"></div>
+    </div>
+    <div class="cf-body">
+
+      <!-- SECTION 1: Recent data trend -->
+      <div class="cf-section">
+        <div class="cf-sec-title">1 — Recent Data Trend</div>
+        <div class="q-row">
+          <div class="q-label">How have the last 2–3 readings trended?</div>
+          <div class="q-sub">Ignoring forecasts — has the raw data been rising, falling, or flat?</div>
+          <div class="q-options" id="q-trend">
+            <button class="q-opt" data-q="trend" data-v="rising" onclick="pick(this,'trend','bull')">Rising / Accelerating</button>
+            <button class="q-opt" data-q="trend" data-v="falling" onclick="pick(this,'trend','bear')">Falling / Decelerating</button>
+            <button class="q-opt" data-q="trend" data-v="flat" onclick="pick(this,'trend','neu')">Flat / Mixed</button>
+          </div>
+        </div>
+        <div class="num-row">
+          <div class="num-group">
+            <div class="num-label">Forecast / Expected</div>
+            <input class="num-input" id="n-fore" type="text" placeholder="e.g. 3.0%"/>
+          </div>
+          <div class="num-group">
+            <div class="num-label">Previous Reading</div>
+            <input class="num-input" id="n-prev" type="text" placeholder="e.g. 3.1%"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: Fed expectations -->
+      <div class="cf-section">
+        <div class="cf-sec-title">2 — Current Fed Expectations</div>
+        <div class="q-row">
+          <div class="q-label">What is the market currently expecting from the Fed?</div>
+          <div class="q-sub">Based on Fed fund futures and recent Fed communication.</div>
+          <div class="q-options" id="q-fed">
+            <button class="q-opt" data-q="fed" data-v="hawkish" onclick="pick(this,'fed','bull')">Rate hike or no cut expected</button>
+            <button class="q-opt" data-q="fed" data-v="neutral" onclick="pick(this,'fed','neu')">Uncertain / data-dependent</button>
+            <button class="q-opt" data-q="fed" data-v="dovish" onclick="pick(this,'fed','bear')">Rate cut expected</button>
+          </div>
+        </div>
+        <div class="q-row">
+          <div class="q-label">How has the Fed been speaking lately?</div>
+          <div class="q-sub">Tone of the most recent Fed Chair remarks or FOMC minutes.</div>
+          <div class="q-options" id="q-tone">
+            <button class="q-opt" data-q="tone" data-v="hawkish" onclick="pick(this,'tone','bull')">Hawkish — cautious on cuts</button>
+            <button class="q-opt" data-q="tone" data-v="neutral" onclick="pick(this,'tone','neu')">Balanced / mixed signals</button>
+            <button class="q-opt" data-q="tone" data-v="dovish" onclick="pick(this,'tone','bear')">Dovish — open to cuts</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3: Positioning -->
+      <div class="cf-section">
+        <div class="cf-sec-title">3 — Market Positioning &amp; Sentiment</div>
+        <div class="q-row">
+          <div class="q-label">What is the general USD sentiment going into the release?</div>
+          <div class="q-sub">Based on price action, DXY trend, and news narrative this week.</div>
+          <div class="q-options" id="q-usd">
+            <button class="q-opt" data-q="usd" data-v="strong" onclick="pick(this,'usd','bull')">USD has been strong / bid</button>
+            <button class="q-opt" data-q="usd" data-v="neutral" onclick="pick(this,'usd','neu')">USD ranging / no clear trend</button>
+            <button class="q-opt" data-q="usd" data-v="weak" onclick="pick(this,'usd','bear')">USD has been weak / offered</div>
+          </div>
+        </div>
+        <div class="q-row">
+          <div class="q-label">Does the forecast beat or miss the previous reading?</div>
+          <div class="q-sub">Consensus expectation vs the last print — before actual is released.</div>
+          <div class="q-options" id="q-vs">
+            <button class="q-opt" data-q="vs" data-v="beat" onclick="pick(this,'vs','bull')">Forecast beats previous</button>
+            <button class="q-opt" data-q="vs" data-v="inline" onclick="pick(this,'vs','neu')">Forecast inline with previous</button>
+            <button class="q-opt" data-q="vs" data-v="miss" onclick="pick(this,'vs','bear')">Forecast misses previous</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 4: Gold context (only for applicable events) -->
+      <div class="cf-section" id="gold-section">
+        <div class="cf-sec-title">4 — Gold &amp; Risk Sentiment</div>
+        <div class="q-row">
+          <div class="q-label">How has Gold (XAU/USD) been trading recently?</div>
+          <div class="q-sub">Is Gold in a strong trend or consolidating into the release?</div>
+          <div class="q-options" id="q-gold">
+            <button class="q-opt" data-q="gold" data-v="rally" onclick="pick(this,'gold','bear')">Gold has been rallying / near highs</button>
+            <button class="q-opt" data-q="gold" data-v="flat" onclick="pick(this,'gold','neu')">Gold ranging / sideways</button>
+            <button class="q-opt" data-q="gold" data-v="sell" onclick="pick(this,'gold','bull')">Gold has been selling off / near lows</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="analyse-btn" onclick="runEngine()">Generate Pre-Release Bias</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-panel" id="result-panel">
+    <div class="verdict-hero">
+      <div class="vh-event" id="r-event-name">—</div>
+      <div class="vh-label">Pre-Release USD Bias</div>
+      <div class="vh-bias" id="r-bias">—</div>
+      <div><div class="vh-confidence" id="r-conf"><div class="conf-dot"></div><span id="r-conf-text">—</span></div></div>
+    </div>
+    <div class="score-section">
+      <div class="score-title">Score Breakdown</div>
+      <div id="score-rows"></div>
+    </div>
+    <div class="instruments-section">
+      <div class="inst-title">Instrument Bias</div>
+      <div class="inst-grid" id="inst-grid"></div>
+    </div>
+    <div class="watchlist">
+      <div class="wl-title">What to Watch At Release</div>
+      <div class="wl-items" id="wl-items"></div>
+    </div>
+    <div class="result-warning">
+      <div class="rw-box">
+        <div class="rw-icon">⚠️</div>
+        <div>
+          <div class="rw-title">Pre-release bias — not a trade signal</div>
+          <div class="rw-text">This engine models the conditions that historically shape the market's reaction. It does not predict the actual figure. A strong pre-release bullish bias can instantly reverse if the actual data misses. Always wait for the release, confirm with the Direction Engine, and look for a technical setup before entering. Never trade the spike — trade the confirmation.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div></div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="bnav">
+  <a class="bn-item" href="accounts.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><span>Accounts</span></a>
+  <a class="bn-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a>
+  <button class="bn-add" onclick="goTo('add-trade.html')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+  <a class="bn-item" href="overall-performance.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Performance</span></a>
+  <button class="bn-item active" onclick="openMore()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg><span>More</span></button>
+</nav>
+<div class="mo-ov" id="mo-ov" onclick="closeMore()"></div>
+<div class="mo-sh" id="mo-sh">
+  <div class="ms-handle"></div><div class="ms-title">More</div>
+  <nav class="ms-nav">
+    <a class="ms-link" href="profile.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div><div class="ms-body"><div class="ms-lbl">My Profile</div><div class="ms-sub">Edit your personal details</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="leaderboard.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg></div><div class="ms-body"><div class="ms-lbl">Leaderboard</div><div class="ms-sub">Top traders — coming soon</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="more-accounts.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div><div class="ms-body"><div class="ms-lbl">All Accounts</div><div class="ms-sub">View and manage all accounts</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="market-sessions.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="ms-body"><div class="ms-lbl">Market Sessions</div><div class="ms-sub">Live session times &amp; countdowns</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="trading-news.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg></div><div class="ms-body"><div class="ms-lbl">Trading News</div><div class="ms-sub">High impact USD news calendar</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="news-direction.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div><div class="ms-body"><div class="ms-lbl">News Direction Engine</div><div class="ms-sub">Surprise model &amp; bias analysis</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="news-release-engine.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="ms-body"><div class="ms-lbl">News Release Engine</div><div class="ms-sub">Pre-release directional bias</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="social.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div><div class="ms-body"><div class="ms-lbl">Follow Us</div><div class="ms-sub">Instagram &amp; Discord</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+  </nav>
+  <button class="ms-out" onclick="handleSignOut()">Sign Out</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+function base(){var p=window.location.pathname;return window.location.origin+p.substring(0,p.lastIndexOf('/')+1);}
+function goTo(f){window.location.href=base()+f;}
+function S(i){return document.getElementById(i);}
+function openMore(){S('mo-sh').classList.add('open');S('mo-ov').classList.add('open');document.body.style.overflow='hidden';}
+function closeMore(){S('mo-sh').classList.remove('open');S('mo-ov').classList.remove('open');document.body.style.overflow='';}
+async function handleSignOut(){await supabase.auth.signOut();goTo('auth.html');}
+
+var selections={trend:null,fed:null,tone:null,usd:null,vs:null,gold:null};
+var activeEvent=null;
+
+var EVENTS=[
+  {id:'nfp',name:'NFP',full:'Non-Farm Payrolls',vol:'EXTREME',cat:'Employment',
+   watchPoints:['Headline jobs number vs forecast','Unemployment rate (lower = USD bullish)','Average hourly earnings m/m (wage inflation)','Prior month revision (can move market more than headline)'],
+   goldNote:'Strong NFP typically pressures Gold via USD strength and reduced safe-haven demand.'},
+  {id:'cpi',name:'CPI',full:'CPI m/m',vol:'EXTREME',cat:'Inflation',
+   watchPoints:['Headline CPI vs forecast','Core CPI (ex-food & energy) — Fed focuses here','Month-over-month vs year-over-year','Shelter / housing component — stickiest inflation input'],
+   goldNote:'Hot CPI → hawkish Fed bias → USD strengthens → Gold often weakens. Cool CPI is Gold-friendly.'},
+  {id:'pce',name:'PCE',full:'PCE Price Index',vol:'HIGH',cat:'Inflation',
+   watchPoints:["Core PCE — Fed's actual preferred gauge",'Month-over-month reading','Personal income and spending released simultaneously','Any revision to prior month'],
+   goldNote:"PCE is the Fed's official target. A persistent above-2% reading is the strongest argument for USD bulls."},
+  {id:'fomc',name:'FOMC',full:'FOMC Decision',vol:'EXTREME',cat:'Central Bank',
+   watchPoints:['Rate decision vs market pricing','Statement language changes (hawkish/dovish shift)','Dot plot — projected rate path','Press conference tone and specific wording'],
+   goldNote:'Dovish FOMC (surprise cut or dovish guidance) is the single most bullish catalyst for Gold.'},
+  {id:'gdp',name:'GDP',full:'GDP q/q',vol:'HIGH',cat:'Growth',
+   watchPoints:['Annualised growth rate vs forecast','Consumption component (biggest driver)','First advance reading vs revision','Whether above or below previous quarter'],
+   goldNote:'Contraction GDP reading supports Gold as a recession hedge. Strong GDP reduces safe-haven demand.'},
+  {id:'retail',name:'Retail Sales',full:'Retail Sales m/m',vol:'HIGH',cat:'Consumer',
+   watchPoints:['Headline vs forecast','Control group (ex-autos, gas, building materials) — feeds GDP','Whether prior month was revised','Core consumer spending trend'],
+   goldNote:'Weak retail sales raise recession concern and can support Gold. Strong sales reduce safe-haven flows.'},
+  {id:'ism',name:'ISM Mfg',full:'ISM Manufacturing PMI',vol:'HIGH',cat:'Business',
+   watchPoints:['Headline reading vs 50 threshold','New orders sub-index (leading indicator)','Employment sub-index','Prices paid component (inflation signal)'],
+   goldNote:'A reading below 50 (contraction) can spark recession fear and Gold buying. Above 50 = USD constructive.'},
+  {id:'jobless',name:'Jobless Claims',full:'Jobless Claims',vol:'MEDIUM',cat:'Employment',
+   watchPoints:['Initial claims vs 220K threshold','4-week moving average trend','Continuing claims trend','Any large state reporting anomalies'],
+   goldNote:'Spike in claims can signal labour market softening — mild Gold support. Below 200K reinforces USD strength.'},
+];
+
+function buildGrid(){
+  var g=S('ep-grid');
+  g.innerHTML=EVENTS.map(function(e){
+    return '<button class="ep-btn" id="epb-'+e.id+'" onclick="selectEvent(\''+e.id+'\')">'
+      +'<span class="en">'+e.name+'</span>'
+      +'<span class="ec">'+e.cat+'</span></button>';
+  }).join('');
+}
+
+function selectEvent(id){
+  activeEvent=EVENTS.find(function(e){return e.id===id;});
+  if(!activeEvent)return;
+  document.querySelectorAll('.ep-btn').forEach(function(b){b.classList.remove('active');});
+  S('epb-'+id).classList.add('active');
+  S('cf-title').textContent=activeEvent.full;
+  var vb=S('cf-vol');
+  vb.textContent=activeEvent.vol+' VOLATILITY';
+  vb.className='cf-vol '+(activeEvent.vol==='EXTREME'?'cf-vol-ext':'cf-vol-high');
+  // Reset selections
+  Object.keys(selections).forEach(function(k){selections[k]=null;});
+  document.querySelectorAll('.q-opt').forEach(function(b){b.className='q-opt';});
+  S('result-panel').style.display='none';
+  S('context-form').style.display='block';
+  S('context-form').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function pick(btn,q,dir){
+  selections[q]=dir;
+  var group=btn.parentElement.querySelectorAll('.q-opt');
+  group.forEach(function(b){b.className='q-opt';});
+  btn.classList.add('sel-'+dir);
+}
+
+function parseNum(s){var n=parseFloat((s||'').replace(/[^0-9.\-]/g,''));return isNaN(n)?null:n;}
+
+function runEngine(){
+  if(!activeEvent){alert('Select an event first.');return;}
+  var required=['trend','fed','tone','usd','vs','gold'];
+  var missing=required.filter(function(k){return !selections[k];});
+  if(missing.length>0){alert('Please answer all questions before generating the bias.');return;}
+
+  // Score system: each answer gives +1 (bull), -1 (bear), 0 (neu) for USD
+  var scores={
+    trend:   selections.trend==='bull'?2:selections.trend==='bear'?-2:0,
+    fed:     selections.fed  ==='bull'?2:selections.fed  ==='bear'?-2:0,
+    tone:    selections.tone ==='bull'?2:selections.tone ==='bear'?-2:0,
+    usd:     selections.usd  ==='bull'?1:selections.usd  ==='bear'?-1:0,
+    vs:      selections.vs   ==='bull'?1:selections.vs   ==='bear'?-1:0,
+    gold:    selections.gold ==='bull'?1:selections.gold ==='bear'?-1:0,
+  };
+
+  var labels={trend:'Recent data trend',fed:'Fed rate expectations',tone:'Fed communication tone',usd:'USD pre-release sentiment',vs:'Forecast vs previous',gold:'Gold pre-release trend'};
+  var total=Object.values(scores).reduce(function(a,b){return a+b;},0);
+  var maxScore=9;
+  var pct=Math.round(((total+maxScore)/(maxScore*2))*100);
+
+  var bias,biasCls,confText,confCls;
+  if(total>=4){bias='Bullish USD';biasCls='bull';}
+  else if(total<=-4){bias='Bearish USD';biasCls='bear';}
+  else if(total>=2){bias='Mildly Bullish';biasCls='bull';}
+  else if(total<=-2){bias='Mildly Bearish';biasCls='bear';}
+  else{bias='Neutral';biasCls='neu';}
+
+  var absTotal=Math.abs(total);
+  if(absTotal>=6){confText='High conviction — strong alignment';confCls='high';}
+  else if(absTotal>=3){confText='Moderate conviction — mixed signals present';confCls='med';}
+  else{confText='Low conviction — contradictory signals';confCls='low';}
+
+  S('r-event-name').textContent=activeEvent.full+' — Pre-Release Analysis';
+  S('r-bias').textContent=bias;
+  S('r-bias').className='vh-bias '+biasCls;
+  S('r-conf').className='vh-confidence '+confCls;
+  S('r-conf-text').textContent=confText;
+
+  // Score rows
+  var sr='';
+  Object.keys(scores).forEach(function(k){
+    var v=scores[k],lbl=labels[k];
+    var barPct=Math.round(((v+2)/4)*100);
+    var barCls=v>0?'bull':v<0?'bear':'neu';
+    var valText=v>0?'Bullish':v<0?'Bearish':'Neutral';
+    sr+='<div class="score-row"><div class="sr-label">'+lbl+'</div>'
+      +'<div class="sr-bar-wrap"><div class="sr-bar '+barCls+'" style="width:'+barPct+'%"></div></div>'
+      +'<div class="sr-val '+barCls+'">'+valText+'</div></div>';
+  });
+  S('score-rows').innerHTML=sr;
+
+  // Instrument cards
+  var usdBull=total>0,goldBull=total<0;
+  var usdDir=total>0?'Bullish ↑':total<0?'Bearish ↓':'Neutral';
+  var goldDir=total<0?'Bullish ↑':total>0?'Bearish ↓':'Neutral';
+  var usdCls=total>0?'bull':total<0?'bear':'neu';
+  var goldCls=total<0?'bull':total>0?'bear':'neu';
+  S('inst-grid').innerHTML=
+    '<div class="inst-card '+(usdCls==='bull'?'bull-card':usdCls==='bear'?'bear-card':'')+'"><div class="ic-top"><div class="ic-name">USD (DXY)</div><div class="ic-bias '+usdCls+'">'+usdDir+'</div></div><div class="ic-logic">Based on the conditions you described, USD demand is expected to be '+(usdCls==='bull'?'supported going into the release':'under pressure going into the release')+'.</div></div>'
+    +'<div class="inst-card '+(goldCls==='bull'?'bull-card':goldCls==='bear'?'bear-card':'')+'"><div class="ic-top"><div class="ic-name">XAU/USD</div><div class="ic-bias '+goldCls+'">'+goldDir+'</div></div><div class="ic-logic">'+activeEvent.goldNote+'</div></div>';
+
+  // Watch points
+  S('wl-items').innerHTML=activeEvent.watchPoints.map(function(wp){
+    return '<div class="wl-item"><div class="wl-bullet" style="background:var(--gold)"></div><div class="wl-item-text">'+wp+'</div></div>';
+  }).join('');
+
+  S('result-panel').style.display='block';
+  S('result-panel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+(async function(){
+  var d=await supabase.auth.getSession();
+  if(!d.data.session){goTo('auth.html');return;}
+  buildGrid();
+})();
+</script>
+</body>
+</html>
