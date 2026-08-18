@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<meta name="theme-color" content="#0d0f14"/>
+<title>RiskPilot — Market Sessions</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+
+/* ── SIDEBAR ── */
+.sidebar{display:flex;flex-direction:column;width:240px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sb-logo{display:flex;flex-direction:column;align-items:flex-start;padding:1.5rem 1.25rem 1rem;border-bottom:1px solid var(--border);}
+.sb-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+.sb-icon{width:36px;height:36px;background:var(--gold-bg);border:1.5px solid var(--gold-border);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sb-name{font-size:20px;font-weight:800;letter-spacing:-.5px;}.sb-name .r{color:var(--text);}.sb-name .p{color:var(--gold);}
+.sb-tag{font-size:10px;font-weight:700;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;padding-left:2px;}
+.sb-nav{flex:1;padding:10px 12px;display:flex;flex-direction:column;}
+.sb-sec{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;padding:12px 10px 4px;}
+.sb-a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:background .15s,color .15s;margin-bottom:1px;}
+.sb-a:hover{background:var(--surface);color:var(--text);}
+.sb-a.on{background:rgba(212,160,23,.1);color:var(--gold);border:1px solid rgba(212,160,23,.15);}
+.sb-a svg{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;}
+.sb-foot{padding:1rem 1.25rem;border-top:1px solid var(--border);}
+.sb-out{width:100%;padding:9px;font-size:12px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:8px;cursor:pointer;}
+
+/* ── MAIN ── */
+.main{flex:1;min-width:0;}
+.page{padding:1.75rem 2rem;max-width:860px;}
+
+/* ── PAGE HEADER ── */
+.ph{margin-bottom:2rem;}
+.ph-eyebrow{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;}
+.ph-title{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-.5px;margin-bottom:4px;}
+.ph-sub{font-size:13px;color:var(--text-muted);}
+.ph-tz{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:5px 12px;background:var(--surface);border:1px solid var(--border);border-radius:100px;font-size:11px;color:var(--text-muted);}
+.ph-tz svg{width:12px;height:12px;stroke:var(--text-dim);fill:none;stroke-width:1.8;}
+
+/* ── LIVE CLOCK ── */
+.live-clock{
+  background:var(--bg2);border:1px solid var(--border);border-radius:16px;
+  padding:1.5rem 2rem;margin-bottom:1.75rem;
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+}
+.lc-left{}
+.lc-label{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;}
+.lc-time{font-family:'JetBrains Mono',monospace;font-size:42px;font-weight:600;color:var(--text);letter-spacing:-1px;line-height:1;}
+.lc-date{font-size:12px;color:var(--text-muted);margin-top:6px;}
+.lc-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+.active-badge{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:100px;font-size:12px;font-weight:700;color:var(--green);}
+.active-badge .pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.8s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.75);}}
+.no-session-badge{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:100px;font-size:12px;font-weight:700;color:var(--text-dim);}
+.next-up{font-size:11px;color:var(--text-dim);text-align:right;}
+.next-up strong{color:var(--gold);}
+
+/* ── SESSION CARDS ── */
+.sessions-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:1.75rem;}
+
+.sess-card{
+  background:var(--bg2);border:1.5px solid var(--border);border-radius:16px;
+  padding:1.25rem 1.35rem;position:relative;overflow:hidden;
+  transition:border-color .2s,box-shadow .2s;
+}
+.sess-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  opacity:0;transition:opacity .2s;
+}
+.sess-card.active{box-shadow:0 0 0 1px var(--sess-color, var(--gold)),0 8px 32px rgba(0,0,0,.3);}
+.sess-card.active::before{opacity:1;}
+.sess-card.active .sc-status-dot{animation:pulse 1.8s ease-in-out infinite;}
+
+/* Session accent colours */
+.sess-asia{--sess-color:#4d8ef5;}
+.sess-asia.active{border-color:#4d8ef5;box-shadow:0 0 0 1px #4d8ef5,0 8px 32px rgba(77,142,245,.15);}
+.sess-asia::before{background:#4d8ef5;}
+.sess-asia .sc-icon{background:rgba(77,142,245,.12);border-color:rgba(77,142,245,.25);}
+.sess-asia .sc-icon svg{stroke:#4d8ef5;}
+.sess-asia .sc-name{color:#4d8ef5;}
+.sess-asia .sc-status-dot.active-dot{background:#4d8ef5;}
+.sess-asia .sc-timer{color:#4d8ef5;}
+
+.sess-london{--sess-color:#22c984;}
+.sess-london.active{border-color:#22c984;box-shadow:0 0 0 1px #22c984,0 8px 32px rgba(34,201,132,.15);}
+.sess-london::before{background:#22c984;}
+.sess-london .sc-icon{background:rgba(34,201,132,.12);border-color:rgba(34,201,132,.25);}
+.sess-london .sc-icon svg{stroke:#22c984;}
+.sess-london .sc-name{color:#22c984;}
+.sess-london .sc-status-dot.active-dot{background:#22c984;}
+.sess-london .sc-timer{color:#22c984;}
+
+.sess-ny{--sess-color:#d4a017;}
+.sess-ny.active{border-color:#d4a017;box-shadow:0 0 0 1px #d4a017,0 8px 32px rgba(212,160,23,.15);}
+.sess-ny::before{background:#d4a017;}
+.sess-ny .sc-icon{background:rgba(212,160,23,.12);border-color:rgba(212,160,23,.25);}
+.sess-ny .sc-icon svg{stroke:#d4a017;}
+.sess-ny .sc-name{color:#d4a017;}
+.sess-ny .sc-status-dot.active-dot{background:#d4a017;}
+.sess-ny .sc-timer{color:#d4a017;}
+
+.sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.sc-icon{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sc-icon svg{width:18px;height:18px;fill:none;stroke-width:1.8;}
+.sc-status{display:flex;align-items:center;gap:5px;}
+.sc-status-dot{width:7px;height:7px;border-radius:50%;background:var(--text-dim);}
+.sc-status-dot.active-dot{background:var(--sess-color,var(--gold));}
+.sc-status-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-dim);}
+.sc-status-lbl.open{color:inherit;}
+
+.sc-name{font-size:15px;font-weight:800;letter-spacing:-.3px;margin-bottom:2px;}
+.sc-region{font-size:11px;color:var(--text-dim);margin-bottom:1rem;}
+
+.sc-divider{height:1px;background:var(--border);margin-bottom:1rem;}
+
+.sc-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+.sc-row:last-child{margin-bottom:0;}
+.sc-lbl{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;}
+.sc-val{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--text);}
+.sc-val.muted{color:var(--text-dim);}
+
+.sc-timer{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;letter-spacing:-1px;margin-top:.75rem;}
+.sc-timer-lbl{font-size:9px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;margin-top:3px;}
+
+/* Progress bar */
+.sc-progress-wrap{margin-top:1rem;}
+.sc-progress-lbl{display:flex;justify-content:space-between;font-size:9px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.sc-progress-track{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.sc-progress-fill{height:100%;border-radius:2px;transition:width .5s ease;}
+
+/* ── MARKET OVERLAP BANNER ── */
+.overlap-banner{
+  background:linear-gradient(135deg,rgba(212,160,23,.06) 0%,rgba(77,142,245,.06) 100%);
+  border:1px solid var(--border);border-radius:14px;
+  padding:1.25rem 1.5rem;
+  display:flex;align-items:center;gap:1rem;
+}
+.ob-icon{width:40px;height:40px;border-radius:10px;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ob-icon svg{width:20px;height:20px;stroke:var(--gold);fill:none;stroke-width:1.8;}
+.ob-body{}
+.ob-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.ob-sub{font-size:12px;color:var(--text-muted);line-height:1.5;}
+.ob-sub strong{color:var(--gold);}
+
+/* ── BOTTOM NAV ── */
+.bnav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;height:64px;background:var(--bg2);border-top:1px solid var(--border);align-items:center;justify-content:space-around;padding:0 4px;padding-bottom:env(safe-area-inset-bottom);}
+.bn-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:1;color:var(--text-dim);text-decoration:none;font-size:10px;font-weight:600;background:none;border:none;cursor:pointer;font-family:inherit;padding:6px 4px;border-radius:10px;transition:color .15s;min-width:0;}
+.bn-item svg{width:22px;height:22px;flex-shrink:0;}
+.bn-item.active{color:var(--gold);}
+.bn-add{width:52px;height:52px;border-radius:16px;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(212,160,23,.4);flex-shrink:0;}
+.bn-add svg{width:24px;height:24px;stroke:#0d0f14;fill:none;stroke-width:2.5;}
+.mo-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;backdrop-filter:blur(3px);}
+.mo-ov.open{display:block;}
+.mo-sh{position:fixed;bottom:0;left:0;right:0;z-index:401;background:var(--bg2);border-radius:22px 22px 0 0;border-top:1px solid var(--border);transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);padding-bottom:calc(24px + env(safe-area-inset-bottom));}
+.mo-sh.open{transform:translateY(0);}
+.ms-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0;}
+.ms-title{font-size:16px;font-weight:800;color:var(--text);padding:16px 20px 8px;}
+.ms-nav{display:flex;flex-direction:column;padding:0 12px;gap:2px;}
+.ms-link{display:flex;align-items:center;gap:14px;padding:13px 14px;border-radius:12px;text-decoration:none;transition:background .15s;}
+.ms-link:active{background:var(--surface);}
+.ms-icon{width:40px;height:40px;border-radius:11px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ms-icon svg{width:18px;height:18px;stroke:var(--text-muted);fill:none;stroke-width:1.8;}
+.ms-body{flex:1;}
+.ms-lbl{font-size:14px;font-weight:600;color:var(--text);}
+.ms-sub{font-size:11px;color:var(--text-dim);margin-top:1px;}
+.ms-chev{width:16px;height:16px;stroke:var(--text-dim);fill:none;flex-shrink:0;}
+.ms-out{width:calc(100% - 24px);margin:10px 12px 0;padding:13px;font-size:14px;font-weight:700;font-family:inherit;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:12px;cursor:pointer;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){.sessions-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:768px){
+  body{display:block;}
+  .sidebar{display:none;}
+  .main{display:block;}
+  .page{padding:1.25rem 1rem 90px;}
+  .bnav{display:flex;}
+  .sessions-grid{grid-template-columns:1fr;}
+  .lc-time{font-size:34px;}
+  .live-clock{flex-direction:column;align-items:flex-start;}
+  .lc-right{align-items:flex-start;}
+  .next-up{text-align:left;}
+}
+</style>
+</head>
+<body>
+
+<!-- DESKTOP SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-row">
+      <div class="sb-icon"><svg viewBox="0 0 32 32" fill="none" width="20" height="20"><polygon points="16,3 29,28 3,28" fill="none" stroke="#d4a017" stroke-width="2.5" stroke-linejoin="round"/><circle cx="16" cy="13" r="2.5" fill="#d4a017"/><line x1="16" y1="16" x2="16" y2="23" stroke="#d4a017" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+      <div class="sb-name"><span class="r">Risk</span><span class="p">Pilot</span></div>
+    </div>
+    <div class="sb-tag">Master Your Risk</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sec">Navigation</div>
+    <a class="sb-a" href="accounts.html"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>My Accounts</a>
+    <a class="sb-a" href="more-accounts.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>All Accounts</a>
+    <a class="sb-a" href="overall-performance.html"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Overall Performance</a>
+    <div class="sb-sec">Tools</div>
+    <a class="sb-a on" href="market-sessions.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Market Sessions</a>
+    <div class="sb-sec">Account</div>
+    <a class="sb-a" href="profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>My Profile</a>
+    <a class="sb-a" href="leaderboard.html"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>Leaderboard</a>
+    <a class="sb-a" href="dashboard.html"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+    <div class="sb-sec">Community</div>
+    <a class="sb-a" href="trading-news.html"><svg viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg>Trading News</a>
+    <a class="sb-a" href="social.html"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Follow Us</a>
+  </nav>
+  <div class="sb-foot">
+    <button class="sb-out" onclick="handleSignOut()">Sign Out</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+<div class="page">
+
+  <div class="ph">
+    <div class="ph-eyebrow">Live Market Data</div>
+    <div class="ph-title">Market Sessions</div>
+    <div class="ph-sub">Trading sessions in your local time. All times auto-adjusted to your device's timezone.</div>
+    <div class="ph-tz">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span id="tz-label">Detecting timezone…</span>
+    </div>
+  </div>
+
+  <!-- LIVE CLOCK -->
+  <div class="live-clock">
+    <div class="lc-left">
+      <div class="lc-label">Your Local Time</div>
+      <div class="lc-time" id="clock">--:--:--</div>
+      <div class="lc-date" id="clock-date">—</div>
+    </div>
+    <div class="lc-right">
+      <div id="active-badge-wrap"></div>
+      <div class="next-up" id="next-up-line"></div>
+    </div>
+  </div>
+
+  <!-- SESSION CARDS -->
+  <div class="sessions-grid">
+
+    <!-- ASIAN SESSION -->
+    <div class="sess-card sess-asia" id="card-asia">
+      <div class="sc-top">
+        <div class="sc-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 010 20M2 12h20"/><path d="M12 2c-2.5 3.5-4 7-4 10s1.5 6.5 4 10"/></svg>
+        </div>
+        <div class="sc-status">
+          <div class="sc-status-dot" id="dot-asia"></div>
+          <div class="sc-status-lbl" id="lbl-asia">Closed</div>
+        </div>
+      </div>
+      <div class="sc-name">Asian Session</div>
+      <div class="sc-region">Tokyo · Singapore · Sydney</div>
+      <div class="sc-divider"></div>
+      <div class="sc-row"><span class="sc-lbl">Opens</span><span class="sc-val" id="asia-open">—</span></div>
+      <div class="sc-row"><span class="sc-lbl">Closes</span><span class="sc-val" id="asia-close">—</span></div>
+      <div class="sc-row"><span class="sc-lbl">Key Pairs</span><span class="sc-val muted">JPY · AUD · NZD</span></div>
+      <div class="sc-progress-wrap">
+        <div class="sc-progress-lbl"><span>Session Progress</span><span id="asia-pct">—</span></div>
+        <div class="sc-progress-track"><div class="sc-progress-fill" id="asia-bar" style="background:#4d8ef5;width:0%"></div></div>
+      </div>
+      <div class="sc-timer" id="asia-timer">--:--:--</div>
+      <div class="sc-timer-lbl" id="asia-timer-lbl">Time Remaining</div>
+    </div>
+
+    <!-- LONDON SESSION -->
+    <div class="sess-card sess-london" id="card-london">
+      <div class="sc-top">
+        <div class="sc-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div class="sc-status">
+          <div class="sc-status-dot" id="dot-london"></div>
+          <div class="sc-status-lbl" id="lbl-london">Closed</div>
+        </div>
+      </div>
+      <div class="sc-name">London Session</div>
+      <div class="sc-region">London · Frankfurt · Paris</div>
+      <div class="sc-divider"></div>
+      <div class="sc-row"><span class="sc-lbl">Opens</span><span class="sc-val" id="london-open">—</span></div>
+      <div class="sc-row"><span class="sc-lbl">Closes</span><span class="sc-val" id="london-close">—</span></div>
+      <div class="sc-row"><span class="sc-lbl">Key Pairs</span><span class="sc-val muted">EUR · GBP · CHF</span></div>
+      <div class="sc-progress-wrap">
+        <div class="sc-progress-lbl"><span>Session Progress</span><span id="london-pct">—</span></div>
+        <div class="sc-progress-track"><div class="sc-progress-fill" id="london-bar" style="background:#22c984;width:0%"></div></div>
+      </div>
+      <div class="sc-timer" id="london-timer">--:--:--</div>
+      <div class="sc-timer-lbl" id="london-timer-lbl">Time Remaining</div>
+    </div>
+
+    <!-- NEW YORK SESSION -->
+    <div class="sess-card sess-ny" id="card-ny">
+      <div class="sc-top">
+        <div class="sc-icon">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+        </div>
+        <div class="sc-status">
+          <div class="sc-status-dot" id="dot-ny"></div>
+          <div class="sc-status-lbl" id="lbl-ny">Closed</div>
+        </div>
+      </div>
+      <div class="sc-name">New York Session</div>
+      <div class="sc-region">New York · Chicago · Toronto</div>
+      <div class="sc-divider"></div>
+      <div class="sc-row"><span class="sc-lbl">Opens</span><span class="sc-val" id="ny-open">—</span></div>
+      <div class="sc-row"><span class="sc-lbl">Closes</span><span class="sc-val" id="ny-close">—</span></div>
+      <div class="sc-row"><span class="sc-lbl">Key Pairs</span><span class="sc-val muted">USD · CAD · MXN</span></div>
+      <div class="sc-progress-wrap">
+        <div class="sc-progress-lbl"><span>Session Progress</span><span id="ny-pct">—</span></div>
+        <div class="sc-progress-track"><div class="sc-progress-fill" id="ny-bar" style="background:#d4a017;width:0%"></div></div>
+      </div>
+      <div class="sc-timer" id="ny-timer">--:--:--</div>
+      <div class="sc-timer-lbl" id="ny-timer-lbl">Time Remaining</div>
+    </div>
+
+  </div>
+
+  <!-- OVERLAP BANNER -->
+  <div class="overlap-banner" id="overlap-banner" style="display:none">
+    <div class="ob-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+    <div class="ob-body">
+      <div class="ob-title" id="overlap-title">High Volatility Window</div>
+      <div class="ob-sub" id="overlap-sub">Two sessions are currently open simultaneously. Expect higher volatility and tighter spreads.</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="bnav">
+  <a class="bn-item" href="accounts.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><span>Accounts</span></a>
+  <a class="bn-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a>
+  <button class="bn-add" onclick="goTo('add-trade.html')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+  <a class="bn-item" href="overall-performance.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Performance</span></a>
+  <button class="bn-item active" onclick="openMore()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg><span>More</span></button>
+</nav>
+
+<!-- MORE SHEET -->
+<div class="mo-ov" id="mo-ov" onclick="closeMore()"></div>
+<div class="mo-sh" id="mo-sh">
+  <div class="ms-handle"></div>
+  <div class="ms-title">More</div>
+  <nav class="ms-nav">
+    <a class="ms-link" href="profile.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div><div class="ms-body"><div class="ms-lbl">My Profile</div><div class="ms-sub">Edit your personal details</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="leaderboard.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg></div><div class="ms-body"><div class="ms-lbl">Leaderboard</div><div class="ms-sub">Top traders — coming soon</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="more-accounts.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div><div class="ms-body"><div class="ms-lbl">All Accounts</div><div class="ms-sub">View and manage all accounts</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="market-sessions.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="ms-body"><div class="ms-lbl">Market Sessions</div><div class="ms-sub">Live session times &amp; countdowns</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="trading-news.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg></div><div class="ms-body"><div class="ms-lbl">Trading News</div><div class="ms-sub">High impact news — coming soon</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+    <a class="ms-link" href="social.html"><div class="ms-icon"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div><div class="ms-body"><div class="ms-lbl">Follow Us</div><div class="ms-sub">Instagram &amp; Discord</div></div><svg class="ms-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+  </nav>
+  <button class="ms-out" onclick="handleSignOut()">Sign Out</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+function base(){var p=window.location.pathname;return window.location.origin+p.substring(0,p.lastIndexOf('/')+1);}
+function goTo(f){window.location.href=base()+f;}
+function S(i){return document.getElementById(i);}
+function openMore(){S('mo-sh').classList.add('open');S('mo-ov').classList.add('open');document.body.style.overflow='hidden';}
+function closeMore(){S('mo-sh').classList.remove('open');S('mo-ov').classList.remove('open');document.body.style.overflow='';}
+async function handleSignOut(){await supabase.auth.signOut();goTo('auth.html');}
+
+// ── SESSION DEFINITIONS (UTC hours) ──────────────────────────────────────
+// Asian:   00:00 – 09:00 UTC
+// London:  08:00 – 17:00 UTC
+// NY:      13:00 – 22:00 UTC
+var SESSIONS={
+  asia:  {utcOpen:0,  utcClose:9,  durH:9},
+  london:{utcOpen:8,  utcClose:17, durH:9},
+  ny:    {utcOpen:13, utcClose:22, durH:9}
+};
+
+function pad(n){return String(n).padStart(2,'0');}
+
+function fmtDuration(totalSec){
+  if(totalSec<=0)return '00:00:00';
+  var h=Math.floor(totalSec/3600);
+  var m=Math.floor((totalSec%3600)/60);
+  var s=totalSec%60;
+  return pad(h)+':'+pad(m)+':'+pad(s);
+}
+
+function localTimeStr(date){
+  return date.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false});
+}
+
+function utcHourToLocalDate(utcHour, refDate){
+  // Build a Date that is today at utcHour:00 UTC
+  var d=new Date(refDate);
+  d.setUTCHours(utcHour,0,0,0);
+  return d;
+}
+
+function getSessionState(sess, now){
+  var openUTC=sess.utcOpen, closeUTC=sess.utcClose;
+  var nowUTCH=now.getUTCHours()+(now.getUTCMinutes()/60)+(now.getUTCSeconds()/3600);
+
+  var openDate=utcHourToLocalDate(openUTC, now);
+  var closeDate=utcHourToLocalDate(closeUTC, now);
+
+  var isOpen=nowUTCH>=openUTC&&nowUTCH<closeUTC;
+  var secsRemaining, progress;
+
+  if(isOpen){
+    var elapsedSec=(now-openDate)/1000;
+    var totalSec=sess.durH*3600;
+    secsRemaining=Math.max(0,Math.round(closeDate-now)/1000);
+    progress=Math.min(100,(elapsedSec/totalSec)*100);
+  } else {
+    // Time until next open
+    if(nowUTCH<openUTC){
+      secsRemaining=Math.round(openDate-now)/1000;
+    } else {
+      // next open is tomorrow
+      var nextOpen=new Date(openDate);
+      nextOpen.setUTCDate(nextOpen.getUTCDate()+1);
+      secsRemaining=Math.round(nextOpen-now)/1000;
+    }
+    progress=0;
+  }
+
+  return {
+    isOpen:isOpen,
+    openLocal:localTimeStr(openDate),
+    closeLocal:localTimeStr(closeDate),
+    secsRemaining:Math.round(secsRemaining),
+    progress:progress
+  };
+}
+
+function tick(){
+  var now=new Date();
+
+  // Clock
+  S('clock').textContent=now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  S('clock-date').textContent=now.toLocaleDateString([],{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  // Timezone
+  var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'Unknown';
+  S('tz-label').textContent=tz.replace(/_/g,' ');
+
+  var asiaS=getSessionState(SESSIONS.asia,now);
+  var londonS=getSessionState(SESSIONS.london,now);
+  var nyS=getSessionState(SESSIONS.ny,now);
+
+  var states=[
+    {key:'asia',  state:asiaS,   name:'Asian',     color:'#4d8ef5'},
+    {key:'london',state:londonS, name:'London',    color:'#22c984'},
+    {key:'ny',    state:nyS,     name:'New York',  color:'#d4a017'}
+  ];
+
+  // Count open sessions
+  var openSessions=states.filter(function(s){return s.state.isOpen;});
+  var closedSessions=states.filter(function(s){return !s.state.isOpen;});
+
+  // Active badge
+  var badge=S('active-badge-wrap');
+  if(openSessions.length>0){
+    var names=openSessions.map(function(s){return s.name;}).join(' + ');
+    badge.innerHTML='<div class="active-badge"><div class="pulse"></div>'+names+' Open</div>';
+  } else {
+    badge.innerHTML='<div class="no-session-badge">All Sessions Closed</div>';
+  }
+
+  // Next session line
+  if(openSessions.length===0&&closedSessions.length>0){
+    var soonest=closedSessions.reduce(function(a,b){return a.state.secsRemaining<b.state.secsRemaining?a:b;});
+    S('next-up-line').innerHTML='Next: <strong>'+soonest.name+' Session</strong> in '+fmtDuration(soonest.state.secsRemaining);
+  } else if(openSessions.length>0){
+    // Show which closes soonest
+    var closingSoon=openSessions.reduce(function(a,b){return a.state.secsRemaining<b.state.secsRemaining?a:b;});
+    S('next-up-line').innerHTML='<strong>'+closingSoon.name+'</strong> closes in '+fmtDuration(closingSoon.state.secsRemaining);
+  } else {
+    S('next-up-line').innerHTML='';
+  }
+
+  // Overlap banner (London + NY overlap: 13:00–17:00 UTC)
+  var londonNYOverlap=londonS.isOpen&&nyS.isOpen;
+  var asiaLondonOverlap=asiaS.isOpen&&londonS.isOpen;
+  var ob=S('overlap-banner');
+  if(londonNYOverlap){
+    ob.style.display='flex';
+    S('overlap-title').textContent='London — New York Overlap';
+    S('overlap-sub').innerHTML='The <strong>highest volatility window</strong> of the trading day. Both the London and New York sessions are simultaneously open. Expect sharp moves, tight spreads, and maximum liquidity on USD and GBP pairs.';
+  } else if(asiaLondonOverlap){
+    ob.style.display='flex';
+    S('overlap-title').textContent='Asian — London Overlap';
+    S('overlap-sub').innerHTML='The <strong>Asian and London sessions</strong> are both active. Increased volatility on EUR/JPY, GBP/JPY, and AUD/USD. Watch for breakouts as European traders react to overnight Asian price action.';
+  } else {
+    ob.style.display='none';
+  }
+
+  // Update each card
+  states.forEach(function(item){
+    var k=item.key, st=item.state;
+    var card=S('card-'+k);
+    var dot=S('dot-'+k);
+    var lbl=S('lbl-'+k);
+    var timer=S(k+'-timer');
+    var timerLbl=S(k+'-timer-lbl');
+    var bar=S(k+'-bar');
+    var pct=S(k+'-pct');
+
+    S(k+'-open').textContent=st.openLocal;
+    S(k+'-close').textContent=st.closeLocal;
+
+    if(st.isOpen){
+      card.classList.add('active');
+      dot.classList.add('active-dot');
+      lbl.textContent='Open';lbl.classList.add('open');
+      timer.textContent=fmtDuration(st.secsRemaining);
+      timerLbl.textContent='Time Remaining';
+      bar.style.width=st.progress.toFixed(1)+'%';
+      pct.textContent=st.progress.toFixed(0)+'%';
+    } else {
+      card.classList.remove('active');
+      dot.classList.remove('active-dot');
+      lbl.textContent='Closed';lbl.classList.remove('open');
+      timer.textContent=fmtDuration(st.secsRemaining);
+      timerLbl.textContent='Opens In';
+      bar.style.width='0%';
+      pct.textContent='—';
+    }
+  });
+}
+
+// Auth check
+(async function(){
+  var d=await supabase.auth.getSession();
+  if(!d.data.session){goTo('auth.html');}
+})();
+
+tick();
+setInterval(tick,1000);
+</script>
+</body>
+</html>
